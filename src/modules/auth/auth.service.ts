@@ -29,7 +29,7 @@ type AuthResponse = {
   };
 };
 
-type ServiceErrorCode = 'CONFLICT' | 'INVALID_CREDENTIALS';
+type ServiceErrorCode = 'CONFLICT' | 'INVALID_CREDENTIALS' | 'NOT_FOUND';
 
 export class ServiceError extends Error {
   public readonly code: ServiceErrorCode;
@@ -140,6 +140,16 @@ export const registerUser = async (input: RegisterInput): Promise<AuthResponse> 
 
     throw error;
   }
+};
+
+export const getMe = async (userId: number): Promise<AuthResponse['user']> => {
+  const user = await User.findByPk(userId);
+
+  if (!user) {
+    throw new ServiceError('NOT_FOUND', 'Usuário não encontrado.');
+  }
+
+  return sanitizeUser(user);
 };
 
 export const loginUser = async (input: LoginInput): Promise<AuthResponse> => {
