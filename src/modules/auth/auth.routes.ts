@@ -1,6 +1,7 @@
 import { type FastifyPluginAsync } from 'fastify';
 
-import { loginUser, registerUser, ServiceError } from './auth.service';
+import { authenticate } from './auth.middleware';
+import { getMe, loginUser, registerUser, ServiceError } from './auth.service';
 
 type RegisterBody = {
   name?: string;
@@ -31,6 +32,19 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     } catch (error: unknown) {
       if (error instanceof ServiceError && error.code === 'CONFLICT') {
         return reply.code(409).send({ message: error.message });
+      }
+
+      throw error;
+    }
+  });
+
+  app.get('/me', { preHandler: [authenticate] }, async (request, reply) => {
+    try {
+      const user = await getMe(request.user!.id);
+      return reply.code(200).send(user);
+    } catch (error: unknown) {
+      if (error instanceof ServiceError && error.code === 'NOT_FOUND') {
+        return reply.code(404).send({ message: error.message });
       }
 
       throw error;
