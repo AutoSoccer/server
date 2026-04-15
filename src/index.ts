@@ -1,5 +1,6 @@
 import { buildApp } from './app';
 import { connectDatabase, disconnectDatabase } from './config/database';
+import './database/models';
 import { env } from './config/env';
 
 const startServer = async (): Promise<void> => {

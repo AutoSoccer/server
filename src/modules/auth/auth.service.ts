@@ -6,7 +6,7 @@ import { env } from '../../config/env';
 import { User } from './user.model';
 
 export type RegisterInput = {
-  name?: string;
+  name: string;
   nickname: string;
   password: string;
   email: string;
@@ -22,10 +22,13 @@ type AuthResponse = {
   token: string;
   user: {
     id: number;
-    name: string | null;
+    name: string;
     nickname: string;
     email: string;
     phone_number: string | null;
+    victory: number;
+    defeat: number;
+    trophies: number;
   };
 };
 
@@ -45,7 +48,10 @@ const sanitizeUser = (user: User): AuthResponse['user'] => ({
   name: user.name,
   nickname: user.nickname,
   email: user.email,
-  phone_number: user.phone_number
+  phone_number: user.phone_number,
+  victory: user.victory,
+  defeat: user.defeat,
+  trophies: user.trophies
 });
 
 const signToken = (user: User): string => {
@@ -107,10 +113,14 @@ const findDuplicatedField = async (
 };
 
 export const registerUser = async (input: RegisterInput): Promise<AuthResponse> => {
+  const name = input.name.trim();
   const nickname = input.nickname.trim();
   const email = input.email.trim().toLowerCase();
-  const name = trimOrUndefined(input.name) ?? null;
   const phoneNumber = trimOrUndefined(input.phone_number);
+
+  if (name.length === 0) {
+    throw new ServiceError('CONFLICT', 'Field name is required.');
+  }
 
   const duplicatedField = await findDuplicatedField(nickname, email, phoneNumber);
 
@@ -126,7 +136,10 @@ export const registerUser = async (input: RegisterInput): Promise<AuthResponse> 
       nickname,
       hashed_password: hashedPassword,
       email,
-      phone_number: phoneNumber ?? null
+      phone_number: phoneNumber ?? null,
+      victory: 0,
+      defeat: 0,
+      trophies: 0
     });
 
     return {
@@ -146,7 +159,7 @@ export const getMe = async (userId: number): Promise<AuthResponse['user']> => {
   const user = await User.findByPk(userId);
 
   if (!user) {
-    throw new ServiceError('NOT_FOUND', 'Usuário não encontrado.');
+    throw new ServiceError('NOT_FOUND', 'Usuario nao encontrado.');
   }
 
   return sanitizeUser(user);

@@ -4,7 +4,7 @@ import { authenticate } from './auth.middleware';
 import { getMe, loginUser, registerUser, ServiceError } from './auth.service';
 
 type RegisterBody = {
-  name?: string;
+  name: string;
   nickname: string;
   password: string;
   email: string;
