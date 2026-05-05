@@ -20,6 +20,7 @@ export class Athlete extends Model<InferAttributes<Athlete>, InferCreationAttrib
   declare ability_id: number;
   declare tier: (typeof ATHLETE_TIERS)[number];
   declare type: (typeof ATHLETE_TYPES)[number];
+  declare cost: CreationOptional<number>;
 }
 
 Athlete.init(
@@ -60,6 +61,11 @@ Athlete.init(
     type: {
       type: DataTypes.ENUM(...ATHLETE_TYPES),
       allowNull: false
+    },
+    cost: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 0
     }
   },
   {

@@ -18,6 +18,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare victory: CreationOptional<number>;
   declare defeat: CreationOptional<number>;
   declare trophies: CreationOptional<number>;
+  declare coins: CreationOptional<number>;
 }
 
 User.init(
@@ -64,6 +65,11 @@ User.init(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       defaultValue: 0
+    },
+    coins: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 1000
     }
   },
   {
