@@ -27,5 +27,15 @@ export default [
       ...tsPlugin.configs.recommended.rules,
       "no-console": "off"
     }
+  },
+  {
+    files: ["**/*.cjs"],
+    languageOptions: {
+      globals: {
+        module: "readonly",
+        process: "readonly",
+        require: "readonly"
+      }
+    }
   }
 ];
