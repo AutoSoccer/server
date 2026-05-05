@@ -1,5 +1,6 @@
 import { Ability } from './ability.model';
 import { Athlete } from './athlete.model';
+import { MarketWindow } from './market-window.model';
 import { TeamAthlete } from './team-athlete.model';
 import { Team } from './team.model';
 import { User } from './user.model';
@@ -38,4 +39,24 @@ Athlete.belongsToMany(Team, {
   as: 'teams'
 });
 
-export { Ability, Athlete, Team, TeamAthlete, User };
+User.hasMany(MarketWindow, {
+  foreignKey: 'user_id',
+  as: 'marketWindow'
+});
+
+MarketWindow.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
+Athlete.hasMany(MarketWindow, {
+  foreignKey: 'athlete_id',
+  as: 'marketEntries'
+});
+
+MarketWindow.belongsTo(Athlete, {
+  foreignKey: 'athlete_id',
+  as: 'athlete'
+});
+
+export { Ability, Athlete, MarketWindow, Team, TeamAthlete, User };
