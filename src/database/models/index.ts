@@ -1,5 +1,5 @@
 import { Ability } from './ability.model';
-import { Athlete } from './athlete.model';
+import { Athlete, ATHLETE_TIERS, ATHLETE_TYPES } from './athlete.model';
 import { MarketWindow } from './market-window.model';
 import { TeamAthlete } from './team-athlete.model';
 import { Team } from './team.model';
@@ -59,4 +59,13 @@ MarketWindow.belongsTo(Athlete, {
   as: 'athlete'
 });
 
-export { Ability, Athlete, MarketWindow, Team, TeamAthlete, User };
+export {
+  Ability,
+  Athlete,
+  ATHLETE_TIERS,
+  ATHLETE_TYPES,
+  MarketWindow,
+  Team,
+  TeamAthlete,
+  User
+};

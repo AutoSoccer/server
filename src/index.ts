@@ -1,10 +1,12 @@
 import { buildApp } from './app';
 import { connectDatabase, disconnectDatabase } from './config/database';
 import './database/models';
+import { runDatabaseSeeds } from './database/seed';
 import { env } from './config/env';
 
 const startServer = async (): Promise<void> => {
   await connectDatabase();
+  await runDatabaseSeeds();
 
   const app = await buildApp();
 
