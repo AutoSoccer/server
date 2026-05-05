@@ -18,6 +18,7 @@ export type MarketAthlete = {
   tier: string;
   type: string;
   overall: number;
+  cost: number;
   status: MarketAthleteStatus;
 };
 
@@ -41,6 +42,7 @@ const sanitizeAthlete = (athlete: Athlete, ownedAthleteIds: Set<number>): Market
   tier: athlete.tier,
   type: athlete.type,
   overall: calculateOverall(athlete),
+  cost: athlete.cost,
   status: ownedAthleteIds.has(athlete.id) ? 'OWNED' : 'MARKET'
 });
 
