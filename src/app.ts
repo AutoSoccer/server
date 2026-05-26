@@ -2,6 +2,7 @@ import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { authRoutes } from './modules/auth/auth.routes';
 import { mercadoRoutes } from './modules/mercado/mercado.routes';
+import { partidaRoutes } from './modules/partida/partida.routes';
 
 export const buildApp = async (): Promise<FastifyInstance> => {
   const app = Fastify({
@@ -25,6 +26,10 @@ export const buildApp = async (): Promise<FastifyInstance> => {
 
   await app.register(mercadoRoutes, {
     prefix: '/mercado'
+  });
+
+  await app.register(partidaRoutes, {
+    prefix: '/partida'
   });
 
   return app;
