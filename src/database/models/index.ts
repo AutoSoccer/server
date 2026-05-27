@@ -2,6 +2,7 @@ import { Ability } from './ability.model';
 import { Athlete, ATHLETE_TIERS, ATHLETE_TYPES } from './athlete.model';
 import { MarketWindow } from './market-window.model';
 import { TeamAthlete } from './team-athlete.model';
+import { TeamSnapshot } from './team-snapshot.model';
 import { Team } from './team.model';
 import { User } from './user.model';
 
@@ -59,6 +60,26 @@ MarketWindow.belongsTo(Athlete, {
   as: 'athlete'
 });
 
+Team.hasMany(TeamSnapshot, {
+  foreignKey: 'team_id',
+  as: 'snapshots'
+});
+
+TeamSnapshot.belongsTo(Team, {
+  foreignKey: 'team_id',
+  as: 'team'
+});
+
+User.hasMany(TeamSnapshot, {
+  foreignKey: 'user_id',
+  as: 'snapshots'
+});
+
+TeamSnapshot.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
 export {
   Ability,
   Athlete,
@@ -67,5 +88,6 @@ export {
   MarketWindow,
   Team,
   TeamAthlete,
+  TeamSnapshot,
   User
 };
