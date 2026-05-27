@@ -63,4 +63,9 @@ export type SimulationOptions = {
   rng?: RandomFn;
   /** Numero total de turnos. RN008 fixa em 12, mas o motor aceita override em testes. */
   totalTurns?: number;
+  /**
+   * Time que comeca com a posse de bola (RN009).
+   * Quando omitido, o motor sorteia via RNG.
+   */
+  initialPossession?: Possession;
 };

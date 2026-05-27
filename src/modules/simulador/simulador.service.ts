@@ -126,7 +126,8 @@ export const processarRodada = (
   const events: TurnEvent[] = [];
   const score = { player: 0, opponent: 0 };
 
-  let possession: Possession = rng() < 0.5 ? 'player' : 'opponent';
+  let possession: Possession =
+    options.initialPossession ?? (rng() < 0.5 ? 'player' : 'opponent');
   let ballRow: BallRow = 0;
 
   for (let turn = 1; turn <= totalTurns; turn++) {
