@@ -6,8 +6,14 @@ import {
   ATHLETE_TIERS,
   ATHLETE_TYPES,
   Item,
-  User
+  Team,
+  TeamAthlete,
+  User,
+  UserItem
 } from './models';
+
+/** Saldo inicial padrao de coins para usuarios (RF010). */
+const DEFAULT_COINS = 2500;
 
 const TIER_COSTS: Record<(typeof ATHLETE_TIERS)[number], number> = {
   bronze: 50,
@@ -111,7 +117,7 @@ export const seedDefaultUsers = async (): Promise<void> => {
       victory: 0,
       defeat: 0,
       trophies: 0,
-      coins: 1000
+      coins: DEFAULT_COINS
     });
   }
 };
@@ -243,8 +249,86 @@ export const seedDefaultItems = async (): Promise<void> => {
   }
 };
 
+/**
+ * Deixa os usuarios padrao prontos para jogar: cada um recebe um time montado
+ * com 6 atletas (1 goleiro, 2 defensores, 3 atacantes) e 3 itens no inventario.
+ * Idempotente: so monta o time/itens de quem ainda nao os possui, e cada
+ * usuario recebe atletas distintos (cursores por tipo).
+ */
+export const seedReadyTeams = async (): Promise<void> => {
+  const athletes = await Athlete.findAll({ order: [['id', 'ASC']] });
+  const byType: Record<(typeof ATHLETE_TYPES)[number], Athlete[]> = {
+    goalkeeper: athletes.filter((a) => a.type === 'goalkeeper'),
+    defender: athletes.filter((a) => a.type === 'defender'),
+    attacker: athletes.filter((a) => a.type === 'attacker')
+  };
+  const items = await Item.findAll({ order: [['id', 'ASC']] });
+
+  // Cursores para nao repetir o mesmo atleta entre usuarios.
+  const cursor: Record<(typeof ATHLETE_TYPES)[number], number> = {
+    goalkeeper: 0,
+    defender: 0,
+    attacker: 0
+  };
+  const take = (type: (typeof ATHLETE_TYPES)[number]): Athlete | undefined =>
+    byType[type][cursor[type]++];
+
+  // Composicao 1 GK + 2 DEF + 3 ATK = 6 atletas (TEAM_MAX).
+  const composition: Array<(typeof ATHLETE_TYPES)[number]> = [
+    'goalkeeper',
+    'defender',
+    'defender',
+    'attacker',
+    'attacker',
+    'attacker'
+  ];
+
+  for (const userData of DEFAULT_USERS) {
+    const user = await User.findOne({ where: { email: userData.email } });
+    if (!user) {
+      continue;
+    }
+
+    // Time com 6 atletas (so monta se ainda nao houver atletas no time).
+    let team = await Team.findOne({ where: { user_id: user.id } });
+    if (!team) {
+      team = await Team.create({
+        user_id: user.id,
+        name: `Equipe ${userData.name.split(' ')[0]}`,
+        round: 1,
+        victory: 0,
+        lose: 0,
+        draw: 0
+      });
+    }
+
+    const athleteCount = await TeamAthlete.count({ where: { team_id: team.id } });
+    if (athleteCount === 0) {
+      for (const type of composition) {
+        const athlete = take(type);
+        if (athlete) {
+          await TeamAthlete.create({ team_id: team.id, athlete_id: athlete.id });
+        }
+      }
+    }
+
+    // Inventario com 3 itens nao consumidos (so se o usuario ainda nao tem itens).
+    const itemCount = await UserItem.count({ where: { user_id: user.id } });
+    if (itemCount === 0) {
+      for (const item of items.slice(0, 3)) {
+        await UserItem.create({
+          user_id: user.id,
+          item_id: item.id,
+          consumed: false
+        });
+      }
+    }
+  }
+};
+
 export const runDatabaseSeeds = async (): Promise<void> => {
   await seedDefaultUsers();
   await seedDefaultAthletes();
   await seedDefaultItems();
+  await seedReadyTeams();
 };

@@ -15,6 +15,7 @@ export class Team extends Model<InferAttributes<Team>, InferCreationAttributes<T
   declare round: number;
   declare victory: CreationOptional<number>;
   declare lose: CreationOptional<number>;
+  declare draw: CreationOptional<number>;
 }
 
 Team.init(
@@ -47,6 +48,11 @@ Team.init(
       defaultValue: 0
     },
     lose: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 0
+    },
+    draw: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       defaultValue: 0

@@ -2,7 +2,7 @@ import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
 import { authenticate } from './auth.middleware';
-import { getMe, loginUser, registerUser, ServiceError } from './auth.service';
+import { createGuest, getMe, loginUser, registerUser, ServiceError } from './auth.service';
 
 type RegisterBody = {
   name: string;
@@ -27,7 +27,9 @@ const userResponseSchema = {
     phone_number: { type: ['string', 'null'], example: '11900000001' },
     victory: { type: 'integer', example: 0 },
     defeat: { type: 'integer', example: 0 },
-    trophies: { type: 'integer', example: 0 }
+    trophies: { type: 'integer', example: 0 },
+    coins: { type: 'integer', example: 1000 },
+    is_guest: { type: 'boolean', example: false }
   }
 } as const;
 
@@ -122,6 +124,26 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
         throw error;
       }
+    }
+  );
+
+  app.post(
+    '/guest',
+    {
+      schema: {
+        tags: ['Auth'],
+        summary: 'Cria uma conta de convidado e retorna um token JWT (RF005)',
+        description:
+          'Cria um usuario efemero com is_guest=true para jogar sem cadastro. Convidados nao acumulam trofeus nem entram no ranking geral.',
+        response: {
+          201: authResponseSchema,
+          500: errorSchema
+        }
+      }
+    },
+    async (_request, reply) => {
+      const result = await createGuest();
+      return reply.code(201).send(result);
     }
   );
 

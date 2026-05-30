@@ -17,6 +17,7 @@ import {
 } from '../matchmaking/matchmaking.service';
 import {
   applyTrophies,
+  coinsForRound,
   type MatchStatus,
   resolveMatchStatus,
   trophiesForStatus
@@ -80,6 +81,8 @@ export type JogarRodadaResult = MatchResult & {
     matchEnded: boolean;
     trophiesDelta: number;
     trophies: number;
+    coinsEarned: number;
+    coins: number;
     userVictory: number;
     userDefeat: number;
     isGuest: boolean;
@@ -223,7 +226,7 @@ const loadOrCreateSnapshot = async (
   }
 
   const { team, athletes } = await loadPlayerTeam(userId);
-  const ratio = computeVictoryRatio(team.victory ?? 0, team.lose ?? 0);
+  const ratio = computeVictoryRatio(team.victory ?? 0, team.lose ?? 0, team.draw ?? 0);
 
   return TeamSnapshot.create({
     team_id: team.id,
@@ -231,6 +234,7 @@ const loadOrCreateSnapshot = async (
     round: team.round ?? 1,
     victory: team.victory ?? 0,
     lose: team.lose ?? 0,
+    draw: team.draw ?? 0,
     victory_ratio: ratio,
     positions: buildSnapshotPositions(athletes)
   });
@@ -283,6 +287,8 @@ type RoundResolution = {
   matchEnded: boolean;
   trophiesDelta: number;
   trophies: number;
+  coinsEarned: number;
+  coins: number;
   userVictory: number;
   userDefeat: number;
   isGuest: boolean;
@@ -330,11 +336,19 @@ const finalizeRound = async (input: FinalizeRoundInput): Promise<RoundResolution
       team.victory = (team.victory ?? 0) + 1;
     } else if (winner === 'opponent') {
       team.lose = (team.lose ?? 0) + 1;
+    } else {
+      // RN005: empate conta como rodada jogada (peso do matchmaking RN006).
+      team.draw = (team.draw ?? 0) + 1;
     }
     team.round = playedRound + 1;
 
     const matchStatus = resolveMatchStatus(team.victory, team.lose);
     const matchEnded = matchStatus !== 'in_progress';
+
+    // RF010: toda rodada jogada credita moedas (base + bonus de vitoria),
+    // inclusive para convidado — moedas nao sao trofeus.
+    const coinsEarned = coinsForRound(winner);
+    user.coins = (user.coins ?? 0) + coinsEarned;
 
     // RF004/RF005: trofeus e perfil so mudam ao encerrar a partida e se nao for convidado.
     let trophiesDelta = 0;
@@ -346,8 +360,9 @@ const finalizeRound = async (input: FinalizeRoundInput): Promise<RoundResolution
       } else {
         user.defeat = (user.defeat ?? 0) + 1;
       }
-      await user.save({ transaction });
     }
+    // Persiste o usuario sempre (moedas mudam toda rodada).
+    await user.save({ transaction });
 
     // Log imutavel da rodada que acabou de ser jogada.
     const roundLog = await RoundLog.create(
@@ -385,6 +400,8 @@ const finalizeRound = async (input: FinalizeRoundInput): Promise<RoundResolution
       matchEnded,
       trophiesDelta,
       trophies: user.trophies,
+      coinsEarned,
+      coins: user.coins,
       userVictory: user.victory,
       userDefeat: user.defeat,
       isGuest: user.is_guest,
@@ -410,21 +427,39 @@ export const jogarRodada = async (
 
   const playerSnapshot = await loadOrCreateSnapshot(userId, snapshotId);
 
+  // RN006: evita repetir o mesmo fantasma — coleta os adversarios ja enfrentados.
+  const facedLogs = await RoundLog.findAll({
+    where: { user_id: userId },
+    attributes: ['opponent_snapshot_id']
+  });
+  const facedSnapshotIds = facedLogs
+    .map((log) => log.opponent_snapshot_id)
+    .filter((id): id is number => typeof id === 'number');
+
   let opponentSnapshot: TeamSnapshot;
   let delta = 0;
   let windowUsed = 0;
 
   try {
-    const match = await findOpponentSnapshot(playerSnapshot);
+    let match;
+    try {
+      match = await findOpponentSnapshot(playerSnapshot, {
+        excludeSnapshotIds: facedSnapshotIds
+      });
+    } catch (error) {
+      // Pool pequeno: se todos ja foram enfrentados, permite repetir adversario.
+      if (error instanceof MatchmakingError && facedSnapshotIds.length > 0) {
+        match = await findOpponentSnapshot(playerSnapshot);
+      } else {
+        throw error;
+      }
+    }
     opponentSnapshot = match.opponent;
     delta = match.delta;
     windowUsed = match.windowUsed;
   } catch (error) {
     if (error instanceof MatchmakingError) {
-      throw new RodadaServiceError(
-        'NO_OPPONENT_FOUND',
-        error.message
-      );
+      throw new RodadaServiceError('NO_OPPONENT_FOUND', error.message);
     }
     throw error;
   }
@@ -475,6 +510,8 @@ export const jogarRodada = async (
       matchEnded: resolution.matchEnded,
       trophiesDelta: resolution.trophiesDelta,
       trophies: resolution.trophies,
+      coinsEarned: resolution.coinsEarned,
+      coins: resolution.coins,
       userVictory: resolution.userVictory,
       userDefeat: resolution.userDefeat,
       isGuest: resolution.isGuest,

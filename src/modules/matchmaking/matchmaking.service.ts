@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op, type Order } from 'sequelize';
 
 import { sequelize } from '../../config/database';
 import { TeamSnapshot } from '../../database/models';
@@ -10,7 +10,7 @@ import { TeamSnapshot } from '../../database/models';
  */
 const VICTORY_RATIO_WINDOWS = [0.05, 0.1, 0.2, 0.35, 1] as const;
 
-const MATCHMAKING_QUERY_LIMIT = 5;
+const MATCHMAKING_QUERY_LIMIT = 10;
 
 export type MatchmakingErrorCode = 'NO_OPPONENT_FOUND';
 
@@ -29,44 +29,68 @@ export type MatchmakingResult = {
   windowUsed: number;
 };
 
+export type FindOpponentOptions = {
+  /** IDs de snapshots ja enfrentados — evita repetir o mesmo fantasma. */
+  excludeSnapshotIds?: number[];
+};
+
 /**
- * Calcula a razao vitoria/(vitoria+derrota) usada como criterio de balanceamento.
- * Adicionamos 1 ao denominador para suavizar contas com poucas partidas.
+ * RN006 — proporcao de vitorias considerando TODAS as rodadas jogadas
+ * (vitorias + derrotas + empates). Empates contam como rodada jogada, entao
+ * nao inflam o ratio mas aproximam jogadores com volume de partidas parecido.
  */
-export const computeVictoryRatio = (victory: number, lose: number): number => {
-  const total = victory + lose;
+export const computeVictoryRatio = (
+  victory: number,
+  lose: number,
+  draw = 0
+): number => {
+  const total = victory + lose + draw;
   if (total <= 0) {
     return 0;
   }
   return victory / total;
 };
 
+/** Rodadas ja jogadas por um snapshot (RN006 — "rodadas ja jogadas"). */
+const roundsPlayed = (snapshot: TeamSnapshot): number =>
+  (snapshot.victory ?? 0) + (snapshot.lose ?? 0) + (snapshot.draw ?? 0);
+
 /**
- * RN006: dado o snapshot do jogador, busca o snapshot mais recente de outro
- * usuario cuja proporcao vitoria/derrotas seja proxima. Usa janelas
- * progressivas e respeita um limit pequeno para nao travar a requisicao.
+ * RN006: dado o snapshot do jogador, busca o snapshot de outro usuario cuja
+ * proporcao vitoria/rodadas seja proxima. Usa janelas progressivas e, dentro de
+ * cada janela, prioriza tambem quem tem numero de rodadas jogadas semelhante.
+ * Snapshots ja enfrentados (excludeSnapshotIds) sao ignorados.
  */
 export const findOpponentSnapshot = async (
-  playerSnapshot: TeamSnapshot
+  playerSnapshot: TeamSnapshot,
+  options: FindOpponentOptions = {}
 ): Promise<MatchmakingResult> => {
   const ratio = Number(playerSnapshot.victory_ratio ?? 0);
+  const playerRounds = roundsPlayed(playerSnapshot);
+  const excluded = [playerSnapshot.id, ...(options.excludeSnapshotIds ?? [])];
+
+  // Ordena por proximidade de ratio e, em empate, por proximidade de rodadas
+  // jogadas (RN006); por fim pelo snapshot mais recente.
+  // CAST p/ SIGNED evita underflow de BIGINT UNSIGNED quando a soma < playerRounds.
+  const order: Order = [
+    [sequelize.literal(`ABS(victory_ratio - ${ratio})`), 'ASC'],
+    [
+      sequelize.literal(`ABS(CAST(victory + lose + draw AS SIGNED) - ${playerRounds})`),
+      'ASC'
+    ],
+    ['created_at', 'DESC']
+  ];
 
   for (const window of VICTORY_RATIO_WINDOWS) {
     const candidate = await TeamSnapshot.findOne({
       where: {
         user_id: { [Op.ne]: playerSnapshot.user_id },
-        id: { [Op.ne]: playerSnapshot.id },
+        id: { [Op.notIn]: excluded },
         victory_ratio: {
-          [Op.between]: [
-            Math.max(0, ratio - window),
-            Math.min(1, ratio + window)
-          ]
+          [Op.between]: [Math.max(0, ratio - window), Math.min(1, ratio + window)]
         }
       },
-      order: [
-        [sequelize.literal(`ABS(victory_ratio - ${ratio})`), 'ASC'],
-        ['created_at', 'DESC']
-      ],
+      order,
       limit: 1,
       subQuery: false
     });
@@ -79,21 +103,20 @@ export const findOpponentSnapshot = async (
       };
     }
 
-    // Heuristica: ao expandir a janela, ainda limitamos a busca por tempo
-    // examinando apenas N candidatos para nao varrer o banco inteiro.
+    // Fallback: examina apenas N candidatos recentes (fora os excluidos) para
+    // nao varrer o banco inteiro ao expandir a janela.
     const sampled = await TeamSnapshot.findAll({
       where: {
         user_id: { [Op.ne]: playerSnapshot.user_id },
-        id: { [Op.ne]: playerSnapshot.id }
+        id: { [Op.notIn]: excluded }
       },
       order: [['created_at', 'DESC']],
       limit: MATCHMAKING_QUERY_LIMIT
     });
 
-    const candidateInSample = sampled.find((snap) => {
-      const diff = Math.abs(Number(snap.victory_ratio) - ratio);
-      return diff <= window;
-    });
+    const candidateInSample = sampled.find(
+      (snap) => Math.abs(Number(snap.victory_ratio) - ratio) <= window
+    );
 
     if (candidateInSample) {
       return {
