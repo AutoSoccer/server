@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   applyTrophies,
+  COINS_PER_ROUND,
+  COINS_WIN_BONUS,
+  coinsForRound,
   LOSSES_TO_LOSE_MATCH,
   resolveMatchStatus,
   TROPHIES_ON_LOSS,
@@ -50,5 +53,16 @@ describe('applyTrophies', () => {
   it('nunca deixa o total negativo (coluna UNSIGNED)', () => {
     expect(applyTrophies(10, -15)).toBe(0);
     expect(applyTrophies(0, -30)).toBe(0);
+  });
+});
+
+describe('coinsForRound (RF010)', () => {
+  it('paga base por rodada jogada em empate e derrota', () => {
+    expect(coinsForRound('draw')).toBe(COINS_PER_ROUND);
+    expect(coinsForRound('opponent')).toBe(COINS_PER_ROUND);
+  });
+
+  it('paga base + bonus ao vencer a rodada', () => {
+    expect(coinsForRound('player')).toBe(COINS_PER_ROUND + COINS_WIN_BONUS);
   });
 });

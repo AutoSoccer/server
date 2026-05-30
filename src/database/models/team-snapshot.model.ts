@@ -40,6 +40,7 @@ export class TeamSnapshot extends Model<
   declare round: CreationOptional<number>;
   declare victory: CreationOptional<number>;
   declare lose: CreationOptional<number>;
+  declare draw: CreationOptional<number>;
   declare victory_ratio: CreationOptional<number>;
   declare positions: SnapshotPositions;
   declare created_at: CreationOptional<Date>;
@@ -73,6 +74,11 @@ TeamSnapshot.init(
       defaultValue: 0
     },
     lose: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 0
+    },
+    draw: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       defaultValue: 0

@@ -2,7 +2,6 @@ import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
 import { authenticate } from '../auth/auth.middleware';
-import { PartidaServiceError, simulateMatch } from './partida.service';
 import { jogarRodada, RodadaServiceError } from './rodada.service';
 
 type JogarRodadaBody = {
@@ -67,32 +66,6 @@ const turnEventSchema = {
   }
 } as const;
 
-const matchResultSchema = {
-  type: 'object',
-  properties: {
-    player: teamDtoSchema,
-    opponent: teamDtoSchema,
-    score: {
-      type: 'object',
-      properties: {
-        player: { type: 'integer', example: 1 },
-        opponent: { type: 'integer', example: 0 }
-      }
-    },
-    winner: { type: 'string', enum: ['player', 'opponent', 'draw'] },
-    totalTurns: { type: 'integer', example: 12 },
-    events: { type: 'array', items: turnEventSchema },
-    persisted: {
-      type: 'object',
-      properties: {
-        teamId: { type: 'integer' },
-        victory: { type: 'integer' },
-        lose: { type: 'integer' }
-      }
-    }
-  }
-} as const;
-
 const rodadaResultSchema = {
   type: 'object',
   properties: {
@@ -146,6 +119,8 @@ const rodadaResultSchema = {
         matchEnded: { type: 'boolean' },
         trophiesDelta: { type: 'integer' },
         trophies: { type: 'integer' },
+        coinsEarned: { type: 'integer', description: 'Moedas ganhas nesta rodada (RF010)' },
+        coins: { type: 'integer', description: 'Saldo de moedas apos a rodada' },
         userVictory: { type: 'integer' },
         userDefeat: { type: 'integer' },
         isGuest: { type: 'boolean' },
@@ -164,40 +139,6 @@ const errorSchema = {
 } as const;
 
 export const partidaRoutes: FastifyPluginAsync = async (app) => {
-  app.post(
-    '/simular',
-    {
-      preHandler: [authenticate],
-      schema: {
-        tags: ['Partida'],
-        summary:
-          'Simula uma partida de 12 turnos contra um adversario gerado automaticamente',
-        description:
-          'Carrega o time autenticado, gera um adversario sintetico com atletas aleatorios, executa o motor de simulacao (Task 4.2) e persiste victory/lose no time.',
-        security: [{ BearerAuth: [] }],
-        response: {
-          200: matchResultSchema,
-          400: errorSchema,
-          404: errorSchema
-        }
-      }
-    },
-    async (request, reply) => {
-      try {
-        const result = await simulateMatch(request.user!.id);
-        return reply.code(200).send(result);
-      } catch (error: unknown) {
-        if (error instanceof PartidaServiceError) {
-          const status = error.code === 'TEAM_NOT_FOUND' ? 404 : 400;
-          return reply
-            .code(status)
-            .send({ message: error.message, code: error.code });
-        }
-        throw error;
-      }
-    }
-  );
-
   app.post<{ Body: JogarRodadaBody }>(
     '/jogar-rodada',
     {
