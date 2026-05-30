@@ -2,6 +2,7 @@ import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { authRoutes } from './modules/auth/auth.routes';
 import { equipeRoutes } from './modules/equipe/equipe.routes';
+import { itensRoutes } from './modules/itens/itens.routes';
 import { mercadoRoutes } from './modules/mercado/mercado.routes';
 import { partidaRoutes } from './modules/partida/partida.routes';
 import { registerSwagger } from './plugins/swagger';
@@ -58,6 +59,10 @@ export const buildApp = async (): Promise<FastifyInstance> => {
 
   await app.register(equipeRoutes, {
     prefix: '/equipe'
+  });
+
+  await app.register(itensRoutes, {
+    prefix: '/itens'
   });
 
   await app.register(partidaRoutes, {
