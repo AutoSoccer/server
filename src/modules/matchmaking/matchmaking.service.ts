@@ -71,9 +71,13 @@ export const findOpponentSnapshot = async (
 
   // Ordena por proximidade de ratio e, em empate, por proximidade de rodadas
   // jogadas (RN006); por fim pelo snapshot mais recente.
+  // CAST p/ SIGNED evita underflow de BIGINT UNSIGNED quando a soma < playerRounds.
   const order: Order = [
     [sequelize.literal(`ABS(victory_ratio - ${ratio})`), 'ASC'],
-    [sequelize.literal(`ABS((victory + lose + draw) - ${playerRounds})`), 'ASC'],
+    [
+      sequelize.literal(`ABS(CAST(victory + lose + draw AS SIGNED) - ${playerRounds})`),
+      'ASC'
+    ],
     ['created_at', 'DESC']
   ];
 
