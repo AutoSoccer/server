@@ -2,6 +2,7 @@ import { Ability } from './ability.model';
 import { Athlete, ATHLETE_TIERS, ATHLETE_TYPES } from './athlete.model';
 import { Item } from './item.model';
 import { MarketWindow } from './market-window.model';
+import { RoundLog } from './round-log.model';
 import { TeamAthlete } from './team-athlete.model';
 import { TeamSnapshot } from './team-snapshot.model';
 import { Team } from './team.model';
@@ -102,6 +103,26 @@ UserItem.belongsTo(Item, {
   as: 'item'
 });
 
+User.hasMany(RoundLog, {
+  foreignKey: 'user_id',
+  as: 'roundLogs'
+});
+
+RoundLog.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
+Team.hasMany(RoundLog, {
+  foreignKey: 'team_id',
+  as: 'roundLogs'
+});
+
+RoundLog.belongsTo(Team, {
+  foreignKey: 'team_id',
+  as: 'team'
+});
+
 export {
   Ability,
   Athlete,
@@ -109,6 +130,7 @@ export {
   ATHLETE_TYPES,
   Item,
   MarketWindow,
+  RoundLog,
   Team,
   TeamAthlete,
   TeamSnapshot,
