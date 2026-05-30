@@ -164,6 +164,14 @@ export const registerUser = async (input: RegisterInput): Promise<AuthResponse> 
  * token JWT para jogar sem cadastro. Convidados nao contabilizam trofeus
  * (tratado no fim da partida) nem entram no ranking geral.
  */
+/**
+ * RF005/RF010 — saldo inicial do convidado.
+ * Com o padrao (1000) e os precos do mercado (ate 500/atleta), o convidado
+ * costuma nao fechar os 6 atletas exigidos para a 1a partida. Damos saldo
+ * suficiente para escalar 6 atletas medianos (~6x gold = 1500) com folga.
+ */
+export const GUEST_INITIAL_COINS = 2500;
+
 export const createGuest = async (): Promise<AuthResponse> => {
   // nickname tem limite de 20 chars; "guest_" + 12 = 18 cabe com folga.
   const makeSuffix = (): string =>
@@ -185,6 +193,7 @@ export const createGuest = async (): Promise<AuthResponse> => {
         victory: 0,
         defeat: 0,
         trophies: 0,
+        coins: GUEST_INITIAL_COINS,
         is_guest: true
       });
 
