@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op, type Order } from 'sequelize';
 
 import { sequelize } from '../../config/database';
 import { TeamSnapshot } from '../../database/models';
@@ -71,13 +71,10 @@ export const findOpponentSnapshot = async (
 
   // Ordena por proximidade de ratio e, em empate, por proximidade de rodadas
   // jogadas (RN006); por fim pelo snapshot mais recente.
-  const order = [
-    [sequelize.literal(`ABS(victory_ratio - ${ratio})`), 'ASC'] as const,
-    [
-      sequelize.literal(`ABS((victory + lose + draw) - ${playerRounds})`),
-      'ASC'
-    ] as const,
-    ['created_at', 'DESC'] as const
+  const order: Order = [
+    [sequelize.literal(`ABS(victory_ratio - ${ratio})`), 'ASC'],
+    [sequelize.literal(`ABS((victory + lose + draw) - ${playerRounds})`), 'ASC'],
+    ['created_at', 'DESC']
   ];
 
   for (const window of VICTORY_RATIO_WINDOWS) {
