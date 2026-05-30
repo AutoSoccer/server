@@ -137,6 +137,20 @@ const rodadaResultSchema = {
         lose: { type: 'integer' },
         round: { type: 'integer' }
       }
+    },
+    resolution: {
+      type: 'object',
+      description: 'Resolucao da partida (RN001/RN002) e trofeus (RF004/RF005)',
+      properties: {
+        matchStatus: { type: 'string', enum: ['in_progress', 'won', 'lost'] },
+        matchEnded: { type: 'boolean' },
+        trophiesDelta: { type: 'integer' },
+        trophies: { type: 'integer' },
+        userVictory: { type: 'integer' },
+        userDefeat: { type: 'integer' },
+        isGuest: { type: 'boolean' },
+        roundLogId: { type: 'integer' }
+      }
     }
   }
 } as const;
@@ -244,7 +258,8 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
           let status = 400;
           if (
             error.code === 'TEAM_NOT_FOUND' ||
-            error.code === 'SNAPSHOT_NOT_FOUND'
+            error.code === 'SNAPSHOT_NOT_FOUND' ||
+            error.code === 'USER_NOT_FOUND'
           ) {
             status = 404;
           } else if (error.code === 'SNAPSHOT_FORBIDDEN') {

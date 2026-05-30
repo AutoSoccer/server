@@ -1,8 +1,10 @@
 import { sequelize } from '../../config/database';
 import {
   Athlete as AthleteModel,
+  RoundLog,
   Team,
-  TeamSnapshot
+  TeamSnapshot,
+  User
 } from '../../database/models';
 import {
   type SnapshotAthlete,
@@ -13,6 +15,12 @@ import {
   findOpponentSnapshot,
   MatchmakingError
 } from '../matchmaking/matchmaking.service';
+import {
+  applyTrophies,
+  type MatchStatus,
+  resolveMatchStatus,
+  trophiesForStatus
+} from './rodada.logic';
 import {
   Athlete as SimAthlete,
   type MatchResult,
@@ -30,7 +38,8 @@ export type RodadaServiceErrorCode =
   | 'TEAM_EMPTY'
   | 'SNAPSHOT_NOT_FOUND'
   | 'SNAPSHOT_FORBIDDEN'
-  | 'NO_OPPONENT_FOUND';
+  | 'NO_OPPONENT_FOUND'
+  | 'USER_NOT_FOUND';
 
 export class RodadaServiceError extends Error {
   public readonly code: RodadaServiceErrorCode;
@@ -65,6 +74,16 @@ export type JogarRodadaResult = MatchResult & {
     victory: number;
     lose: number;
     round: number;
+  };
+  resolution: {
+    matchStatus: MatchStatus;
+    matchEnded: boolean;
+    trophiesDelta: number;
+    trophies: number;
+    userVictory: number;
+    userDefeat: number;
+    isGuest: boolean;
+    roundLogId: number;
   };
 };
 
@@ -258,23 +277,118 @@ const computeInitiative = (
   };
 };
 
-const persistResultOnPlayer = async (
-  team: Team,
-  winner: MatchResult['winner']
-): Promise<{ teamId: number; victory: number; lose: number; round: number }> => {
+type RoundResolution = {
+  persisted: { teamId: number; victory: number; lose: number; round: number };
+  matchStatus: MatchStatus;
+  matchEnded: boolean;
+  trophiesDelta: number;
+  trophies: number;
+  userVictory: number;
+  userDefeat: number;
+  isGuest: boolean;
+  roundLogId: number;
+};
+
+type FinalizeRoundInput = {
+  userId: number;
+  teamId: number;
+  result: MatchResult;
+  playerSnapshotId: number;
+  opponentSnapshotId: number;
+};
+
+/**
+ * Task 4.6 — encerra a rodada e aplica as consequencias numa unica transacao:
+ *  - atualiza victory/lose/round do time (progresso da partida);
+ *  - grava o log da rodada (round_logs);
+ *  - RN001/RN002: detecta o fim da partida (7 vitorias ou 4 derrotas);
+ *  - RF004/RF005: ao encerrar, soma/subtrai trofeus e atualiza o perfil do
+ *    usuario, exceto convidado (is_guest); zera o progresso para a proxima.
+ */
+const finalizeRound = async (input: FinalizeRoundInput): Promise<RoundResolution> => {
   return sequelize.transaction(async (transaction) => {
+    const team = await Team.findByPk(input.teamId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE
+    });
+    if (!team) {
+      throw new RodadaServiceError('TEAM_NOT_FOUND', 'Time do jogador nao encontrado.');
+    }
+
+    const user = await User.findByPk(input.userId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE
+    });
+    if (!user) {
+      throw new RodadaServiceError('USER_NOT_FOUND', 'Usuario nao encontrado.');
+    }
+
+    const winner = input.result.winner;
+    const playedRound = team.round ?? 1;
+
     if (winner === 'player') {
       team.victory = (team.victory ?? 0) + 1;
     } else if (winner === 'opponent') {
       team.lose = (team.lose ?? 0) + 1;
     }
-    team.round = (team.round ?? 1) + 1;
+    team.round = playedRound + 1;
+
+    const matchStatus = resolveMatchStatus(team.victory, team.lose);
+    const matchEnded = matchStatus !== 'in_progress';
+
+    // RF004/RF005: trofeus e perfil so mudam ao encerrar a partida e se nao for convidado.
+    let trophiesDelta = 0;
+    if (matchEnded && !user.is_guest) {
+      trophiesDelta = trophiesForStatus(matchStatus);
+      user.trophies = applyTrophies(user.trophies, trophiesDelta);
+      if (matchStatus === 'won') {
+        user.victory = (user.victory ?? 0) + 1;
+      } else {
+        user.defeat = (user.defeat ?? 0) + 1;
+      }
+      await user.save({ transaction });
+    }
+
+    // Log imutavel da rodada que acabou de ser jogada.
+    const roundLog = await RoundLog.create(
+      {
+        user_id: user.id,
+        team_id: team.id,
+        snapshot_id: input.playerSnapshotId,
+        opponent_snapshot_id: input.opponentSnapshotId,
+        round: playedRound,
+        winner,
+        player_score: input.result.score.player,
+        opponent_score: input.result.score.opponent,
+        match_status: matchStatus,
+        trophies_delta: trophiesDelta
+      },
+      { transaction }
+    );
+
+    // RN001/RN002: encerrando a partida, zera o progresso para a proxima campanha.
+    if (matchEnded) {
+      team.victory = 0;
+      team.lose = 0;
+      team.round = 1;
+    }
     await team.save({ transaction });
+
     return {
-      teamId: team.id,
-      victory: team.victory,
-      lose: team.lose,
-      round: team.round
+      persisted: {
+        teamId: team.id,
+        victory: team.victory,
+        lose: team.lose,
+        round: team.round
+      },
+      matchStatus,
+      matchEnded,
+      trophiesDelta,
+      trophies: user.trophies,
+      userVictory: user.victory,
+      userDefeat: user.defeat,
+      isGuest: user.is_guest,
+      roundLogId: roundLog.id
     };
   });
 };
@@ -336,7 +450,13 @@ export const jogarRodada = async (
     initialPossession: initiative.startsWith
   });
 
-  const persisted = await persistResultOnPlayer(playerTeam, result.winner);
+  const resolution = await finalizeRound({
+    userId,
+    teamId: playerTeam.id,
+    result,
+    playerSnapshotId: playerSnapshot.id,
+    opponentSnapshotId: opponentSnapshot.id
+  });
 
   return {
     ...result,
@@ -349,6 +469,16 @@ export const jogarRodada = async (
       windowUsed
     },
     initiative,
-    persisted
+    persisted: resolution.persisted,
+    resolution: {
+      matchStatus: resolution.matchStatus,
+      matchEnded: resolution.matchEnded,
+      trophiesDelta: resolution.trophiesDelta,
+      trophies: resolution.trophies,
+      userVictory: resolution.userVictory,
+      userDefeat: resolution.userDefeat,
+      isGuest: resolution.isGuest,
+      roundLogId: resolution.roundLogId
+    }
   };
 };

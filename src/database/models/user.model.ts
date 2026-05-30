@@ -19,6 +19,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare defeat: CreationOptional<number>;
   declare trophies: CreationOptional<number>;
   declare coins: CreationOptional<number>;
+  declare is_guest: CreationOptional<boolean>;
 }
 
 User.init(
@@ -70,6 +71,11 @@ User.init(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       defaultValue: 1000
+    },
+    is_guest: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   },
   {
