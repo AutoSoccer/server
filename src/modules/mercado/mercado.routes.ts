@@ -22,6 +22,7 @@ const marketAthleteSchema = {
       enum: ['goalkeeper', 'defender', 'attacker']
     },
     overall: { type: 'integer' },
+    cost: { type: 'integer' },
     status: { type: 'string', enum: ['MARKET', 'OWNED'] }
   }
 } as const;
