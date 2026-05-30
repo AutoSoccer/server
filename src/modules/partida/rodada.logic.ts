@@ -1,9 +1,22 @@
 export type MatchStatus = 'in_progress' | 'won' | 'lost';
+export type RoundWinner = 'player' | 'opponent' | 'draw';
 
 /** RN001: vitorias de rodada necessarias para vencer a partida. */
 export const WINS_TO_WIN_MATCH = 7;
 /** RN002: derrotas de rodada que encerram a partida com derrota. */
 export const LOSSES_TO_LOSE_MATCH = 4;
+
+/** RF010: moedas creditadas por rodada jogada, independentemente do resultado. */
+export const COINS_PER_ROUND = 50;
+/** RF010: bonus de moedas por vencer a rodada. */
+export const COINS_WIN_BONUS = 50;
+
+/**
+ * RF010 — recompensa de moedas ao fim de uma rodada. Toda rodada jogada paga uma
+ * base (mantem a economia girando) e a vitoria adiciona um bonus.
+ */
+export const coinsForRound = (winner: RoundWinner): number =>
+  COINS_PER_ROUND + (winner === 'player' ? COINS_WIN_BONUS : 0);
 
 /** RF004: trofeus ganhos ao vencer a partida. */
 export const TROPHIES_ON_WIN = 30;
