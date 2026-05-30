@@ -1,6 +1,9 @@
+import { retreatOnPossessionLoss } from './movement';
+import { strategyForBallRow } from './strategies';
 import {
   Athlete,
   type BallRow,
+  type DisputeOutcome,
   type MatchResult,
   type MatchWinner,
   type Possession,
@@ -11,29 +14,20 @@ import {
 } from './types';
 
 /**
- * RN008: a partida deve durar exatamente 12 turnos automaticos.
- * Esta constante e usada como default e pode ser sobrescrita apenas em
- * cenarios de teste atraves de SimulationOptions.totalTurns.
+ * RN008: a partida dura no maximo 12 turnos automaticos. A rodada pode encerrar
+ * antes por gol (RN007). Constante usada como default, sobrescrita apenas em testes.
  */
 export const TOTAL_TURNS = 12;
 
-const ATTRIBUTE_WEIGHT = 0.6;
-const ROLL_WINDOW = 40;
-
 const defaultRandom: RandomFn = Math.random;
 
-const cloneTeam = (team: TeamDTO): TeamDTO =>
-  JSON.parse(JSON.stringify(team)) as TeamDTO;
-
-const rollFor = (value: number, rng: RandomFn): number =>
-  value * ATTRIBUTE_WEIGHT + rng() * ROLL_WINDOW;
+const cloneTeam = (team: TeamDTO): TeamDTO => JSON.parse(JSON.stringify(team)) as TeamDTO;
 
 const pickRandom = <T>(items: T[], rng: RandomFn): T | undefined => {
   if (items.length === 0) {
     return undefined;
   }
-  const index = Math.floor(rng() * items.length);
-  return items[index];
+  return items[Math.floor(rng() * items.length)];
 };
 
 const getRowAthletes = (team: TeamDTO, row: number): Athlete[] => {
@@ -56,57 +50,39 @@ const collectAllPositioned = (team: TeamDTO): Athlete[] => {
   return result;
 };
 
-/**
- * RN011: ao perder a posse na linha de ataque, o atleta deve retornar
- * para uma vaga livre na linha de defesa do proprio time.
- */
-const moveAthleteToDefense = (team: TeamDTO, athleteId: number): boolean => {
-  for (let row = 0; row < team.athletesPositions.length; row++) {
-    const cols = team.athletesPositions[row];
-    for (let col = 0; col < cols.length; col++) {
-      const entry = cols[col];
-      if (entry && entry.id === athleteId && row !== 0) {
-        const defenseRow = team.athletesPositions[0];
-        const freeCol = defenseRow.findIndex((slot) => slot === null);
-        if (freeCol === -1) {
-          return false;
-        }
-        cols[col] = null;
-        defenseRow[freeCol] = entry;
-        return true;
-      }
-    }
-  }
-  return false;
-};
-
-const getAttribute = (athlete: Athlete | undefined, attr: keyof Athlete): number => {
-  if (!athlete) {
-    return 0;
-  }
-  const value = athlete[attr];
-  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
-    return value;
-  }
-  return 50;
-};
-
 const togglePossession = (possession: Possession): Possession =>
   possession === 'player' ? 'opponent' : 'player';
 
-const buildEvent = (base: Omit<TurnEvent, 'description'> & { description?: string }): TurnEvent => ({
-  ...base,
-  description: base.description ?? ''
-});
+const describeDispute = (
+  strategyName: string,
+  attacker: Athlete,
+  defender: Athlete | undefined,
+  outcome: DisputeOutcome,
+  goal: boolean
+): string => {
+  const chance = Math.round(outcome.successChance * 100);
+  const roll = outcome.roll.toFixed(2);
+  const marker = defender
+    ? `${defender.name} (${outcome.defenderAttribute})`
+    : 'sem marcacao';
+  const tail = `${strategyName}, ${chance}% chance, sorteio ${roll}`;
+  if (goal) {
+    return `GOL! ${attacker.name} (${outcome.attackerAttribute}) vence ${marker} — ${tail}.`;
+  }
+  if (outcome.success) {
+    return `${attacker.name} (${outcome.attackerAttribute}) supera ${marker} — ${tail}.`;
+  }
+  return `${marker} interrompe ${attacker.name} (${outcome.attackerAttribute}) — ${tail}.`;
+};
 
 /**
- * Motor de simulacao de partida (Task 4.2).
+ * Motor de simulacao de partida (Tasks 4.2 + 4.5).
  *
- * Executa estruturalmente TOTAL_TURNS turnos consecutivos (RN008) entre o
- * time do jogador e um adversario, decidindo cada disputa via RNG +
- * atributos (RN012), atualizando o posicionamento do atleta vencido em
- * ataque para a defesa (RN011) e contabilizando gols quando a posse
- * vence a ultima linha adversaria (RN003 / RN004).
+ * Executa ate TOTAL_TURNS turnos consecutivos (RN008) entre o time do jogador e
+ * um adversario, resolvendo cada disputa por uma Strategy (RN012) que considera
+ * os buffs de itens, recuando o atleta vencido em ataque (RN011, salvo habilidade
+ * especial) e encerrando IMEDIATAMENTE a rodada quando ha gol (RN003/RN004/RN007).
+ * Se nenhum gol sai em 12 turnos, a rodada termina empatada 0x0 (RN005).
  */
 export const processarRodada = (
   equipePlayer: TeamDTO,
@@ -129,8 +105,11 @@ export const processarRodada = (
   let possession: Possession =
     options.initialPossession ?? (rng() < 0.5 ? 'player' : 'opponent');
   let ballRow: BallRow = 0;
+  let turnsPlayed = 0;
 
   for (let turn = 1; turn <= totalTurns; turn++) {
+    turnsPlayed = turn;
+
     const attackingTeam = possession === 'player' ? player : opponent;
     const defendingTeam = possession === 'player' ? opponent : player;
 
@@ -140,25 +119,23 @@ export const processarRodada = (
     }
 
     if (attackers.length === 0) {
-      events.push(
-        buildEvent({
-          turn,
-          possession,
-          ballRow,
-          kind: 'turnover',
-          attackerTeamId: attackingTeam.id,
-          defenderTeamId: defendingTeam.id,
-          attackerId: null,
-          attackerName: null,
-          defenderId: null,
-          defenderName: null,
-          attackerRoll: 0,
-          defenderRoll: 0,
-          success: false,
-          goal: false,
-          description: `${attackingTeam.name} sem atletas em campo; posse para ${defendingTeam.name}.`
-        })
-      );
+      events.push({
+        turn,
+        possession,
+        ballRow,
+        kind: 'turnover',
+        attackerTeamId: attackingTeam.id,
+        defenderTeamId: defendingTeam.id,
+        attackerId: null,
+        attackerName: null,
+        defenderId: null,
+        defenderName: null,
+        attackerRoll: 0,
+        defenderRoll: 0,
+        success: false,
+        goal: false,
+        description: `${attackingTeam.name} sem atletas em campo; posse para ${defendingTeam.name}.`
+      });
       possession = togglePossession(possession);
       ballRow = 0;
       continue;
@@ -166,112 +143,77 @@ export const processarRodada = (
 
     const attacker = pickRandom(attackers, rng)!;
 
+    const defendersInRow = getRowAthletes(defendingTeam, ballRow);
     const defenders =
-      getRowAthletes(defendingTeam, ballRow).length > 0
-        ? getRowAthletes(defendingTeam, ballRow)
-        : collectAllPositioned(defendingTeam);
-
+      defendersInRow.length > 0 ? defendersInRow : collectAllPositioned(defendingTeam);
     const defender = pickRandom(defenders, rng);
 
-    const isShot = ballRow === 2;
-    const attackerAttr = getAttribute(attacker, isShot ? 'attack' : 'velocity');
-    const defenderAttr = getAttribute(defender, 'defense');
+    const strategy = strategyForBallRow(ballRow);
+    const outcome = strategy.resolve(attacker, defender, rng);
 
-    const attackerRoll = rollFor(attackerAttr, rng);
-    const defenderRoll = defender ? rollFor(defenderAttr, rng) : 0;
-    const attackerWins = attackerRoll > defenderRoll;
+    const baseEvent = {
+      turn,
+      possession,
+      ballRow,
+      attackerTeamId: attackingTeam.id,
+      defenderTeamId: defendingTeam.id,
+      attackerId: attacker.id,
+      attackerName: attacker.name,
+      defenderId: defender?.id ?? null,
+      defenderName: defender?.name ?? null,
+      attackerRoll: outcome.attackerAttribute,
+      defenderRoll: outcome.defenderAttribute
+    };
 
-    if (attackerWins && isShot) {
-      // RN003 / RN004: vencer a ultima linha adversaria computa um gol.
+    if (outcome.goal) {
+      // RN003 / RN004: vencer a ultima linha computa um gol.
       if (possession === 'player') {
         score.player += 1;
       } else {
         score.opponent += 1;
       }
-
-      events.push(
-        buildEvent({
-          turn,
-          possession,
-          ballRow,
-          kind: 'shot',
-          attackerTeamId: attackingTeam.id,
-          defenderTeamId: defendingTeam.id,
-          attackerId: attacker.id,
-          attackerName: attacker.name,
-          defenderId: defender?.id ?? null,
-          defenderName: defender?.name ?? null,
-          attackerRoll,
-          defenderRoll,
-          success: true,
-          goal: true,
-          description: `GOL! ${attacker.name} (${attackingTeam.name}) vence ${defender?.name ?? 'sem marcacao'} (${defendingTeam.name}).`
-        })
-      );
-
-      // Reinicia jogada com a posse no adversario.
-      possession = togglePossession(possession);
-      ballRow = 0;
-      continue;
+      events.push({
+        ...baseEvent,
+        kind: 'shot',
+        success: true,
+        goal: true,
+        description: describeDispute(strategy.name, attacker, defender, outcome, true)
+      });
+      // RN007: o gol encerra a rodada imediatamente.
+      break;
     }
 
-    if (attackerWins) {
-      // RN011: a bola avanca uma linha mantendo a posse.
-      events.push(
-        buildEvent({
-          turn,
-          possession,
-          ballRow,
-          kind: 'pass',
-          attackerTeamId: attackingTeam.id,
-          defenderTeamId: defendingTeam.id,
-          attackerId: attacker.id,
-          attackerName: attacker.name,
-          defenderId: defender?.id ?? null,
-          defenderName: defender?.name ?? null,
-          attackerRoll,
-          defenderRoll,
-          success: true,
-          goal: false,
-          description: `${attacker.name} (${attackingTeam.name}) avanca contra ${defender?.name ?? 'a marcacao'}.`
-        })
-      );
+    if (outcome.success) {
+      // A bola avanca uma linha mantendo a posse.
+      events.push({
+        ...baseEvent,
+        kind: strategy.successKind,
+        success: true,
+        goal: false,
+        description: describeDispute(strategy.name, attacker, defender, outcome, false)
+      });
       ballRow = Math.min(ballRow + 1, 2) as BallRow;
       continue;
     }
 
     // Defesa vence — perda de posse.
-    events.push(
-      buildEvent({
-        turn,
-        possession,
-        ballRow,
-        kind: 'tackle',
-        attackerTeamId: attackingTeam.id,
-        defenderTeamId: defendingTeam.id,
-        attackerId: attacker.id,
-        attackerName: attacker.name,
-        defenderId: defender?.id ?? null,
-        defenderName: defender?.name ?? null,
-        attackerRoll,
-        defenderRoll,
-        success: false,
-        goal: false,
-        description: `${defender?.name ?? 'A defesa'} (${defendingTeam.name}) intercepta ${attacker.name}.`
-      })
-    );
+    events.push({
+      ...baseEvent,
+      kind: 'tackle',
+      success: false,
+      goal: false,
+      description: describeDispute(strategy.name, attacker, defender, outcome, false)
+    });
 
-    // RN011: se a perda for na linha de ataque, o atleta retorna para a defesa.
-    if (isShot) {
-      moveAthleteToDefense(attackingTeam, attacker.id);
-    }
+    // RN011: perda na linha de ataque recua o atleta, salvo habilidade especial.
+    retreatOnPossessionLoss(attackingTeam, attacker, ballRow);
 
     possession = togglePossession(possession);
     ballRow = 0;
   }
 
-  player.turn = totalTurns;
-  opponent.turn = totalTurns;
+  player.turn = turnsPlayed;
+  opponent.turn = turnsPlayed;
 
   let winner: MatchWinner;
   if (score.player > score.opponent) {
@@ -283,6 +225,7 @@ export const processarRodada = (
     opponent.victorys += 1;
     player.loses += 1;
   } else {
+    // RN005: nenhum gol em 12 turnos => empate 0x0.
     winner = 'draw';
   }
 
@@ -291,13 +234,13 @@ export const processarRodada = (
     opponent,
     score,
     winner,
-    totalTurns,
+    totalTurns: turnsPlayed,
     events
   };
 };
 
 /**
- * Classe utilitaria para uso orientado a objetos quando preferir.
+ * Wrapper orientado a objetos.
  *
  * @example
  *   const result = Simulador.processarRodada(player, opponent);
