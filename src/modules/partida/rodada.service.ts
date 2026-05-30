@@ -138,6 +138,13 @@ const snapshotToTeamDto = (
       a.velocity = cell.velocity;
       a.attack = cell.attack;
       a.defense = cell.defense;
+      // Task 4.1: leva os buffs de itens e a ancoragem (RN011) para o motor.
+      if (cell.bonus) {
+        a.bonus = cell.bonus;
+      }
+      if (cell.holdsPosition) {
+        a.holdsPosition = cell.holdsPosition;
+      }
       return a;
     })
   );

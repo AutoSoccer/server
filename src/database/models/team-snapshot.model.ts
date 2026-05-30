@@ -8,12 +8,24 @@ import {
 
 import { sequelize } from '../../config/database';
 
+export type SnapshotAthleteBonus = {
+  attack?: number;
+  defense?: number;
+  velocity?: number;
+};
+
 export type SnapshotAthlete = {
   id: number;
   name: string;
   velocity: number;
   attack: number;
   defense: number;
+  /** Bonus acumulado de itens aplicados nesta rodada (Task 4.1). */
+  bonus?: SnapshotAthleteBonus;
+  /** IDs dos itens ja aplicados ao atleta nesta rodada (controle de stacking). */
+  appliedItemIds?: number[];
+  /** RN011: se true, o atleta nao recua ao perder a posse no ataque. */
+  holdsPosition?: boolean;
 };
 
 export type SnapshotPositions = (SnapshotAthlete | null)[][];

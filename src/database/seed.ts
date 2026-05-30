@@ -5,6 +5,7 @@ import {
   Athlete,
   ATHLETE_TIERS,
   ATHLETE_TYPES,
+  Item,
   User
 } from './models';
 
@@ -185,7 +186,65 @@ export const seedDefaultAthletes = async (): Promise<void> => {
   await Athlete.bulkCreate(athletesToCreate);
 };
 
+const DEFAULT_ITEMS = [
+  {
+    name: 'Chuteira de Ouro',
+    description: 'Aumenta a forca de finalizacao do atleta.',
+    modifier_attack: 12,
+    modifier_defense: 0,
+    modifier_velocity: 0,
+    cost: 150,
+    stackable: false
+  },
+  {
+    name: 'Luvas Reforcadas',
+    description: 'Reforca a defesa do atleta.',
+    modifier_attack: 0,
+    modifier_defense: 12,
+    modifier_velocity: 0,
+    cost: 150,
+    stackable: false
+  },
+  {
+    name: 'Tornozeleira Leve',
+    description: 'Ganho de velocidade nas arrancadas.',
+    modifier_attack: 0,
+    modifier_defense: 0,
+    modifier_velocity: 12,
+    cost: 150,
+    stackable: false
+  },
+  {
+    name: 'Energetico',
+    description: 'Pequeno bonus geral; pode ser empilhado.',
+    modifier_attack: 5,
+    modifier_defense: 5,
+    modifier_velocity: 5,
+    cost: 100,
+    stackable: true
+  },
+  {
+    name: 'Faixa de Capitao',
+    description: 'Inspira o atleta: ataque e defesa.',
+    modifier_attack: 6,
+    modifier_defense: 6,
+    modifier_velocity: 0,
+    cost: 200,
+    stackable: false
+  }
+] as const;
+
+export const seedDefaultItems = async (): Promise<void> => {
+  for (const data of DEFAULT_ITEMS) {
+    await Item.findOrCreate({
+      where: { name: data.name },
+      defaults: { ...data, is_active: true }
+    });
+  }
+};
+
 export const runDatabaseSeeds = async (): Promise<void> => {
   await seedDefaultUsers();
   await seedDefaultAthletes();
+  await seedDefaultItems();
 };
