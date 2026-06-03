@@ -165,12 +165,9 @@ export const registerUser = async (input: RegisterInput): Promise<AuthResponse> 
  * (tratado no fim da partida) nem entram no ranking geral.
  */
 /**
- * RF005/RF010 — saldo inicial do convidado.
- * Com o padrao (1000) e os precos do mercado (ate 500/atleta), o convidado
- * costuma nao fechar os 6 atletas exigidos para a 1a partida. Damos saldo
- * suficiente para escalar 6 atletas medianos (~6x gold = 1500) com folga.
+ * RF005/RF010 — saldo inicial do convidado (economia original).
  */
-export const GUEST_INITIAL_COINS = 2500;
+export const GUEST_INITIAL_COINS = 10;
 
 export const createGuest = async (): Promise<AuthResponse> => {
   // nickname tem limite de 20 chars; "guest_" + 12 = 18 cabe com folga.

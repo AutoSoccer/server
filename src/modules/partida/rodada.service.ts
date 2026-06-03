@@ -345,10 +345,10 @@ const finalizeRound = async (input: FinalizeRoundInput): Promise<RoundResolution
     const matchStatus = resolveMatchStatus(team.victory, team.lose);
     const matchEnded = matchStatus !== 'in_progress';
 
-    // RF010: toda rodada jogada credita moedas (base + bonus de vitoria),
+    // RF010: toda rodada jogada define o saldo de moedas (sem acumulacao),
     // inclusive para convidado — moedas nao sao trofeus.
     const coinsEarned = coinsForRound(winner);
-    user.coins = (user.coins ?? 0) + coinsEarned;
+    user.coins = coinsEarned;
 
     // RF004/RF005: trofeus e perfil so mudam ao encerrar a partida e se nao for convidado.
     let trophiesDelta = 0;

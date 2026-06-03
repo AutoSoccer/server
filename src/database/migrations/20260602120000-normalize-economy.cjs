@@ -1,9 +1,8 @@
 'use strict';
 
 /**
- * RF010 — ajusta o saldo inicial padrao de coins para 10 (economia original).
- * Afeta apenas cadastros futuros (default da coluna); registros existentes
- * mantem o saldo atual.
+ * Economia original: custo fixo de atleta (3) e saldo inicial (10).
+ * Atualiza dados existentes para ambiente dev/teste.
  */
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -13,6 +12,9 @@ module.exports = {
       allowNull: false,
       defaultValue: 10
     });
+
+    await queryInterface.bulkUpdate('users', { coins: 10 }, {});
+    await queryInterface.bulkUpdate('athletes', { cost: 3 }, {});
   },
 
   async down(queryInterface, Sequelize) {
