@@ -2,7 +2,8 @@
 
 /**
  * Economia original: custo fixo de atleta (3) e saldo inicial (10).
- * Atualiza dados existentes para ambiente dev/teste.
+ * Mantem o saldo de usuarios existentes intacto; apenas novos usuarios
+ * passam a nascer com 10 coins. Atletas existentes sao normalizados para 3.
  */
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -13,7 +14,6 @@ module.exports = {
       defaultValue: 10
     });
 
-    await queryInterface.bulkUpdate('users', { coins: 10 }, {});
     await queryInterface.bulkUpdate('athletes', { cost: 3 }, {});
   },
 
@@ -21,7 +21,7 @@ module.exports = {
     await queryInterface.changeColumn('users', 'coins', {
       type: Sequelize.INTEGER.UNSIGNED,
       allowNull: false,
-      defaultValue: 1000
+      defaultValue: 10
     });
   }
 };
