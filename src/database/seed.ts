@@ -13,15 +13,10 @@ import {
 } from './models';
 
 /** Saldo inicial padrao de coins para usuarios (RF010). */
-const DEFAULT_COINS = 2500;
+const DEFAULT_COINS = 10;
 
-const TIER_COSTS: Record<(typeof ATHLETE_TIERS)[number], number> = {
-  bronze: 50,
-  silver: 120,
-  gold: 250,
-  epic: 500,
-  legend: 1000
-};
+/** Custo fixo de atleta (economia original). */
+const ATHLETE_COST = 3;
 
 const TIER_STATS: Record<
   (typeof ATHLETE_TIERS)[number],
@@ -183,7 +178,7 @@ export const seedDefaultAthletes = async (): Promise<void> => {
           ability_id: ability.id,
           tier,
           type,
-          cost: TIER_COSTS[tier]
+          cost: ATHLETE_COST
         });
       }
     }

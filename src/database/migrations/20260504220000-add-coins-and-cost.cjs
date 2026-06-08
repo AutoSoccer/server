@@ -1,14 +1,7 @@
 'use strict';
 
-const TIER_COSTS = {
-  bronze: 50,
-  silver: 120,
-  gold: 250,
-  epic: 500,
-  legend: 1000
-};
-
-const INITIAL_USER_COINS = 1000;
+const ATHLETE_COST = 3;
+const INITIAL_USER_COINS = 10;
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -22,12 +15,10 @@ module.exports = {
     await queryInterface.addColumn('athletes', 'cost', {
       type: Sequelize.INTEGER.UNSIGNED,
       allowNull: false,
-      defaultValue: 0
+      defaultValue: ATHLETE_COST
     });
 
-    for (const [tier, cost] of Object.entries(TIER_COSTS)) {
-      await queryInterface.bulkUpdate('athletes', { cost }, { tier });
-    }
+    await queryInterface.bulkUpdate('athletes', { cost: ATHLETE_COST }, {});
   },
 
   async down(queryInterface) {

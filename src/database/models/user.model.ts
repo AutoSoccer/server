@@ -70,7 +70,7 @@ User.init(
     coins: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
-      defaultValue: 2500
+      defaultValue: 10
     },
     is_guest: {
       type: DataTypes.BOOLEAN,
