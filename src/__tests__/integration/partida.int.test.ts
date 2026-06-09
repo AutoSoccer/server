@@ -47,7 +47,7 @@ import { bearer, buildTestApp, signTestToken } from '../helpers/buildApp';
 
 const token = signTestToken({ id: 1, nickname: 'lucas' });
 
-const buildApp = () => buildTestApp([{ plugin: partidaRoutes, prefix: '/partida' }]);
+const buildApp = () => buildTestApp([{ plugin: partidaRoutes, prefix: '/match' }]);
 
 const campaignSuccess = {
   user: { id: 1, coins: 10, trophies: 0 },
@@ -62,18 +62,18 @@ const campaignSuccess = {
   }
 };
 
-describe('integration: /partida', () => {
+describe('integration: /match', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('POST /partida/iniciar responde 200 quando o name eh valido', async () => {
+  it('POST /match/start responde 200 quando o name eh valido', async () => {
     const app = await buildApp();
     mocks.startCampaign.mockResolvedValue(campaignSuccess);
 
     const response = await app.inject({
       method: 'POST',
-      url: '/partida/iniciar',
+      url: '/match/start',
       headers: bearer(token),
       payload: { name: 'Time A' }
     });
@@ -84,12 +84,12 @@ describe('integration: /partida', () => {
     await app.close();
   });
 
-  it('POST /partida/iniciar responde 400 quando body nao tem name', async () => {
+  it('POST /match/start responde 400 quando body nao tem name', async () => {
     const app = await buildApp();
 
     const response = await app.inject({
       method: 'POST',
-      url: '/partida/iniciar',
+      url: '/match/start',
       headers: bearer(token),
       payload: {}
     });
@@ -100,13 +100,13 @@ describe('integration: /partida', () => {
     await app.close();
   });
 
-  it('POST /partida/desistir responde 200 quando ha campanha', async () => {
+  it('POST /match/abandon responde 200 quando ha campanha', async () => {
     const app = await buildApp();
     mocks.abandonCampaign.mockResolvedValue(campaignSuccess);
 
     const response = await app.inject({
       method: 'POST',
-      url: '/partida/desistir',
+      url: '/match/abandon',
       headers: bearer(token)
     });
 
@@ -116,7 +116,7 @@ describe('integration: /partida', () => {
     await app.close();
   });
 
-  it('POST /partida/desistir responde 404 quando user nao encontrado', async () => {
+  it('POST /match/abandon responde 404 quando user nao encontrado', async () => {
     const app = await buildApp();
     mocks.abandonCampaign.mockRejectedValue(
       new CampaignServiceError('USER_NOT_FOUND')
@@ -124,7 +124,7 @@ describe('integration: /partida', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/partida/desistir',
+      url: '/match/abandon',
       headers: bearer(token)
     });
 
@@ -133,7 +133,7 @@ describe('integration: /partida', () => {
     await app.close();
   });
 
-  it('POST /partida/jogar-rodada responde com o formato esperado (smoke)', async () => {
+  it('POST /match/play-round responde com o formato esperado (smoke)', async () => {
     const app = await buildApp();
     mocks.jogarRodada.mockResolvedValue({
       player: {},
@@ -188,7 +188,7 @@ describe('integration: /partida', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/partida/jogar-rodada',
+      url: '/match/play-round',
       headers: bearer(token),
       payload: {}
     });
@@ -206,12 +206,12 @@ describe('integration: /partida', () => {
     await app.close();
   });
 
-  it('POST /partida/jogar-rodada responde 403 quando user_id nao bate', async () => {
+  it('POST /match/play-round responde 403 quando user_id nao bate', async () => {
     const app = await buildApp();
 
     const response = await app.inject({
       method: 'POST',
-      url: '/partida/jogar-rodada',
+      url: '/match/play-round',
       headers: bearer(token),
       payload: { user_id: 999 }
     });

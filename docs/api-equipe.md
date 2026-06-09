@@ -38,7 +38,7 @@ backend sempre considera o usuario autenticado.
   que precise repetir uma snapshot ja enfrentada.
 - Tipos ativos de atleta: `defender`, `midfielder` e `attacker`.
 
-## GET /mercado
+## GET /market
 
 Retorna os atletas disponiveis no mercado do usuario.
 
@@ -65,12 +65,12 @@ Retorna os atletas disponiveis no mercado do usuario.
 }
 ```
 
-## POST /mercado/refresh
+## POST /market/refresh
 
 Desconta 1 moeda, sorteia uma nova selecao de no maximo 3 atletas e retorna o
-mesmo formato de `GET /mercado`, incluindo o saldo atualizado em `coins`.
+mesmo formato de `GET /market`, incluindo o saldo atualizado em `coins`.
 
-## GET /equipe
+## GET /team
 
 Retorna o time atual. Quando o usuario ainda nao possui time, retorna `null`.
 
@@ -100,7 +100,7 @@ Retorna o time atual. Quando o usuario ainda nao possui time, retorna `null`.
 }
 ```
 
-## POST /equipe/comprar-atleta
+## POST /team/buy-athlete
 
 Compra um atleta disponivel no mercado.
 
@@ -139,7 +139,7 @@ Erros principais:
 - `404 USER_NOT_FOUND`
 - `404 ATHLETE_NOT_AVAILABLE`
 
-## POST /equipe/vender-atleta
+## POST /team/sell-athlete
 
 Remove um atleta do time e credita 2 moedas.
 
@@ -178,7 +178,7 @@ Erros principais:
 - `404 ATHLETE_NOT_AVAILABLE`
 - `404 USER_NOT_FOUND`
 
-## POST /partida/jogar
+## POST /match/play
 
 Este e o endpoint principal do botao **Jogar**. Ele:
 
@@ -348,13 +348,13 @@ Erros de formacao:
 - `400 ATHLETE_NOT_IN_TEAM`
 - `404 TEAM_NOT_FOUND`
 
-## POST /equipe/salvar-estado
+## POST /team/save-state
 
 Rota de baixo nivel para salvar somente o snapshot, sem jogar a rodada. Aceita
 o mesmo array `positions` de 1 a 6 atletas. O frontend principal deve preferir
-`POST /partida/jogar`, que salva e joga em uma unica operacao.
+`POST /match/play`, que salva e joga em uma unica operacao.
 
-## POST /partida/desistir
+## POST /match/abandon
 
 Abandona a campanha autenticada sem registrar derrota nem alterar trofeus.
 
@@ -368,7 +368,7 @@ Ao confirmar a desistencia, o backend executa tudo em uma unica transacao:
 
 O endpoint nao exige corpo e retorna o estado inicial do usuario e da equipe.
 
-## POST /partida/iniciar
+## POST /match/start
 
 Inicia uma campanha nova com o nome de time escolhido pelo usuario.
 
@@ -388,7 +388,7 @@ caracteres. Sempre que este endpoint e chamado:
 - a janela do mercado e renovada ao abrir a nova campanha;
 - trofeus, snapshots e logs historicos sao preservados.
 
-## POST /partida/jogar-rodada
+## POST /match/play-round
 
 Rota de baixo nivel para executar a simulacao usando um snapshot existente. O
 frontend principal nao precisa chama-la diretamente.
@@ -396,11 +396,11 @@ frontend principal nao precisa chama-la diretamente.
 ## Fluxo recomendado no frontend
 
 1. No menu principal, solicitar o nome do time.
-2. Enviar o nome para `POST /partida/iniciar`.
-3. Carregar `/auth/me`, `/mercado` e `/equipe`.
+2. Enviar o nome para `POST /match/start`.
+3. Carregar `/auth/me`, `/market` e `/team`.
 4. Comprar ou vender atletas e atualizar moedas com a resposta da API.
 5. Permitir posicionar de 1 a 6 atletas no grid.
-6. Enviar a formacao para `POST /partida/jogar`.
+6. Enviar a formacao para `POST /match/play`.
 7. Renderizar os campos a partir de `lineups`.
 8. Animar os eventos e mostrar o resultado retornado pelo backend.
 9. Voltar ao mercado e recarregar o estado persistido.

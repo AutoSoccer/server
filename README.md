@@ -275,11 +275,11 @@ curl -X POST https://autosoccer-api.onrender.com/auth/login \
   -d '{"email":"demo@example.com","password":"Demo@1234"}'
 
 # Listar mercado (use o token do login)
-curl https://autosoccer-api.onrender.com/mercado \
+curl https://autosoccer-api.onrender.com/market \
   -H 'Authorization: Bearer <token>'
 
 # Jogar uma rodada
-curl -X POST https://autosoccer-api.onrender.com/partida/jogar-rodada \
+curl -X POST https://autosoccer-api.onrender.com/match/play-round \
   -H 'Authorization: Bearer <token>'
 ```
 
