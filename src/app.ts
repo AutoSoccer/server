@@ -6,6 +6,7 @@ import { itensRoutes } from './modules/itens/itens.routes';
 import { mercadoRoutes } from './modules/mercado/mercado.routes';
 import { partidaRoutes } from './modules/partida/partida.routes';
 import { rankingRoutes } from './modules/ranking/ranking.routes';
+import { registerErrorHandler } from './plugins/errorHandler';
 import { registerSwagger } from './plugins/swagger';
 
 export const buildApp = async (): Promise<FastifyInstance> => {
@@ -24,6 +25,8 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   });
 
   await registerSwagger(app);
+
+  registerErrorHandler(app);
 
   app.get(
     '/health',

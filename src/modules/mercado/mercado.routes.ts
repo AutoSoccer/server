@@ -2,11 +2,7 @@ import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
 import { authenticate } from '../auth/auth.middleware';
-import {
-  getMarket,
-  MercadoServiceError,
-  refreshMarket
-} from './mercado.service';
+import { getMarket, refreshMarket } from './mercado.service';
 
 const marketAthleteSchema = {
   type: 'object',
@@ -65,18 +61,8 @@ export const mercadoRoutes: FastifyPluginAsync = async (app) => {
       }
     },
     async (request, reply) => {
-      try {
-        const market = await getMarket(request.user!.id);
-        return reply.code(200).send(market);
-      } catch (error: unknown) {
-        if (error instanceof MercadoServiceError) {
-          return reply.code(404).send({
-            code: error.code,
-            message: error.message
-          });
-        }
-        throw error;
-      }
+      const market = await getMarket(request.user!.id);
+      return reply.code(200).send(market);
     }
   );
 
@@ -97,20 +83,8 @@ export const mercadoRoutes: FastifyPluginAsync = async (app) => {
       }
     },
     async (request, reply) => {
-      try {
-        const market = await refreshMarket(request.user!.id);
-
-        return reply.code(200).send(market);
-      } catch (error: unknown) {
-        if (error instanceof MercadoServiceError) {
-          const status = error.code === 'USER_NOT_FOUND' ? 404 : 400;
-          return reply.code(status).send({
-            code: error.code,
-            message: error.message
-          });
-        }
-        throw error;
-      }
+      const market = await refreshMarket(request.user!.id);
+      return reply.code(200).send(market);
     }
   );
 };

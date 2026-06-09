@@ -1,9 +1,14 @@
 import 'dotenv/config';
 
+import { ConfigError } from '../modules/shared/configError';
+
 const requiredEnv = (key: string): string => {
   const value = process.env[key];
   if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
+    throw new ConfigError(
+      'CONFIG_MISSING_ENV',
+      `Missing required environment variable: ${key}`
+    );
   }
 
   return value;
@@ -12,7 +17,10 @@ const requiredEnv = (key: string): string => {
 const parseNumber = (value: string, key: string): number => {
   const parsedValue = Number(value);
   if (Number.isNaN(parsedValue)) {
-    throw new Error(`Environment variable ${key} must be a valid number.`);
+    throw new ConfigError(
+      'CONFIG_INVALID_ENV',
+      `Environment variable ${key} must be a valid number.`
+    );
   }
 
   return parsedValue;

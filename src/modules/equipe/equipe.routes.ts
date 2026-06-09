@@ -2,17 +2,11 @@ import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
 import { authenticate } from '../auth/auth.middleware';
-import {
-  buyAthlete,
-  EquipeServiceError,
-  getMyTeam,
-  sellAthlete
-} from './equipe.service';
+import { buyAthlete, getMyTeam, sellAthlete } from './equipe.service';
 import {
   MAX_POSITIONED_ATHLETES,
   MIN_POSITIONED_ATHLETES,
   salvarEstadoEquipe,
-  TeamSnapshotError,
   type SalvarEstadoInput
 } from './team-snapshot.service';
 
@@ -112,24 +106,8 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
           .send({ message: 'user_id nao corresponde ao usuario autenticado.' });
       }
 
-      try {
-        const result = await buyAthlete(authenticatedUserId, athleteId);
-        return reply.code(201).send(result);
-      } catch (error: unknown) {
-        if (error instanceof EquipeServiceError) {
-          if (error.code === 'USER_NOT_FOUND') {
-            return reply.code(404).send({ message: error.message, code: error.code });
-          }
-
-          if (error.code === 'ATHLETE_NOT_AVAILABLE') {
-            return reply.code(404).send({ message: error.message, code: error.code });
-          }
-
-          return reply.code(400).send({ message: error.message, code: error.code });
-        }
-
-        throw error;
-      }
+      const result = await buyAthlete(authenticatedUserId, athleteId);
+      return reply.code(201).send(result);
     }
   );
 
@@ -155,25 +133,8 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
           .send({ message: 'user_id nao corresponde ao usuario autenticado.' });
       }
 
-      try {
-        const result = await sellAthlete(authenticatedUserId, athleteId);
-        return reply.code(200).send(result);
-      } catch (error: unknown) {
-        if (error instanceof EquipeServiceError) {
-          if (
-            error.code === 'USER_NOT_FOUND' ||
-            error.code === 'TEAM_NOT_FOUND' ||
-            error.code === 'ATHLETE_NOT_AVAILABLE' ||
-            error.code === 'ATHLETE_NOT_OWNED'
-          ) {
-            return reply.code(404).send({ message: error.message, code: error.code });
-          }
-
-          return reply.code(400).send({ message: error.message, code: error.code });
-        }
-
-        throw error;
-      }
+      const result = await sellAthlete(authenticatedUserId, athleteId);
+      return reply.code(200).send(result);
     }
   );
 
@@ -231,22 +192,12 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
           .send({ message: 'user_id nao corresponde ao usuario autenticado.', code: 'USER_MISMATCH' });
       }
 
-      try {
-        const result = await salvarEstadoEquipe({
-          userId: authenticatedUserId,
-          positions: body.positions ?? [],
-          items: body.items
-        });
-        return reply.code(200).send(result);
-      } catch (error: unknown) {
-        if (error instanceof TeamSnapshotError) {
-          const status = error.code === 'TEAM_NOT_FOUND' ? 404 : 400;
-          return reply
-            .code(status)
-            .send({ message: error.message, code: error.code });
-        }
-        throw error;
-      }
+      const result = await salvarEstadoEquipe({
+        userId: authenticatedUserId,
+        positions: body.positions ?? [],
+        items: body.items
+      });
+      return reply.code(200).send(result);
     }
   );
 };

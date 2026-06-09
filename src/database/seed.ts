@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 
+import { SeedError } from '../modules/shared/seedError';
 import {
   Ability,
   Athlete,
@@ -428,7 +429,10 @@ const buildBotPositions = (
   for (const slot of buildBotFormation(seed, athleteCount)) {
     const pool = byType[slot.type];
     if (pool.length === 0) {
-      throw new Error(`Nao ha atletas do tipo ${slot.type} para popular bots.`);
+      throw new SeedError(
+        'SEED_DATA_INVARIANT',
+        `Nao ha atletas do tipo ${slot.type} para popular bots.`
+      );
     }
 
     const athlete = pool[cursor[slot.type] % pool.length];

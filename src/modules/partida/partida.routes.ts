@@ -5,19 +5,10 @@ import { authenticate } from '../auth/auth.middleware';
 import {
   MAX_POSITIONED_ATHLETES,
   MIN_POSITIONED_ATHLETES,
-  TeamSnapshotError,
   type SalvarEstadoInput
 } from '../equipe/team-snapshot.service';
-import {
-  jogarRodada,
-  jogarRodadaComFormacao,
-  RodadaServiceError
-} from './rodada.service';
-import {
-  abandonCampaign,
-  CampaignServiceError,
-  startCampaign
-} from './campaign.service';
+import { jogarRodada, jogarRodadaComFormacao } from './rodada.service';
+import { abandonCampaign, startCampaign } from './campaign.service';
 
 type JogarRodadaBody = {
   user_id?: number;
@@ -324,25 +315,6 @@ const abandonCampaignResponseSchema = {
   }
 } as const;
 
-const statusForRodadaError = (error: RodadaServiceError): number => {
-  if (
-    error.code === 'TEAM_NOT_FOUND' ||
-    error.code === 'SNAPSHOT_NOT_FOUND' ||
-    error.code === 'USER_NOT_FOUND'
-  ) {
-    return 404;
-  }
-
-  if (error.code === 'SNAPSHOT_FORBIDDEN') {
-    return 403;
-  }
-
-  return 400;
-};
-
-const statusForSnapshotError = (error: TeamSnapshotError): number =>
-  error.code === 'TEAM_NOT_FOUND' ? 404 : 400;
-
 export const partidaRoutes: FastifyPluginAsync = async (app) => {
   app.post<{ Body: StartCampaignBody }>(
     '/iniciar',
@@ -374,22 +346,11 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
       }
     },
     async (request, reply) => {
-      try {
-        const result = await startCampaign(
-          request.user!.id,
-          request.body.name
-        );
-        return reply.code(200).send(result);
-      } catch (error: unknown) {
-        if (error instanceof CampaignServiceError) {
-          const status = error.code === 'USER_NOT_FOUND' ? 404 : 400;
-          return reply
-            .code(status)
-            .send({ message: error.message, code: error.code });
-        }
-
-        throw error;
-      }
+      const result = await startCampaign(
+        request.user!.id,
+        request.body.name
+      );
+      return reply.code(200).send(result);
     }
   );
 
@@ -410,18 +371,8 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
       }
     },
     async (request, reply) => {
-      try {
-        const result = await abandonCampaign(request.user!.id);
-        return reply.code(200).send(result);
-      } catch (error: unknown) {
-        if (error instanceof CampaignServiceError) {
-          return reply
-            .code(404)
-            .send({ message: error.message, code: error.code });
-        }
-
-        throw error;
-      }
+      const result = await abandonCampaign(request.user!.id);
+      return reply.code(200).send(result);
     }
   );
 
@@ -480,28 +431,12 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
         });
       }
 
-      try {
-        const result = await jogarRodadaComFormacao({
-          userId: authenticatedUserId,
-          positions: body.positions,
-          items: body.items
-        });
-        return reply.code(200).send(result);
-      } catch (error: unknown) {
-        if (error instanceof TeamSnapshotError) {
-          return reply
-            .code(statusForSnapshotError(error))
-            .send({ message: error.message, code: error.code });
-        }
-
-        if (error instanceof RodadaServiceError) {
-          return reply
-            .code(statusForRodadaError(error))
-            .send({ message: error.message, code: error.code });
-        }
-
-        throw error;
-      }
+      const result = await jogarRodadaComFormacao({
+        userId: authenticatedUserId,
+        positions: body.positions,
+        items: body.items
+      });
+      return reply.code(200).send(result);
     }
   );
 
@@ -554,20 +489,11 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
         });
       }
 
-      try {
-        const result = await jogarRodada({
-          userId: authenticatedUserId,
-          snapshotId: body.snapshot_id
-        });
-        return reply.code(200).send(result);
-      } catch (error: unknown) {
-        if (error instanceof RodadaServiceError) {
-          return reply
-            .code(statusForRodadaError(error))
-            .send({ message: error.message, code: error.code });
-        }
-        throw error;
-      }
+      const result = await jogarRodada({
+        userId: authenticatedUserId,
+        snapshotId: body.snapshot_id
+      });
+      return reply.code(200).send(result);
     }
   );
 };
