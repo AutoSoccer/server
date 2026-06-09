@@ -216,6 +216,8 @@ Este e o endpoint principal do botao **Jogar**. Ele:
 - O primeiro gol encerra a rodada.
 - Sem gol depois de 12 acoes, a rodada termina empatada.
 - A posicao original do atleta nao concede bonus nem penalidade de atributos.
+- Na primeira rodada, o matchmaking ignora snapshots adversarios com mais de
+  tres atletas, inclusive snapshots antigos de jogadores reais.
 
 Body com 1 a 6 atletas:
 
@@ -352,6 +354,40 @@ Rota de baixo nivel para salvar somente o snapshot, sem jogar a rodada. Aceita
 o mesmo array `positions` de 1 a 6 atletas. O frontend principal deve preferir
 `POST /partida/jogar`, que salva e joga em uma unica operacao.
 
+## POST /partida/desistir
+
+Abandona a campanha autenticada sem registrar derrota nem alterar trofeus.
+
+Ao confirmar a desistencia, o backend executa tudo em uma unica transacao:
+
+- restaura o saldo para 10 moedas;
+- zera vitorias, derrotas e empates;
+- retorna a equipe para a rodada 1;
+- remove todos os atletas da equipe atual;
+- preserva snapshots e logs anteriores como historico.
+
+O endpoint nao exige corpo e retorna o estado inicial do usuario e da equipe.
+
+## POST /partida/iniciar
+
+Inicia uma campanha nova com o nome de time escolhido pelo usuario.
+
+```json
+{
+  "name": "Canela de Vidro FC"
+}
+```
+
+O nome e obrigatorio, nao precisa ser unico e deve ter entre 1 e 40
+caracteres. Sempre que este endpoint e chamado:
+
+- a equipe e criada ou recebe o novo nome;
+- o saldo volta para 10 moedas;
+- vitorias, derrotas, empates e rodada voltam ao estado inicial;
+- os atletas atuais sao removidos;
+- a janela do mercado e renovada ao abrir a nova campanha;
+- trofeus, snapshots e logs historicos sao preservados.
+
 ## POST /partida/jogar-rodada
 
 Rota de baixo nivel para executar a simulacao usando um snapshot existente. O
@@ -359,10 +395,12 @@ frontend principal nao precisa chama-la diretamente.
 
 ## Fluxo recomendado no frontend
 
-1. Carregar `/auth/me`, `/mercado` e `/equipe`.
-2. Comprar ou vender atletas e atualizar moedas com a resposta da API.
-3. Permitir posicionar de 1 a 6 atletas no grid.
-4. Enviar a formacao para `POST /partida/jogar`.
-5. Renderizar os campos a partir de `lineups`.
-6. Animar os eventos e mostrar o resultado retornado pelo backend.
-7. Voltar ao mercado e recarregar o estado persistido.
+1. No menu principal, solicitar o nome do time.
+2. Enviar o nome para `POST /partida/iniciar`.
+3. Carregar `/auth/me`, `/mercado` e `/equipe`.
+4. Comprar ou vender atletas e atualizar moedas com a resposta da API.
+5. Permitir posicionar de 1 a 6 atletas no grid.
+6. Enviar a formacao para `POST /partida/jogar`.
+7. Renderizar os campos a partir de `lineups`.
+8. Animar os eventos e mostrar o resultado retornado pelo backend.
+9. Voltar ao mercado e recarregar o estado persistido.
