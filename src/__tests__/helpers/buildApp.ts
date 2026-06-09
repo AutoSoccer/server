@@ -14,6 +14,8 @@ import Fastify, { type FastifyInstance, type FastifyPluginAsync } from 'fastify'
 import jwt from 'jsonwebtoken';
 
 import { registerErrorHandler } from '../../plugins/errorHandler';
+import { registerI18n } from '../../plugins/i18n';
+import { swaggerSchemas } from '../../plugins/swagger.schemas';
 import { env } from '../../config/env';
 
 export type TestRouteRegistration = {
@@ -43,7 +45,18 @@ export const buildTestApp = async (
     }
   });
 
+  // i18n precisa estar registrado antes das rotas e do errorHandler:
+  // as rotas usam `tSwagger()` (i18next.getFixedT) no momento do registro
+  // para gerar summary/description, e o errorHandler depende de `req.t`.
+  await registerI18n(app);
   registerErrorHandler(app);
+
+  // Schemas referenciados via `$ref: '<Nome>#'` nas rotas precisam estar
+  // disponiveis no Fastify (serializador + validador). Em prod o WS-04
+  // registra via `registerSwagger`; em teste registramos diretamente.
+  for (const [name, schema] of Object.entries(swaggerSchemas)) {
+    app.addSchema({ $id: name, ...(schema as Record<string, unknown>) });
+  }
 
   if (options.beforeRegister) {
     await options.beforeRegister(app);

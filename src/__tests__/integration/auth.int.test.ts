@@ -102,7 +102,7 @@ describe('integration: /auth', () => {
   it('POST /auth/register devolve 409 quando ja existe (ServiceError CONFLICT)', async () => {
     const app = await buildApp();
     mocks.registerUser.mockRejectedValue(
-      new ServiceError('CONFLICT', 'nickname em uso')
+      new ServiceError('CONFLICT', { params: { nickname: 'lucas' } })
     );
 
     const response = await app.inject({
@@ -141,7 +141,7 @@ describe('integration: /auth', () => {
   it('POST /auth/login devolve 401 com credencial errada', async () => {
     const app = await buildApp();
     mocks.loginUser.mockRejectedValue(
-      new ServiceError('INVALID_CREDENTIALS', 'invalid')
+      new ServiceError('INVALID_CREDENTIALS')
     );
 
     const response = await app.inject({

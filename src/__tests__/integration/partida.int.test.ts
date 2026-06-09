@@ -119,7 +119,7 @@ describe('integration: /partida', () => {
   it('POST /partida/desistir responde 404 quando user nao encontrado', async () => {
     const app = await buildApp();
     mocks.abandonCampaign.mockRejectedValue(
-      new CampaignServiceError('USER_NOT_FOUND', 'sem user')
+      new CampaignServiceError('USER_NOT_FOUND')
     );
 
     const response = await app.inject({
