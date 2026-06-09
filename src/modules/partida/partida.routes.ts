@@ -2,11 +2,27 @@ import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
 import { authenticate } from '../auth/auth.middleware';
-import { jogarRodada, RodadaServiceError } from './rodada.service';
+import {
+  MAX_POSITIONED_ATHLETES,
+  MIN_POSITIONED_ATHLETES,
+  TeamSnapshotError,
+  type SalvarEstadoInput
+} from '../equipe/team-snapshot.service';
+import {
+  jogarRodada,
+  jogarRodadaComFormacao,
+  RodadaServiceError
+} from './rodada.service';
 
 type JogarRodadaBody = {
   user_id?: number;
   snapshot_id?: number;
+};
+
+type JogarPartidaBody = {
+  user_id?: number;
+  positions: SalvarEstadoInput['positions'];
+  items?: number[];
 };
 
 const athleteSimSchema = {
@@ -17,6 +33,48 @@ const athleteSimSchema = {
     velocity: { type: 'integer' },
     attack: { type: 'integer' },
     defense: { type: 'integer' }
+  }
+} as const;
+
+const snapshotAthleteSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'integer' },
+    name: { type: 'string' },
+    velocity: { type: 'integer' },
+    attack: { type: 'integer' },
+    defense: { type: 'integer' }
+  }
+} as const;
+
+const snapshotGridSchema = {
+  type: 'array',
+  description: 'Grid 3x3 inicial salvo no snapshot antes da simulacao.',
+  items: {
+    type: 'array',
+    items: {
+      oneOf: [snapshotAthleteSchema, { type: 'null' }]
+    }
+  }
+} as const;
+
+const lineupSchema = {
+  type: 'object',
+  properties: {
+    snapshotId: { type: 'integer' },
+    teamId: { type: 'integer' },
+    name: { type: 'string' },
+    positions: snapshotGridSchema
+  }
+} as const;
+
+const positionSchema = {
+  type: 'object',
+  required: ['athleteId', 'posX', 'posY'],
+  properties: {
+    athleteId: { type: 'integer', example: 21 },
+    posX: { type: 'integer', minimum: 0, maximum: 2, example: 0 },
+    posY: { type: 'integer', minimum: 0, maximum: 2, example: 0 }
   }
 } as const;
 
@@ -69,6 +127,15 @@ const turnEventSchema = {
 const rodadaResultSchema = {
   type: 'object',
   properties: {
+    lineups: {
+      type: 'object',
+      description:
+        'Formacoes iniciais salvas nos snapshots antes do motor movimentar atletas.',
+      properties: {
+        player: lineupSchema,
+        opponent: lineupSchema
+      }
+    },
     player: teamDtoSchema,
     opponent: teamDtoSchema,
     score: {
@@ -138,7 +205,106 @@ const errorSchema = {
   }
 } as const;
 
+const statusForRodadaError = (error: RodadaServiceError): number => {
+  if (
+    error.code === 'TEAM_NOT_FOUND' ||
+    error.code === 'SNAPSHOT_NOT_FOUND' ||
+    error.code === 'USER_NOT_FOUND'
+  ) {
+    return 404;
+  }
+
+  if (error.code === 'SNAPSHOT_FORBIDDEN') {
+    return 403;
+  }
+
+  return 400;
+};
+
+const statusForSnapshotError = (error: TeamSnapshotError): number =>
+  error.code === 'TEAM_NOT_FOUND' ? 404 : 400;
+
 export const partidaRoutes: FastifyPluginAsync = async (app) => {
+  app.post<{ Body: JogarPartidaBody }>(
+    '/jogar',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Partida'],
+        summary: 'Salva a formacao atual e joga uma rodada',
+        description:
+          'Fluxo principal do botao Jogar: cria um snapshot imutavel da formacao enviada (1 a 6 atletas), busca um adversario por matchmaking e executa a simulacao.',
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: 'object',
+          required: ['positions'],
+          additionalProperties: false,
+          properties: {
+            user_id: {
+              type: 'integer',
+              description:
+                'Opcional. Quando informado deve coincidir com o usuario autenticado; o backend usa sempre o id do token.'
+            },
+            positions: {
+              type: 'array',
+              minItems: MIN_POSITIONED_ATHLETES,
+              maxItems: MAX_POSITIONED_ATHLETES,
+              items: positionSchema
+            },
+            items: {
+              type: 'array',
+              items: { type: 'integer' },
+              description: 'IDs de itens aplicados (reservado para integracao futura).'
+            }
+          }
+        },
+        response: {
+          200: rodadaResultSchema,
+          400: errorSchema,
+          403: errorSchema,
+          404: errorSchema
+        }
+      }
+    },
+    async (request, reply) => {
+      const authenticatedUserId = request.user!.id;
+      const body = request.body;
+
+      if (
+        body.user_id !== undefined &&
+        Number(body.user_id) !== authenticatedUserId
+      ) {
+        return reply.code(403).send({
+          message: 'user_id nao corresponde ao usuario autenticado.',
+          code: 'USER_MISMATCH'
+        });
+      }
+
+      try {
+        const result = await jogarRodadaComFormacao({
+          userId: authenticatedUserId,
+          positions: body.positions,
+          items: body.items
+        });
+        return reply.code(200).send(result);
+      } catch (error: unknown) {
+        if (error instanceof TeamSnapshotError) {
+          return reply
+            .code(statusForSnapshotError(error))
+            .send({ message: error.message, code: error.code });
+        }
+
+        if (error instanceof RodadaServiceError) {
+          return reply
+            .code(statusForRodadaError(error))
+            .send({ message: error.message, code: error.code });
+        }
+
+        throw error;
+      }
+    }
+  );
+
   app.post<{ Body: JogarRodadaBody }>(
     '/jogar-rodada',
     {
@@ -196,18 +362,8 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
         return reply.code(200).send(result);
       } catch (error: unknown) {
         if (error instanceof RodadaServiceError) {
-          let status = 400;
-          if (
-            error.code === 'TEAM_NOT_FOUND' ||
-            error.code === 'SNAPSHOT_NOT_FOUND' ||
-            error.code === 'USER_NOT_FOUND'
-          ) {
-            status = 404;
-          } else if (error.code === 'SNAPSHOT_FORBIDDEN') {
-            status = 403;
-          }
           return reply
-            .code(status)
+            .code(statusForRodadaError(error))
             .send({ message: error.message, code: error.code });
         }
         throw error;

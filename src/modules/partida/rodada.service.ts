@@ -3,6 +3,7 @@ import {
   Athlete as AthleteModel,
   RoundLog,
   Team,
+  TeamAthlete,
   TeamSnapshot,
   User
 } from '../../database/models';
@@ -10,6 +11,10 @@ import {
   type SnapshotAthlete,
   type SnapshotPositions
 } from '../../database/models/team-snapshot.model';
+import {
+  salvarEstadoEquipe,
+  type AthletePositionInput
+} from '../equipe/team-snapshot.service';
 import {
   computeVictoryRatio,
   findOpponentSnapshot,
@@ -56,7 +61,24 @@ export type JogarRodadaInput = {
   snapshotId?: number;
 };
 
+export type JogarRodadaComFormacaoInput = {
+  userId: number;
+  positions: AthletePositionInput[];
+  items?: number[];
+};
+
+type InitialLineup = {
+  snapshotId: number;
+  teamId: number;
+  name: string;
+  positions: SnapshotPositions;
+};
+
 export type JogarRodadaResult = MatchResult & {
+  lineups: {
+    player: InitialLineup;
+    opponent: InitialLineup;
+  };
   matchmaking: {
     snapshotId: number;
     opponentSnapshotId: number;
@@ -91,8 +113,11 @@ export type JogarRodadaResult = MatchResult & {
 };
 
 const rowForType = (type: string | undefined): number => {
-  if (type === 'goalkeeper' || type === 'defender') {
+  if (type === 'defender') {
     return 0;
+  }
+  if (type === 'midfielder') {
+    return 1;
   }
   if (type === 'attacker') {
     return 2;
@@ -307,7 +332,7 @@ type FinalizeRoundInput = {
  * Task 4.6 — encerra a rodada e aplica as consequencias numa unica transacao:
  *  - atualiza victory/lose/round do time (progresso da partida);
  *  - grava o log da rodada (round_logs);
- *  - RN001/RN002: detecta o fim da partida (7 vitorias ou 4 derrotas);
+ *  - RN001/RN002: detecta o fim da partida (10 vitorias ou 5 derrotas);
  *  - RF004/RF005: ao encerrar, soma/subtrai trofeus e atualiza o perfil do
  *    usuario, exceto convidado (is_guest); zera o progresso para a proxima.
  */
@@ -385,7 +410,12 @@ const finalizeRound = async (input: FinalizeRoundInput): Promise<RoundResolution
     if (matchEnded) {
       team.victory = 0;
       team.lose = 0;
+      team.draw = 0;
       team.round = 1;
+      await TeamAthlete.destroy({
+        where: { team_id: team.id },
+        transaction
+      });
     }
     await team.save({ transaction });
 
@@ -472,11 +502,12 @@ export const jogarRodada = async (
     );
   }
 
+  const opponentFallbackName = `Adversario fantasma #${opponentSnapshot.team_id}`;
+  const opponentTeam = await Team.findByPk(opponentSnapshot.team_id);
+  const opponentName = opponentTeam?.name ?? opponentFallbackName;
+
   const playerDto = snapshotToTeamDto(playerSnapshot, playerTeam.name);
-  const opponentDto = snapshotToTeamDto(
-    opponentSnapshot,
-    `Adversario fantasma #${opponentSnapshot.team_id}`
-  );
+  const opponentDto = snapshotToTeamDto(opponentSnapshot, opponentName);
 
   const initiative = computeInitiative(playerDto, opponentDto, rng);
 
@@ -495,6 +526,20 @@ export const jogarRodada = async (
 
   return {
     ...result,
+    lineups: {
+      player: {
+        snapshotId: playerSnapshot.id,
+        teamId: playerSnapshot.team_id,
+        name: playerTeam.name,
+        positions: playerSnapshot.positions
+      },
+      opponent: {
+        snapshotId: opponentSnapshot.id,
+        teamId: opponentSnapshot.team_id,
+        name: opponentName,
+        positions: opponentSnapshot.positions
+      }
+    },
     matchmaking: {
       snapshotId: playerSnapshot.id,
       opponentSnapshotId: opponentSnapshot.id,
@@ -518,4 +563,27 @@ export const jogarRodada = async (
       roundLogId: resolution.roundLogId
     }
   };
+};
+
+/**
+ * Fluxo do botao Jogar no front: salva um snapshot novo da formacao atual e
+ * roda a rodada usando exatamente esse snapshot.
+ */
+export const jogarRodadaComFormacao = async (
+  input: JogarRodadaComFormacaoInput,
+  options?: SimulationOptions
+): Promise<JogarRodadaResult> => {
+  const snapshot = await salvarEstadoEquipe({
+    userId: input.userId,
+    positions: input.positions,
+    items: input.items
+  });
+
+  return jogarRodada(
+    {
+      userId: input.userId,
+      snapshotId: snapshot.snapshotId
+    },
+    options
+  );
 };

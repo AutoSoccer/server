@@ -2,9 +2,9 @@ export type MatchStatus = 'in_progress' | 'won' | 'lost';
 export type RoundWinner = 'player' | 'opponent' | 'draw';
 
 /** RN001: vitorias de rodada necessarias para vencer a partida. */
-export const WINS_TO_WIN_MATCH = 7;
+export const WINS_TO_WIN_MATCH = 10;
 /** RN002: derrotas de rodada que encerram a partida com derrota. */
-export const LOSSES_TO_LOSE_MATCH = 4;
+export const LOSSES_TO_LOSE_MATCH = 5;
 
 /** RF010: moedas creditadas por rodada jogada (economia original). */
 export const COINS_PER_ROUND = 10;
@@ -24,7 +24,7 @@ export const TROPHIES_ON_LOSS = 15;
 
 /**
  * RN001/RN002 — define o status da partida a partir do placar acumulado de rodadas.
- * 7 rodadas vencidas => 'won'; 4 perdidas => 'lost'; senao continua 'in_progress'.
+ * 10 rodadas vencidas => 'won'; 5 perdidas => 'lost'; senao continua 'in_progress'.
  */
 export const resolveMatchStatus = (wins: number, losses: number): MatchStatus => {
   if (wins >= WINS_TO_WIN_MATCH) {

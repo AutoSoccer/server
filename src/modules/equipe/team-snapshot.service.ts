@@ -11,9 +11,11 @@ import type {
   SnapshotAthlete,
   SnapshotPositions
 } from '../../database/models/team-snapshot.model';
+import { computeVictoryRatio } from '../matchmaking/matchmaking.service';
 
 export const GRID_SIZE = 3;
-export const REQUIRED_ATHLETES = 6;
+export const MIN_POSITIONED_ATHLETES = 1;
+export const MAX_POSITIONED_ATHLETES = 6;
 
 export type AthletePositionInput = {
   athleteId: number;
@@ -96,11 +98,14 @@ const ensurePositionsShape = (positions: unknown): AthletePositionInput[] => {
 };
 
 const ensureValidPositions = (positions: AthletePositionInput[]): void => {
-  // RN: a equipe precisa estar completa com exatamente 6 atletas posicionados.
-  if (positions.length !== REQUIRED_ATHLETES) {
+  // RN: o jogador pode iniciar a rodada com qualquer formacao entre 1 e 6 atletas.
+  if (
+    positions.length < MIN_POSITIONED_ATHLETES ||
+    positions.length > MAX_POSITIONED_ATHLETES
+  ) {
     throw new TeamSnapshotError(
       'WRONG_ATHLETE_COUNT',
-      `Equipe precisa de exatamente ${REQUIRED_ATHLETES} atletas posicionados; recebido ${positions.length}.`
+      `Equipe precisa de ${MIN_POSITIONED_ATHLETES} a ${MAX_POSITIONED_ATHLETES} atletas posicionados; recebido ${positions.length}.`
     );
   }
 
@@ -190,14 +195,6 @@ const ensureAthletesBelongToTeam = (
   return ownership;
 };
 
-const computeVictoryRatio = (victory: number, lose: number): number => {
-  const total = victory + lose;
-  if (total <= 0) {
-    return 0;
-  }
-  return victory / total;
-};
-
 const buildPositionsGrid = (
   positions: AthletePositionInput[],
   ownership: Map<number, AthleteModel>
@@ -229,7 +226,7 @@ const buildPositionsGrid = (
  * usado pelo matchmaking (Task 4.3) e pelo motor (Task 4.2).
  *
  * Validacoes aplicadas:
- *  - exatamente 6 atletas posicionados (RN)
+ *  - de 1 a 6 atletas posicionados (RN)
  *  - grid 3x3, sem celulas duplicadas, sem atletas duplicados
  *  - todos os IDs pertencem ao inventario atual do usuario (RF007/RF008)
  *  - itens (Sprint 5) reservado para integracao futura
@@ -269,7 +266,8 @@ export const salvarEstadoEquipe = async (
 
     const victoryRatio = computeVictoryRatio(
       team.victory ?? 0,
-      team.lose ?? 0
+      team.lose ?? 0,
+      team.draw ?? 0
     );
 
     const snapshot = await TeamSnapshot.create(
@@ -279,6 +277,7 @@ export const salvarEstadoEquipe = async (
         round: team.round ?? 1,
         victory: team.victory ?? 0,
         lose: team.lose ?? 0,
+        draw: team.draw ?? 0,
         victory_ratio: victoryRatio,
         positions: buildPositionsGrid(positions, ownership)
       },
