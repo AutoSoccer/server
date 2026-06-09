@@ -48,6 +48,11 @@ const normalizeLocale = (raw: string | undefined | null): SupportedLocale => {
     return DEFAULT_LOCALE;
   }
   const normalized = raw.trim().toLowerCase();
+  // Qualquer tag que comece com "pt" (incluindo "pt", "pt-BR" e "pt-PT") cai
+  // em pt-BR. Oficialmente so suportamos pt-BR; pt-PT e tratado como fallback
+  // por ser a variante mais proxima — preferimos servir traducoes brasileiras
+  // a devolver o usuario para o ingles. Se um dia adicionarmos pt-PT como
+  // locale proprio, este branch precisara discriminar a regiao antes do match.
   if (normalized.startsWith('pt')) {
     return 'pt-BR';
   }
@@ -119,8 +124,16 @@ export const registerI18n = async (app: FastifyInstance): Promise<void> => {
   const localesPath = path.resolve(__dirname, '..', 'i18n', 'locales');
 
   if (!initialized) {
-    // O tipo do i18next exige `as any` por causa do init options exposto pelo
-    // backend de FS; o objeto e o mesmo da documentacao oficial.
+    /**
+     * Cast para `any` no `init({...})` abaixo: o pacote `i18next-fs-backend`
+     * exporta apenas a interface publica do plugin (`use(FsBackend)`), mas nao
+     * expoe publicamente o tipo do construtor/das init options especificas do
+     * backend (`backend.loadPath`, etc). Como o i18next tipa essas chaves como
+     * `unknown` quando o backend nao declara seu proprio modulo declarado, o
+     * unico jeito de passar a configuracao sem reescrever os types do plugin
+     * de terceiros e relaxar para `any`. O objeto em si segue exatamente a
+     * documentacao oficial (https://www.i18next.com/overview/configuration-options).
+     */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await i18next
       .use(FsBackend)
