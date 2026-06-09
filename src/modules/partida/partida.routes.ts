@@ -277,13 +277,7 @@ const rodadaResultSchema = {
   }
 } as const;
 
-const errorSchema = {
-  type: 'object',
-  properties: {
-    message: { type: 'string' },
-    code: { type: 'string' }
-  }
-} as const;
+const errorRef = { $ref: 'ErrorResponse#' } as const;
 
 const abandonCampaignResponseSchema = {
   type: 'object',
@@ -340,8 +334,8 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
         },
         response: {
           200: abandonCampaignResponseSchema,
-          400: errorSchema,
-          404: errorSchema
+          400: errorRef,
+          404: errorRef
         }
       }
     },
@@ -365,7 +359,7 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
         security: [{ BearerAuth: [] }],
         response: {
           200: abandonCampaignResponseSchema,
-          404: errorSchema
+          404: errorRef
         }
       }
     },
@@ -409,9 +403,9 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
         },
         response: {
           200: rodadaResultSchema,
-          400: errorSchema,
-          403: errorSchema,
-          404: errorSchema
+          400: errorRef,
+          403: errorRef,
+          404: errorRef
         }
       }
     },
@@ -465,9 +459,9 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
         },
         response: {
           200: rodadaResultSchema,
-          400: errorSchema,
-          403: errorSchema,
-          404: errorSchema
+          400: errorRef,
+          403: errorRef,
+          404: errorRef
         }
       }
     },

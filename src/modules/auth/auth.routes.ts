@@ -18,36 +18,9 @@ type LoginBody = {
   password: string;
 };
 
-const userResponseSchema = {
-  type: 'object',
-  properties: {
-    id: { type: 'integer', example: 1 },
-    name: { type: 'string', example: 'Lucas Stopinski' },
-    nickname: { type: 'string', example: 'lucas' },
-    email: { type: 'string', example: 'lucas@gmail.com' },
-    phone_number: { type: ['string', 'null'], example: '11900000001' },
-    victory: { type: 'integer', example: 0 },
-    defeat: { type: 'integer', example: 0 },
-    trophies: { type: 'integer', example: 0 },
-    coins: { type: 'integer', example: 1000 },
-    is_guest: { type: 'boolean', example: false }
-  }
-} as const;
-
-const authResponseSchema = {
-  type: 'object',
-  properties: {
-    token: { type: 'string' },
-    user: userResponseSchema
-  }
-} as const;
-
-const errorSchema = {
-  type: 'object',
-  properties: {
-    message: { type: 'string' }
-  }
-} as const;
+const userResponseRef = { $ref: 'UserResponse#' } as const;
+const authResponseRef = { $ref: 'AuthResponse#' } as const;
+const errorRef = { $ref: 'ErrorResponse#' } as const;
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
   app.post<{ Body: RegisterBody }>(
@@ -73,8 +46,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
           }
         },
         response: {
-          201: authResponseSchema,
-          409: errorSchema
+          201: authResponseRef,
+          409: errorRef
         }
       }
     },
@@ -110,9 +83,9 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         description: tSwagger('auth.me.description'),
         security: [{ BearerAuth: [] }],
         response: {
-          200: userResponseSchema,
-          401: errorSchema,
-          404: errorSchema
+          200: userResponseRef,
+          401: errorRef,
+          404: errorRef
         }
       }
     },
@@ -138,8 +111,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         summary: tSwagger('auth.guest.summary'),
         description: tSwagger('auth.guest.description'),
         response: {
-          201: authResponseSchema,
-          500: errorSchema
+          201: authResponseRef,
+          500: errorRef
         }
       }
     },
@@ -169,8 +142,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
           }
         },
         response: {
-          200: authResponseSchema,
-          401: errorSchema
+          200: authResponseRef,
+          401: errorRef
         }
       }
     },

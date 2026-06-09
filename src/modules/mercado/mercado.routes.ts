@@ -38,13 +38,7 @@ const marketResponseSchema = {
   }
 } as const;
 
-const errorSchema = {
-  type: 'object',
-  properties: {
-    code: { type: 'string' },
-    message: { type: 'string' }
-  }
-} as const;
+const errorRef = { $ref: 'ErrorResponse#' } as const;
 
 export const mercadoRoutes: FastifyPluginAsync = async (app) => {
   app.get(
@@ -58,7 +52,7 @@ export const mercadoRoutes: FastifyPluginAsync = async (app) => {
         security: [{ BearerAuth: [] }],
         response: {
           200: marketResponseSchema,
-          404: errorSchema
+          404: errorRef
         }
       }
     },
@@ -79,8 +73,8 @@ export const mercadoRoutes: FastifyPluginAsync = async (app) => {
         security: [{ BearerAuth: [] }],
         response: {
           200: marketResponseSchema,
-          400: errorSchema,
-          404: errorSchema
+          400: errorRef,
+          404: errorRef
         }
       }
     },

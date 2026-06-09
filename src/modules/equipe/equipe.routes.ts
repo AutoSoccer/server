@@ -27,21 +27,41 @@ type SalvarEstadoBody = {
   items?: number[];
 };
 
-const errorSchema = {
-  type: 'object',
-  properties: {
-    message: { type: 'string' },
-    code: { type: 'string' }
-  }
-} as const;
+const errorRef = { $ref: 'ErrorResponse#' } as const;
+const positionSchema = { $ref: 'SnapshotPosition#' } as const;
 
-const positionSchema = {
+const compraVendaResponseSchema = {
   type: 'object',
-  required: ['athleteId', 'posX', 'posY'],
+  additionalProperties: true,
   properties: {
-    athleteId: { type: 'integer', example: 21 },
-    posX: { type: 'integer', minimum: 0, maximum: 2, example: 0 },
-    posY: { type: 'integer', minimum: 0, maximum: 2, example: 0 }
+    user: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        id: { type: 'integer' },
+        coins: { type: 'integer' }
+      }
+    },
+    team: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        id: { type: 'integer' },
+        athletes_count: { type: 'integer' }
+      }
+    },
+    athlete: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        id: { type: 'integer' },
+        name: { type: 'string' },
+        cost: { type: 'integer' },
+        refund: { type: 'integer' },
+        tier: { type: 'string' },
+        type: { type: 'string', enum: ['defender', 'midfielder', 'attacker'] }
+      }
+    }
   }
 } as const;
 
@@ -88,7 +108,12 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
         tags: ['Equipe'],
         summary: tSwagger('equipe.get.summary'),
         description: tSwagger('equipe.get.description'),
-        security: [{ BearerAuth: [] }]
+        security: [{ BearerAuth: [] }],
+        response: {
+          200: { $ref: 'TeamResponse#' },
+          401: errorRef,
+          404: errorRef
+        }
       }
     },
     async (request, reply) => {
@@ -105,7 +130,27 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
         tags: ['Equipe'],
         summary: tSwagger('equipe.buyAthlete.summary'),
         description: tSwagger('equipe.buyAthlete.description'),
-        security: [{ BearerAuth: [] }]
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: 'object',
+          required: ['atleta_id'],
+          additionalProperties: true,
+          properties: {
+            atleta_id: { type: 'integer', example: 21 },
+            user_id: {
+              type: 'integer',
+              description:
+                'Opcional. Quando informado deve coincidir com o usuario autenticado.'
+            }
+          }
+        },
+        response: {
+          201: compraVendaResponseSchema,
+          400: errorRef,
+          401: errorRef,
+          403: errorRef,
+          404: errorRef
+        }
       }
     },
     async (request, reply) => {
@@ -140,7 +185,26 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
         tags: ['Equipe'],
         summary: tSwagger('equipe.sellAthlete.summary'),
         description: tSwagger('equipe.sellAthlete.description'),
-        security: [{ BearerAuth: [] }]
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: 'object',
+          required: ['atleta_id'],
+          additionalProperties: true,
+          properties: {
+            atleta_id: { type: 'integer', example: 21 },
+            user_id: {
+              type: 'integer',
+              description:
+                'Opcional. Quando informado deve coincidir com o usuario autenticado.'
+            }
+          }
+        },
+        response: {
+          200: compraVendaResponseSchema,
+          400: errorRef,
+          401: errorRef,
+          404: errorRef
+        }
       }
     },
     async (request, reply) => {
@@ -201,9 +265,9 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
         },
         response: {
           200: salvarEstadoResponseSchema,
-          400: errorSchema,
-          403: errorSchema,
-          404: errorSchema
+          400: errorRef,
+          403: errorRef,
+          404: errorRef
         }
       }
     },

@@ -69,13 +69,7 @@ const currentUserSchema = {
   }
 } as const;
 
-const errorSchema = {
-  type: 'object',
-  properties: {
-    message: { type: 'string' },
-    code: { type: 'string' }
-  }
-} as const;
+const errorRef = { $ref: 'ErrorResponse#' } as const;
 
 export const rankingRoutes: FastifyPluginAsync = async (app) => {
   app.get<{ Querystring: RankingQuery }>(
@@ -107,7 +101,7 @@ export const rankingRoutes: FastifyPluginAsync = async (app) => {
               currentUser: currentUserSchema
             }
           },
-          404: errorSchema
+          404: errorRef
         }
       }
     },
