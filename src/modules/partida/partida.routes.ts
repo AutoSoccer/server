@@ -13,6 +13,11 @@ import {
   jogarRodadaComFormacao,
   RodadaServiceError
 } from './rodada.service';
+import {
+  abandonCampaign,
+  CampaignServiceError,
+  startCampaign
+} from './campaign.service';
 
 type JogarRodadaBody = {
   user_id?: number;
@@ -23,6 +28,10 @@ type JogarPartidaBody = {
   user_id?: number;
   positions: SalvarEstadoInput['positions'];
   items?: number[];
+};
+
+type StartCampaignBody = {
+  name: string;
 };
 
 const athleteSimSchema = {
@@ -284,6 +293,37 @@ const errorSchema = {
   }
 } as const;
 
+const abandonCampaignResponseSchema = {
+  type: 'object',
+  properties: {
+    user: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer' },
+        coins: { type: 'integer' },
+        trophies: { type: 'integer' }
+      }
+    },
+    team: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            id: { type: 'integer' },
+            name: { type: 'string' },
+            round: { type: 'integer' },
+            victory: { type: 'integer' },
+            lose: { type: 'integer' },
+            draw: { type: 'integer' },
+            athletesCount: { type: 'integer' }
+          }
+        },
+        { type: 'null' }
+      ]
+    }
+  }
+} as const;
+
 const statusForRodadaError = (error: RodadaServiceError): number => {
   if (
     error.code === 'TEAM_NOT_FOUND' ||
@@ -304,6 +344,87 @@ const statusForSnapshotError = (error: TeamSnapshotError): number =>
   error.code === 'TEAM_NOT_FOUND' ? 404 : 400;
 
 export const partidaRoutes: FastifyPluginAsync = async (app) => {
+  app.post<{ Body: StartCampaignBody }>(
+    '/iniciar',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Partida'],
+        summary: 'Inicia uma nova campanha com o nome escolhido',
+        description:
+          'Sempre inicia uma campanha limpa: define o nome da equipe, restaura 10 moedas, zera o progresso e remove os atletas atuais. Nao altera trofeus nem o historico.',
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: 'object',
+          required: ['name'],
+          additionalProperties: false,
+          properties: {
+            name: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 40
+            }
+          }
+        },
+        response: {
+          200: abandonCampaignResponseSchema,
+          400: errorSchema,
+          404: errorSchema
+        }
+      }
+    },
+    async (request, reply) => {
+      try {
+        const result = await startCampaign(
+          request.user!.id,
+          request.body.name
+        );
+        return reply.code(200).send(result);
+      } catch (error: unknown) {
+        if (error instanceof CampaignServiceError) {
+          const status = error.code === 'USER_NOT_FOUND' ? 404 : 400;
+          return reply
+            .code(status)
+            .send({ message: error.message, code: error.code });
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  app.post(
+    '/desistir',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Partida'],
+        summary: 'Abandona a campanha atual',
+        description:
+          'Zera rodada, vitorias, derrotas e empates, remove os atletas da equipe e restaura 10 moedas. Nao registra derrota, nao altera trofeus e preserva snapshots e logs historicos.',
+        security: [{ BearerAuth: [] }],
+        response: {
+          200: abandonCampaignResponseSchema,
+          404: errorSchema
+        }
+      }
+    },
+    async (request, reply) => {
+      try {
+        const result = await abandonCampaign(request.user!.id);
+        return reply.code(200).send(result);
+      } catch (error: unknown) {
+        if (error instanceof CampaignServiceError) {
+          return reply
+            .code(404)
+            .send({ message: error.message, code: error.code });
+        }
+
+        throw error;
+      }
+    }
+  );
+
   app.post<{ Body: JogarPartidaBody }>(
     '/jogar',
     {
