@@ -48,12 +48,23 @@ export type RodadaServiceErrorCode =
   | 'NO_OPPONENT_FOUND'
   | 'USER_NOT_FOUND';
 
+export type RodadaServiceErrorOptions = {
+  i18nKey?: string;
+  params?: Record<string, unknown>;
+};
+
 export class RodadaServiceError extends Error {
   public readonly code: RodadaServiceErrorCode;
+  public readonly i18nKey: string;
+  public readonly params?: Record<string, unknown>;
 
-  constructor(code: RodadaServiceErrorCode, message: string) {
-    super(message);
+  constructor(code: RodadaServiceErrorCode, options: RodadaServiceErrorOptions = {}) {
+    const i18nKey = options.i18nKey ?? `partida.errors.${code}`;
+    super(i18nKey);
+    this.name = 'RodadaServiceError';
     this.code = code;
+    this.i18nKey = i18nKey;
+    this.params = options.params;
   }
 }
 
@@ -214,10 +225,9 @@ const loadPlayerTeam = async (userId: number) => {
   });
 
   if (!team) {
-    throw new RodadaServiceError(
-      'TEAM_NOT_FOUND',
-      'Voce precisa de um time para jogar uma rodada.'
-    );
+    throw new RodadaServiceError('TEAM_NOT_FOUND', {
+      i18nKey: 'partida.rodada.teamNotFound'
+    });
   }
 
   const athletes = ((team.get('athletes') as AthleteModel[] | undefined) ?? []).filter(
@@ -225,10 +235,9 @@ const loadPlayerTeam = async (userId: number) => {
   );
 
   if (athletes.length === 0) {
-    throw new RodadaServiceError(
-      'TEAM_EMPTY',
-      'Seu time nao possui atletas; contrate antes de jogar.'
-    );
+    throw new RodadaServiceError('TEAM_EMPTY', {
+      i18nKey: 'partida.rodada.teamEmpty'
+    });
   }
 
   return { team, athletes };
@@ -241,16 +250,15 @@ const loadOrCreateSnapshot = async (
   if (snapshotId !== undefined) {
     const existing = await TeamSnapshot.findByPk(snapshotId);
     if (!existing) {
-      throw new RodadaServiceError(
-        'SNAPSHOT_NOT_FOUND',
-        `Snapshot ${snapshotId} nao encontrado.`
-      );
+      throw new RodadaServiceError('SNAPSHOT_NOT_FOUND', {
+        i18nKey: 'partida.rodada.snapshotNotFound',
+        params: { snapshotId }
+      });
     }
     if (existing.user_id !== userId) {
-      throw new RodadaServiceError(
-        'SNAPSHOT_FORBIDDEN',
-        'Voce nao tem permissao para usar este snapshot.'
-      );
+      throw new RodadaServiceError('SNAPSHOT_FORBIDDEN', {
+        i18nKey: 'partida.rodada.snapshotForbidden'
+      });
     }
     return existing;
   }
@@ -307,7 +315,9 @@ const finalizeRound = async (input: FinalizeRoundInput): Promise<RoundResolution
       lock: transaction.LOCK.UPDATE
     });
     if (!team) {
-      throw new RodadaServiceError('TEAM_NOT_FOUND', 'Time do jogador nao encontrado.');
+      throw new RodadaServiceError('TEAM_NOT_FOUND', {
+        i18nKey: 'partida.rodada.teamMissingOnFinalize'
+      });
     }
 
     const user = await User.findByPk(input.userId, {
@@ -315,7 +325,9 @@ const finalizeRound = async (input: FinalizeRoundInput): Promise<RoundResolution
       lock: transaction.LOCK.UPDATE
     });
     if (!user) {
-      throw new RodadaServiceError('USER_NOT_FOUND', 'Usuario nao encontrado.');
+      throw new RodadaServiceError('USER_NOT_FOUND', {
+        i18nKey: 'partida.rodada.userNotFound'
+      });
     }
 
     const winner = input.result.winner;
@@ -454,17 +466,18 @@ export const jogarRodada = async (
     windowUsed = match.windowUsed;
   } catch (error) {
     if (error instanceof MatchmakingError) {
-      throw new RodadaServiceError('NO_OPPONENT_FOUND', error.message);
+      throw new RodadaServiceError('NO_OPPONENT_FOUND', {
+        i18nKey: 'partida.rodada.noOpponentFound'
+      });
     }
     throw error;
   }
 
   const playerTeam = await Team.findByPk(playerSnapshot.team_id);
   if (!playerTeam) {
-    throw new RodadaServiceError(
-      'TEAM_NOT_FOUND',
-      'Time do jogador desapareceu entre o snapshot e a partida.'
-    );
+    throw new RodadaServiceError('TEAM_NOT_FOUND', {
+      i18nKey: 'partida.rodada.teamMissingForMatch'
+    });
   }
 
   const opponentFallbackName = `Adversario fantasma #${opponentSnapshot.team_id}`;

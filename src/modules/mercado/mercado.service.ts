@@ -10,12 +10,23 @@ export type MercadoServiceErrorCode =
   | 'INSUFFICIENT_COINS'
   | 'USER_NOT_FOUND';
 
+export type MercadoServiceErrorOptions = {
+  i18nKey?: string;
+  params?: Record<string, unknown>;
+};
+
 export class MercadoServiceError extends Error {
   public readonly code: MercadoServiceErrorCode;
+  public readonly i18nKey: string;
+  public readonly params?: Record<string, unknown>;
 
-  constructor(code: MercadoServiceErrorCode, message: string) {
-    super(message);
+  constructor(code: MercadoServiceErrorCode, options: MercadoServiceErrorOptions = {}) {
+    const i18nKey = options.i18nKey ?? `mercado.errors.${code}`;
+    super(i18nKey);
+    this.name = 'MercadoServiceError';
     this.code = code;
+    this.i18nKey = i18nKey;
+    this.params = options.params;
   }
 }
 
@@ -136,14 +147,15 @@ export const refreshMarket = async (
     });
 
     if (!user) {
-      throw new MercadoServiceError('USER_NOT_FOUND', 'Usuario nao encontrado.');
+      throw new MercadoServiceError('USER_NOT_FOUND', {
+        i18nKey: 'mercado.refresh.userNotFound'
+      });
     }
 
     if (user.coins < REFRESH_COST) {
-      throw new MercadoServiceError(
-        'INSUFFICIENT_COINS',
-        'Saldo insuficiente para atualizar o mercado.'
-      );
+      throw new MercadoServiceError('INSUFFICIENT_COINS', {
+        i18nKey: 'mercado.refresh.insufficientBalance'
+      });
     }
 
     user.coins -= REFRESH_COST;
@@ -181,7 +193,9 @@ export const getMarket = async (userId: number): Promise<MarketResponse> => {
   const user = await User.findByPk(userId);
 
   if (!user) {
-    throw new MercadoServiceError('USER_NOT_FOUND', 'Usuario nao encontrado.');
+    throw new MercadoServiceError('USER_NOT_FOUND', {
+      i18nKey: 'mercado.get.userNotFound'
+    });
   }
 
   if (existingEntries.length > 0) {

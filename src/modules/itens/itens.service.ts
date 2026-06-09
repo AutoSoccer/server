@@ -17,12 +17,23 @@ export type ItemServiceErrorCode =
   | 'ATHLETE_NOT_IN_SNAPSHOT'
   | 'STACK_NOT_ALLOWED';
 
+export type ItemServiceErrorOptions = {
+  i18nKey?: string;
+  params?: Record<string, unknown>;
+};
+
 export class ItemServiceError extends Error {
   public readonly code: ItemServiceErrorCode;
+  public readonly i18nKey: string;
+  public readonly params?: Record<string, unknown>;
 
-  constructor(code: ItemServiceErrorCode, message: string) {
-    super(message);
+  constructor(code: ItemServiceErrorCode, options: ItemServiceErrorOptions = {}) {
+    const i18nKey = options.i18nKey ?? `itens.errors.${code}`;
+    super(i18nKey);
+    this.name = 'ItemServiceError';
     this.code = code;
+    this.i18nKey = i18nKey;
+    this.params = options.params;
   }
 }
 
@@ -82,22 +93,28 @@ export const comprarItem = async (
       lock: transaction.LOCK.UPDATE
     });
     if (!user) {
-      throw new ItemServiceError('USER_NOT_FOUND', 'Usuario nao encontrado.');
+      throw new ItemServiceError('USER_NOT_FOUND', {
+        i18nKey: 'itens.buy.userNotFound'
+      });
     }
 
     const item = await Item.findByPk(itemId, { transaction });
     if (!item) {
-      throw new ItemServiceError('ITEM_NOT_FOUND', `Item ${itemId} nao encontrado.`);
+      throw new ItemServiceError('ITEM_NOT_FOUND', {
+        i18nKey: 'itens.buy.itemNotFound',
+        params: { itemId }
+      });
     }
     if (!item.is_active) {
-      throw new ItemServiceError('ITEM_INACTIVE', 'Item indisponivel na loja.');
+      throw new ItemServiceError('ITEM_INACTIVE', {
+        i18nKey: 'itens.buy.itemInactive'
+      });
     }
 
     if (user.coins < item.cost) {
-      throw new ItemServiceError(
-        'INSUFFICIENT_COINS',
-        'Saldo insuficiente para comprar o item.'
-      );
+      throw new ItemServiceError('INSUFFICIENT_COINS', {
+        i18nKey: 'itens.buy.insufficientBalance'
+      });
     }
 
     user.coins -= item.cost;
@@ -169,10 +186,15 @@ export const aplicarItem = async (
   return sequelize.transaction(async (transaction) => {
     const item = await Item.findByPk(itemId, { transaction });
     if (!item) {
-      throw new ItemServiceError('ITEM_NOT_FOUND', `Item ${itemId} nao encontrado.`);
+      throw new ItemServiceError('ITEM_NOT_FOUND', {
+        i18nKey: 'itens.apply.itemNotFound',
+        params: { itemId }
+      });
     }
     if (!item.is_active) {
-      throw new ItemServiceError('ITEM_INACTIVE', 'Item indisponivel.');
+      throw new ItemServiceError('ITEM_INACTIVE', {
+        i18nKey: 'itens.apply.itemInactive'
+      });
     }
 
     // Posse e uso: instancia ainda nao consumida no inventario do usuario.
@@ -183,10 +205,9 @@ export const aplicarItem = async (
       lock: transaction.LOCK.UPDATE
     });
     if (!inventoryItem) {
-      throw new ItemServiceError(
-        'NO_INVENTORY_ITEM',
-        'Voce nao possui este item disponivel no inventario.'
-      );
+      throw new ItemServiceError('NO_INVENTORY_ITEM', {
+        i18nKey: 'itens.apply.noInventoryItem'
+      });
     }
 
     // Snapshot da rodada atual (mais recente do usuario).
@@ -200,27 +221,26 @@ export const aplicarItem = async (
       lock: transaction.LOCK.UPDATE
     });
     if (!snapshot) {
-      throw new ItemServiceError(
-        'NO_SNAPSHOT',
-        'Salve o estado da equipe (rodada) antes de aplicar itens.'
-      );
+      throw new ItemServiceError('NO_SNAPSHOT', {
+        i18nKey: 'itens.apply.noSnapshot'
+      });
     }
 
     const positions = clonePositions(snapshot.positions);
     const target = findAthleteCell(positions, athleteId);
     if (!target) {
-      throw new ItemServiceError(
-        'ATHLETE_NOT_IN_SNAPSHOT',
-        `Atleta ${athleteId} nao esta posicionado no snapshot atual.`
-      );
+      throw new ItemServiceError('ATHLETE_NOT_IN_SNAPSHOT', {
+        i18nKey: 'itens.apply.athleteNotInSnapshot',
+        params: { athleteId }
+      });
     }
 
     // Stacking: item nao-stackable nao pode repetir no mesmo atleta na rodada.
     if (!canApplyItem(target, itemId, item.stackable)) {
-      throw new ItemServiceError(
-        'STACK_NOT_ALLOWED',
-        `O item "${item.name}" nao pode ser aplicado mais de uma vez no mesmo atleta nesta rodada.`
-      );
+      throw new ItemServiceError('STACK_NOT_ALLOWED', {
+        i18nKey: 'itens.apply.stackNotAllowed',
+        params: { name: item.name }
+      });
     }
 
     const mods = itemModifiers(item);

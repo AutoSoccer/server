@@ -30,13 +30,23 @@ export type RankingResponse = {
   currentUser: CurrentUserRanking;
 };
 
+export type RankingServiceErrorOptions = {
+  i18nKey?: string;
+  params?: Record<string, unknown>;
+};
+
 export class RankingServiceError extends Error {
-  constructor(
-    public readonly code: 'USER_NOT_FOUND',
-    message: string
-  ) {
-    super(message);
+  public readonly code: 'USER_NOT_FOUND';
+  public readonly i18nKey: string;
+  public readonly params?: Record<string, unknown>;
+
+  constructor(code: 'USER_NOT_FOUND', options: RankingServiceErrorOptions = {}) {
+    const i18nKey = options.i18nKey ?? `ranking.errors.${code}`;
+    super(i18nKey);
     this.name = 'RankingServiceError';
+    this.code = code;
+    this.i18nKey = i18nKey;
+    this.params = options.params;
   }
 }
 
@@ -135,10 +145,9 @@ export const getRanking = async (
   ]);
 
   if (!currentUser) {
-    throw new RankingServiceError(
-      'USER_NOT_FOUND',
-      'Usuario autenticado nao encontrado.'
-    );
+    throw new RankingServiceError('USER_NOT_FOUND', {
+      i18nKey: 'ranking.userNotFound'
+    });
   }
 
   const currentMetrics = calculateRankingMetrics(

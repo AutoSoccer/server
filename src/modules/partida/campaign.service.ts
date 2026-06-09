@@ -11,12 +11,23 @@ export type CampaignServiceErrorCode =
   | 'USER_NOT_FOUND'
   | 'INVALID_TEAM_NAME';
 
+export type CampaignServiceErrorOptions = {
+  i18nKey?: string;
+  params?: Record<string, unknown>;
+};
+
 export class CampaignServiceError extends Error {
   public readonly code: CampaignServiceErrorCode;
+  public readonly i18nKey: string;
+  public readonly params?: Record<string, unknown>;
 
-  constructor(code: CampaignServiceErrorCode, message: string) {
-    super(message);
+  constructor(code: CampaignServiceErrorCode, options: CampaignServiceErrorOptions = {}) {
+    const i18nKey = options.i18nKey ?? `partida.errors.${code}`;
+    super(i18nKey);
+    this.name = 'CampaignServiceError';
     this.code = code;
+    this.i18nKey = i18nKey;
+    this.params = options.params;
   }
 }
 
@@ -60,10 +71,9 @@ export const abandonCampaign = async (
     });
 
     if (!user) {
-      throw new CampaignServiceError(
-        'USER_NOT_FOUND',
-        'Usuario nao encontrado.'
-      );
+      throw new CampaignServiceError('USER_NOT_FOUND', {
+        i18nKey: 'partida.campaign.userNotFound'
+      });
     }
 
     const team = await Team.findOne({
@@ -121,10 +131,9 @@ export const startCampaign = async (
   const teamName = rawTeamName.trim();
 
   if (teamName.length === 0 || teamName.length > 40) {
-    throw new CampaignServiceError(
-      'INVALID_TEAM_NAME',
-      'O nome do time deve ter entre 1 e 40 caracteres.'
-    );
+    throw new CampaignServiceError('INVALID_TEAM_NAME', {
+      i18nKey: 'partida.campaign.invalidTeamName'
+    });
   }
 
   return sequelize.transaction(async (transaction) => {
@@ -134,10 +143,9 @@ export const startCampaign = async (
     });
 
     if (!user) {
-      throw new CampaignServiceError(
-        'USER_NOT_FOUND',
-        'Usuario nao encontrado.'
-      );
+      throw new CampaignServiceError('USER_NOT_FOUND', {
+        i18nKey: 'partida.campaign.userNotFound'
+      });
     }
 
     let team = await Team.findOne({
