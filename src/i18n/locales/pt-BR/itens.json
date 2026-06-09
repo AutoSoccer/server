@@ -22,5 +22,27 @@
     "NO_SNAPSHOT": "Snapshot nao encontrado.",
     "ATHLETE_NOT_IN_SNAPSHOT": "Atleta nao esta no snapshot.",
     "STACK_NOT_ALLOWED": "Item nao pode ser empilhado neste atleta."
+  },
+  "catalog": {
+    "chuteira-de-ouro": {
+      "name": "Chuteira de Ouro",
+      "description": "Aumenta a forca de finalizacao do atleta."
+    },
+    "luvas-reforcadas": {
+      "name": "Luvas Reforcadas",
+      "description": "Reforca a defesa do atleta."
+    },
+    "tornozeleira-leve": {
+      "name": "Tornozeleira Leve",
+      "description": "Ganho de velocidade nas arrancadas."
+    },
+    "energetico": {
+      "name": "Energetico",
+      "description": "Pequeno bonus geral; pode ser empilhado."
+    },
+    "faixa-de-capitao": {
+      "name": "Faixa de Capitao",
+      "description": "Inspira o atleta: ataque e defesa."
+    }
   }
 }

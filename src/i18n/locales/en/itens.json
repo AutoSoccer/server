@@ -22,5 +22,27 @@
     "NO_SNAPSHOT": "Snapshot not found.",
     "ATHLETE_NOT_IN_SNAPSHOT": "Athlete is not in the snapshot.",
     "STACK_NOT_ALLOWED": "Item cannot be stacked on this athlete."
+  },
+  "catalog": {
+    "chuteira-de-ouro": {
+      "name": "Golden Boot",
+      "description": "Increases the athlete's finishing power."
+    },
+    "luvas-reforcadas": {
+      "name": "Reinforced Gloves",
+      "description": "Reinforces the athlete's defense."
+    },
+    "tornozeleira-leve": {
+      "name": "Light Ankle Brace",
+      "description": "Boosts speed on sprints."
+    },
+    "energetico": {
+      "name": "Energy Drink",
+      "description": "Small overall bonus; can be stacked."
+    },
+    "faixa-de-capitao": {
+      "name": "Captain's Armband",
+      "description": "Inspires the athlete: attack and defense."
+    }
   }
 }
