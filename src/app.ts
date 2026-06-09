@@ -1,6 +1,7 @@
 import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { env } from './config/env';
+import { tSwagger } from './i18n/swagger';
 import { authRoutes } from './modules/auth/auth.routes';
 import { equipeRoutes } from './modules/equipe/equipe.routes';
 import { itensRoutes } from './modules/itens/itens.routes';
@@ -44,11 +45,11 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     origin: parseCorsOrigin(env.corsOrigin)
   });
 
-  await registerSwagger(app);
-
-  // i18n precisa estar ativo antes do error handler para que `req.t` esteja
-  // disponivel ao traduzir o `code` dos erros de servico (WS-02).
+  // i18n precisa estar inicializado antes de qualquer registro que use
+  // `i18next.t(...)` (Swagger e error handler dependem disso).
   await registerI18n(app);
+
+  await registerSwagger(app);
 
   registerErrorHandler(app);
 
@@ -64,7 +65,8 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     {
       schema: {
         tags: ['Sistema'],
-        summary: 'Health check',
+        summary: tSwagger('sistema.health.summary'),
+        description: tSwagger('sistema.health.description'),
         response: {
           200: {
             type: 'object',
@@ -84,7 +86,8 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     {
       schema: {
         tags: ['Sistema'],
-        summary: 'Health check (alias para infra de deploy)',
+        summary: tSwagger('sistema.healthz.summary'),
+        description: tSwagger('sistema.healthz.description'),
         response: {
           200: {
             type: 'object',

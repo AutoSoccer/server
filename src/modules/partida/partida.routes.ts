@@ -1,6 +1,7 @@
 import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
+import { tSwagger } from '../../i18n/swagger';
 import { authenticate } from '../auth/auth.middleware';
 import {
   MAX_POSITIONED_ATHLETES,
@@ -322,9 +323,8 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Partida'],
-        summary: 'Inicia uma nova campanha com o nome escolhido',
-        description:
-          'Sempre inicia uma campanha limpa: define o nome da equipe, restaura 10 moedas, zera o progresso e remove os atletas atuais. Nao altera trofeus nem o historico.',
+        summary: tSwagger('partida.iniciar.summary'),
+        description: tSwagger('partida.iniciar.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -360,9 +360,8 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Partida'],
-        summary: 'Abandona a campanha atual',
-        description:
-          'Zera rodada, vitorias, derrotas e empates, remove os atletas da equipe e restaura 10 moedas. Nao registra derrota, nao altera trofeus e preserva snapshots e logs historicos.',
+        summary: tSwagger('partida.desistir.summary'),
+        description: tSwagger('partida.desistir.description'),
         security: [{ BearerAuth: [] }],
         response: {
           200: abandonCampaignResponseSchema,
@@ -382,9 +381,8 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Partida'],
-        summary: 'Salva a formacao atual e joga uma rodada',
-        description:
-          'Fluxo principal do botao Jogar: cria um snapshot imutavel da formacao enviada (1 a 6 atletas), busca um adversario por matchmaking e executa a simulacao.',
+        summary: tSwagger('partida.jogar.summary'),
+        description: tSwagger('partida.jogar.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -446,10 +444,8 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Partida'],
-        summary:
-          'Joga uma rodada com matchmaking baseado em vitorias (Task 4.3)',
-        description:
-          'Cria um snapshot da equipe do jogador (ou usa o snapshot_id informado), busca um adversario fantasma com victory_ratio proximo (RN006), calcula iniciativa pela velocidade do atacante mais a frente (RN009) e executa o motor de 12 turnos. Persiste victory/lose/round no time do jogador.',
+        summary: tSwagger('partida.jogarRodada.summary'),
+        description: tSwagger('partida.jogarRodada.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',

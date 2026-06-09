@@ -1,6 +1,7 @@
 import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
+import { tSwagger } from '../../i18n/swagger';
 import { authenticate } from '../auth/auth.middleware';
 import { getMarket, refreshMarket } from './mercado.service';
 
@@ -52,7 +53,8 @@ export const mercadoRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Mercado'],
-        summary: 'Retorna a janela de mercado do usuario',
+        summary: tSwagger('mercado.list.summary'),
+        description: tSwagger('mercado.list.description'),
         security: [{ BearerAuth: [] }],
         response: {
           200: marketResponseSchema,
@@ -72,8 +74,8 @@ export const mercadoRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Mercado'],
-        summary: 'Sorteia uma nova janela de atletas no mercado',
-        description: 'Desconta 1 moeda e sorteia ate 3 novos atletas.',
+        summary: tSwagger('mercado.refresh.summary'),
+        description: tSwagger('mercado.refresh.description'),
         security: [{ BearerAuth: [] }],
         response: {
           200: marketResponseSchema,
