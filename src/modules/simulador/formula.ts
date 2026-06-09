@@ -1,7 +1,7 @@
 import type { Athlete } from './types';
 
 export type AttackAttribute = 'velocity' | 'attack';
-export type DefenseAttribute = 'defense';
+export type DefenseAttribute = 'velocity' | 'defense';
 export type SimAttribute = AttackAttribute | DefenseAttribute;
 
 /** Valor neutro usado quando um atributo vem ausente/invalido, para a simulacao nunca quebrar. */

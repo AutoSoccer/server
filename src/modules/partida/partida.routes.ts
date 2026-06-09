@@ -32,7 +32,8 @@ const athleteSimSchema = {
     name: { type: 'string' },
     velocity: { type: 'integer' },
     attack: { type: 'integer' },
-    defense: { type: 'integer' }
+    defense: { type: 'integer' },
+    type: { type: 'string', enum: ['defender', 'midfielder', 'attacker'] }
   }
 } as const;
 
@@ -43,7 +44,8 @@ const snapshotAthleteSchema = {
     name: { type: 'string' },
     velocity: { type: 'integer' },
     attack: { type: 'integer' },
-    defense: { type: 'integer' }
+    defense: { type: 'integer' },
+    type: { type: 'string', enum: ['defender', 'midfielder', 'attacker'] }
   }
 } as const;
 
@@ -105,10 +107,10 @@ const turnEventSchema = {
   properties: {
     turn: { type: 'integer', example: 1 },
     possession: { type: 'string', enum: ['player', 'opponent'] },
-    ballRow: { type: 'integer', enum: [0, 1, 2] },
+    ballRow: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] },
     kind: {
       type: 'string',
-      enum: ['pass', 'tackle', 'shot', 'turnover']
+      enum: ['move', 'pass', 'tackle', 'shot', 'turnover']
     },
     attackerTeamId: { type: 'integer' },
     defenderTeamId: { type: 'integer' },
@@ -118,8 +120,49 @@ const turnEventSchema = {
     defenderName: { type: ['string', 'null'] },
     attackerRoll: { type: 'number' },
     defenderRoll: { type: 'number' },
+    successChance: { type: 'number' },
+    randomRoll: { type: 'number' },
     success: { type: 'boolean' },
     goal: { type: 'boolean' },
+    movements: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          team: { type: 'string', enum: ['player', 'opponent'] },
+          athleteId: { type: 'integer' },
+          from: {
+            type: 'object',
+            properties: {
+              x: { type: 'integer', enum: [0, 1, 2] },
+              y: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] }
+            }
+          },
+          to: {
+            type: 'object',
+            properties: {
+              x: { type: 'integer', enum: [0, 1, 2] },
+              y: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] }
+            }
+          }
+        }
+      }
+    },
+    ball: {
+      type: 'object',
+      properties: {
+        team: { type: 'string', enum: ['player', 'opponent'] },
+        athleteId: { type: 'integer' },
+        athleteName: { type: 'string' },
+        position: {
+          type: 'object',
+          properties: {
+            x: { type: 'integer', enum: [0, 1, 2] },
+            y: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] }
+          }
+        }
+      }
+    },
     description: { type: 'string' }
   }
 } as const;
@@ -147,6 +190,21 @@ const rodadaResultSchema = {
     },
     winner: { type: 'string', enum: ['player', 'opponent', 'draw'] },
     totalTurns: { type: 'integer', example: 12 },
+    initialBall: {
+      type: 'object',
+      properties: {
+        team: { type: 'string', enum: ['player', 'opponent'] },
+        athleteId: { type: 'integer' },
+        athleteName: { type: 'string' },
+        position: {
+          type: 'object',
+          properties: {
+            x: { type: 'integer', enum: [0, 1, 2] },
+            y: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] }
+          }
+        }
+      }
+    },
     events: { type: 'array', items: turnEventSchema },
     matchmaking: {
       type: 'object',
@@ -164,9 +222,30 @@ const rodadaResultSchema = {
       type: 'object',
       description: 'Resultado da RN009 — quem comeca com a posse',
       properties: {
-        playerLeadVelocity: { type: 'integer' },
-        opponentLeadVelocity: { type: 'integer' },
-        startsWith: { type: 'string', enum: ['player', 'opponent'] }
+        playerLeadVelocity: {
+          type: 'integer',
+          description: 'Soma de velocidade da linha mais avancada do jogador.'
+        },
+        opponentLeadVelocity: {
+          type: 'integer',
+          description: 'Soma de velocidade da linha mais avancada do oponente.'
+        },
+        startsWith: { type: 'string', enum: ['player', 'opponent'] },
+        carrier: {
+          type: 'object',
+          properties: {
+            team: { type: 'string', enum: ['player', 'opponent'] },
+            athleteId: { type: 'integer' },
+            athleteName: { type: 'string' },
+            position: {
+              type: 'object',
+              properties: {
+                x: { type: 'integer', enum: [0, 1, 2] },
+                y: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] }
+              }
+            }
+          }
+        }
       }
     },
     persisted: {

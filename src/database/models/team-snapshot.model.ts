@@ -20,6 +20,7 @@ export type SnapshotAthlete = {
   velocity: number;
   attack: number;
   defense: number;
+  type?: 'defender' | 'midfielder' | 'attacker';
   /** Bonus acumulado de itens aplicados nesta rodada (Task 4.1). */
   bonus?: SnapshotAthleteBonus;
   /** IDs dos itens ja aplicados ao atleta nesta rodada (controle de stacking). */

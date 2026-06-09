@@ -29,8 +29,9 @@ import {
 } from './rodada.logic';
 import {
   Athlete as SimAthlete,
+  computeInitiative,
+  type InitiativeResult,
   type MatchResult,
-  type Possession,
   processarRodada,
   type SimulationOptions,
   TeamDTO
@@ -87,11 +88,7 @@ export type JogarRodadaResult = MatchResult & {
     delta: number;
     windowUsed: number;
   };
-  initiative: {
-    playerLeadVelocity: number;
-    opponentLeadVelocity: number;
-    startsWith: Possession;
-  };
+  initiative: InitiativeResult;
   persisted: {
     teamId: number;
     victory: number;
@@ -135,7 +132,8 @@ const toSnapshotAthlete = (athlete: AthleteModel): SnapshotAthlete => ({
   name: athlete.name,
   velocity: athlete.velocity,
   attack: athlete.attack,
-  defense: athlete.defense
+  defense: athlete.defense,
+  type: athlete.type
 });
 
 const placeOnGrid = <T>(
@@ -174,7 +172,7 @@ const snapshotToTeamDto = (
   dto.turn = snapshot.round;
   dto.victorys = snapshot.victory;
   dto.loses = snapshot.lose;
-  dto.athletesPositions = snapshot.positions.map((row) =>
+  dto.athletesPositions = snapshot.positions.map((row, rowIndex) =>
     row.map((cell) => {
       if (!cell) {
         return null;
@@ -185,6 +183,13 @@ const snapshotToTeamDto = (
       a.velocity = cell.velocity;
       a.attack = cell.attack;
       a.defense = cell.defense;
+      a.type =
+        cell.type ??
+        (rowIndex === 0
+          ? 'defender'
+          : rowIndex === 2
+            ? 'attacker'
+            : 'midfielder');
       // Task 4.1: leva os buffs de itens e a ancoragem (RN011) para o motor.
       if (cell.bonus) {
         a.bonus = cell.bonus;
@@ -263,47 +268,6 @@ const loadOrCreateSnapshot = async (
     victory_ratio: ratio,
     positions: buildSnapshotPositions(athletes)
   });
-};
-
-const getLeadVelocity = (team: TeamDTO): number => {
-  // RN009: atleta "mais a frente" e o da linha de ataque (row 2).
-  for (let row = team.athletesPositions.length - 1; row >= 0; row--) {
-    const cols = team.athletesPositions[row];
-    let bestInRow = -Infinity;
-    for (const cell of cols) {
-      if (cell && typeof cell.velocity === 'number') {
-        bestInRow = Math.max(bestInRow, cell.velocity);
-      }
-    }
-    if (bestInRow !== -Infinity) {
-      return bestInRow;
-    }
-  }
-  return 0;
-};
-
-const computeInitiative = (
-  player: TeamDTO,
-  opponent: TeamDTO,
-  rng: () => number
-): { playerLeadVelocity: number; opponentLeadVelocity: number; startsWith: Possession } => {
-  const playerLead = getLeadVelocity(player);
-  const opponentLead = getLeadVelocity(opponent);
-
-  let startsWith: Possession;
-  if (playerLead > opponentLead) {
-    startsWith = 'player';
-  } else if (opponentLead > playerLead) {
-    startsWith = 'opponent';
-  } else {
-    startsWith = rng() < 0.5 ? 'player' : 'opponent';
-  }
-
-  return {
-    playerLeadVelocity: playerLead,
-    opponentLeadVelocity: opponentLead,
-    startsWith
-  };
 };
 
 type RoundResolution = {
@@ -444,7 +408,8 @@ const finalizeRound = async (input: FinalizeRoundInput): Promise<RoundResolution
  * Task 4.3 — orquestra a rodada completa:
  * 1. Garante o snapshot da equipe do jogador (RN: usa o informado ou cria um novo).
  * 2. Busca oponente fantasma com victory_ratio proximo (RN006).
- * 3. Reconstroi TeamDTOs e calcula iniciativa pela velocidade do atacante (RN009).
+ * 3. Reconstroi TeamDTOs e calcula iniciativa pela soma de velocidade da linha
+ *    mais avancada de cada time (RN009).
  * 4. Aciona o motor de 12 turnos (Task 4.2) com a posse inicial calculada.
  * 5. Persiste victory/lose/round no time do jogador.
  */
@@ -513,7 +478,8 @@ export const jogarRodada = async (
 
   const result = processarRodada(playerDto, opponentDto, {
     ...options,
-    initialPossession: initiative.startsWith
+    initialPossession: initiative.startsWith,
+    initialCarrierId: initiative.carrier.athleteId
   });
 
   const resolution = await finalizeRound({

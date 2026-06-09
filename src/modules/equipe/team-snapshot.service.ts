@@ -144,6 +144,14 @@ const ensureValidPositions = (positions: AthletePositionInput[]): void => {
   }
 };
 
+export const validateAthletePositions = (
+  positions: unknown
+): AthletePositionInput[] => {
+  const normalized = ensurePositionsShape(positions);
+  ensureValidPositions(normalized);
+  return normalized;
+};
+
 const loadUserTeam = async (
   userId: number,
   transaction?: Transaction
@@ -210,7 +218,8 @@ const buildPositionsGrid = (
       name: athlete.name,
       velocity: athlete.velocity,
       attack: athlete.attack,
-      defense: athlete.defense
+      defense: athlete.defense,
+      type: athlete.type
     };
   }
 
@@ -234,8 +243,7 @@ const buildPositionsGrid = (
 export const salvarEstadoEquipe = async (
   input: SalvarEstadoInput
 ): Promise<SalvarEstadoResult> => {
-  const positions = ensurePositionsShape(input.positions);
-  ensureValidPositions(positions);
+  const positions = validateAthletePositions(input.positions);
 
   if (input.items && input.items.length > 0) {
     // Sprint 5 — Sistema de Itens ainda nao existe; impedimos uso ate la.

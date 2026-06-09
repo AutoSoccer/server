@@ -1,26 +1,25 @@
-export { Simulador, processarRodada, TOTAL_TURNS } from './simulador.service';
+export {
+  computeInitiative,
+  Simulador,
+  processarRodada,
+  TOTAL_TURNS
+} from './simulador.service';
 
 export { computeSuccessChance, effectiveAttribute, FALLBACK_ATTRIBUTE } from './formula';
-
-export { moveAthleteToDefense, retreatOnPossessionLoss } from './movement';
-
-export {
-  dribbleVsTackle,
-  shotVsKeeper,
-  resolveDispute,
-  strategyForBallRow,
-  DribbleVsTackleStrategy,
-  ShotVsKeeperStrategy
-} from './strategies';
-export type { DisputeStrategy } from './strategies';
 
 export {
   Athlete,
   TeamDTO,
   type AttributeBonus,
+  type AthleteRole,
   type BallRow,
+  type BallState,
   type DisputeKind,
   type DisputeOutcome,
+  type FieldColumn,
+  type FieldMovement,
+  type FieldPosition,
+  type InitiativeResult,
   type MatchResult,
   type MatchScore,
   type MatchWinner,
