@@ -2,13 +2,7 @@ import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
 import { authenticate } from '../auth/auth.middleware';
-import {
-  aplicarItem,
-  comprarItem,
-  ItemServiceError,
-  type ItemServiceErrorCode,
-  listarItens
-} from './itens.service';
+import { aplicarItem, comprarItem, listarItens } from './itens.service';
 
 type ComprarBody = {
   item_id: number;
@@ -37,11 +31,6 @@ const modifiersSchema = {
     velocity: { type: 'integer' }
   }
 } as const;
-
-const NOT_FOUND_CODES: ItemServiceErrorCode[] = ['USER_NOT_FOUND', 'ITEM_NOT_FOUND'];
-
-const statusForError = (code: ItemServiceErrorCode): number =>
-  NOT_FOUND_CODES.includes(code) ? 404 : 400;
 
 export const itensRoutes: FastifyPluginAsync = async (app) => {
   app.get(
@@ -125,17 +114,8 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
         return reply.code(400).send({ message: 'Campo item_id invalido.', code: 'INVALID_BODY' });
       }
 
-      try {
-        const result = await comprarItem(authenticatedUserId, itemId);
-        return reply.code(201).send(result);
-      } catch (error: unknown) {
-        if (error instanceof ItemServiceError) {
-          return reply
-            .code(statusForError(error.code))
-            .send({ message: error.message, code: error.code });
-        }
-        throw error;
-      }
+      const result = await comprarItem(authenticatedUserId, itemId);
+      return reply.code(201).send(result);
     }
   );
 
@@ -211,17 +191,8 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
           .send({ message: 'Campos item_id e atleta_id precisam ser inteiros validos.', code: 'INVALID_BODY' });
       }
 
-      try {
-        const result = await aplicarItem(authenticatedUserId, itemId, athleteId);
-        return reply.code(200).send(result);
-      } catch (error: unknown) {
-        if (error instanceof ItemServiceError) {
-          return reply
-            .code(statusForError(error.code))
-            .send({ message: error.message, code: error.code });
-        }
-        throw error;
-      }
+      const result = await aplicarItem(authenticatedUserId, itemId, athleteId);
+      return reply.code(200).send(result);
     }
   );
 };
