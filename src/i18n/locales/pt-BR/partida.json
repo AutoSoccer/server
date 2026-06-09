@@ -1,0 +1,28 @@
+{
+  "rodada": {
+    "teamNotFound": "Voce precisa de um time para jogar uma rodada.",
+    "teamEmpty": "Seu time nao possui atletas; contrate antes de jogar.",
+    "snapshotNotFound": "Snapshot {{snapshotId}} nao encontrado.",
+    "snapshotForbidden": "Voce nao tem permissao para usar este snapshot.",
+    "teamMissingForMatch": "Time do jogador desapareceu entre o snapshot e a partida.",
+    "teamMissingOnFinalize": "Time do jogador nao encontrado.",
+    "userNotFound": "Usuario nao encontrado.",
+    "noOpponentFound": "Nenhum oponente compativel encontrado para esta rodada."
+  },
+  "campaign": {
+    "userNotFound": "Usuario nao encontrado.",
+    "invalidTeamName": "O nome do time deve ter entre 1 e 40 caracteres."
+  },
+  "matchmaking": {
+    "noOpponentFound": "Nenhum oponente compativel encontrado para esta rodada."
+  },
+  "errors": {
+    "TEAM_NOT_FOUND": "Time nao encontrado.",
+    "TEAM_EMPTY": "Time vazio.",
+    "SNAPSHOT_NOT_FOUND": "Snapshot nao encontrado.",
+    "SNAPSHOT_FORBIDDEN": "Voce nao tem permissao para usar este snapshot.",
+    "NO_OPPONENT_FOUND": "Nenhum oponente compativel encontrado.",
+    "USER_NOT_FOUND": "Usuario nao encontrado.",
+    "INVALID_TEAM_NAME": "Nome do time invalido."
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "rodada": {
+    "teamNotFound": "You need a team to play a round.",
+    "teamEmpty": "Your team has no athletes; hire some before playing.",
+    "snapshotNotFound": "Snapshot {{snapshotId}} not found.",
+    "snapshotForbidden": "You do not have permission to use this snapshot.",
+    "teamMissingForMatch": "Player's team disappeared between the snapshot and the match.",
+    "teamMissingOnFinalize": "Player's team not found.",
+    "userNotFound": "User not found.",
+    "noOpponentFound": "No compatible opponent found for this round."
+  },
+  "campaign": {
+    "userNotFound": "User not found.",
+    "invalidTeamName": "Team name must have between 1 and 40 characters."
+  },
+  "matchmaking": {
+    "noOpponentFound": "No compatible opponent found for this round."
+  },
+  "errors": {
+    "TEAM_NOT_FOUND": "Team not found.",
+    "TEAM_EMPTY": "Team is empty.",
+    "SNAPSHOT_NOT_FOUND": "Snapshot not found.",
+    "SNAPSHOT_FORBIDDEN": "You do not have permission to use this snapshot.",
+    "NO_OPPONENT_FOUND": "No compatible opponent found.",
+    "USER_NOT_FOUND": "User not found.",
+    "INVALID_TEAM_NAME": "Invalid team name."
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "internalError": "Erro interno do servidor.",
+  "validationError": "Erro de validacao no payload da requisicao.",
+  "notFound": "Recurso nao encontrado."
+}

@@ -1,0 +1,13 @@
+{
+  "refresh": {
+    "userNotFound": "User not found.",
+    "insufficientBalance": "Insufficient balance to refresh the market."
+  },
+  "get": {
+    "userNotFound": "User not found."
+  },
+  "errors": {
+    "USER_NOT_FOUND": "User not found.",
+    "INSUFFICIENT_COINS": "Insufficient balance."
+  }
+}

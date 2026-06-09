@@ -13,6 +13,35 @@ import { TeamSnapshotError } from '../modules/equipe/team-snapshot.service';
 
 type ServiceErrorLike = Error & {
   readonly code: string;
+  /**
+   * Chave hierarquica i18n quando o servico segue a convencao do WS-02
+   * (ex.: `equipe.buyAthlete.insufficientBalance`). Quando ausente, o handler
+   * cai no namespace de erro derivado do `code`.
+   */
+  readonly i18nKey?: string;
+  /**
+   * Parametros adicionais usados na interpolacao de mensagens i18n
+   * (`req.t(key, params)`). Quando ausentes, o handler chama `req.t(key)`.
+   */
+  readonly params?: Record<string, unknown>;
+};
+
+/**
+ * Convencao de fallback: cada subclasse de ServiceError reside em um namespace
+ * i18n dedicado (`auth`, `equipe`, ...). Quando o servico nao define um
+ * `i18nKey` proprio, traduzimos `<namespace>.errors.<CODE>`.
+ */
+const NAMESPACE_BY_ERROR_CLASS: Record<string, string> = {
+  ServiceError: 'auth',
+  MercadoServiceError: 'mercado',
+  EquipeServiceError: 'equipe',
+  TeamSnapshotError: 'equipe',
+  ItemServiceError: 'itens',
+  RodadaServiceError: 'partida',
+  CampaignServiceError: 'partida',
+  MatchmakingError: 'partida',
+  RankingServiceError: 'ranking',
+  SimuladorServiceError: 'simulador'
 };
 
 type ErrorPayload = {
@@ -135,27 +164,77 @@ const isFastifyError = (error: unknown): error is FastifyError => {
 };
 
 /**
+ * Resolve a mensagem traduzida para um `code` de servico via `req.t`.
+ *
+ * Estrategia:
+ * 1. Chama `req.t(code, params)` com a chave hierarquica do erro
+ *    (ex.: `equipe.buyAthlete.insufficientBalance`).
+ * 2. Quando o i18next nao encontra a chave (por defeito ele retorna a propria
+ *    chave), caimos no `error.message` original — preservando assim qualquer
+ *    fallback definido no servico.
+ */
+const translateServiceError = (
+  request: FastifyRequest,
+  error: ServiceErrorLike
+): string => {
+  const translator = request.t;
+  if (typeof translator !== 'function') {
+    return error.message;
+  }
+  const params = (error.params ?? {}) as Record<string, unknown>;
+  const namespace = NAMESPACE_BY_ERROR_CLASS[error.constructor.name];
+  const candidates = [
+    error.i18nKey,
+    namespace ? `${namespace}.errors.${error.code}` : undefined,
+    error.code
+  ].filter((key): key is string => typeof key === 'string' && key.length > 0);
+
+  for (const key of candidates) {
+    const translated = translator(key, params);
+    if (typeof translated === 'string' && translated.length > 0 && translated !== key) {
+      return translated;
+    }
+  }
+  return error.message || error.code;
+};
+
+const translateGeneric = (
+  request: FastifyRequest,
+  key: string,
+  fallback: string,
+  params?: Record<string, unknown>
+): string => {
+  const translator = request.t;
+  if (typeof translator !== 'function') {
+    return fallback;
+  }
+  const translated = translator(key, params ?? {});
+  if (typeof translated !== 'string' || translated.length === 0 || translated === key) {
+    return fallback;
+  }
+  return translated;
+};
+
+/**
  * Error handler global do Fastify.
  *
  * Estrategia:
- * - Subclasses de ServiceError (detectadas por instanceof + nominalmente
- *   pela propriedade `code`) viram payload `{ code, message, details? }`
- *   com o status mapeado pela tabela acima.
+ * - Subclasses de ServiceError viram payload `{ code, message, details? }`
+ *   com o status mapeado pela tabela acima. A mensagem e resolvida via
+ *   `req.t(error.code, error.params)`, com fallback no `error.message`.
  * - Erros de validacao do schema (validation) e demais erros internos do
- *   Fastify (FST_*) preservam o statusCode original.
+ *   Fastify (FST_*) preservam o statusCode original e usam `common.*`.
  * - Qualquer outro erro nao tratado vira 500 INTERNAL_ERROR e e logado
  *   com `request.log.error` para investigacao posterior.
- *
- * A mensagem segue vindo de `error.message`. WS-02 vai substituir esse
- * texto por uma traducao via `req.t(code)`.
  */
 export const registerErrorHandler = (app: FastifyInstance): void => {
   app.setErrorHandler((error, request: FastifyRequest, reply: FastifyReply) => {
     if (isServiceErrorLike(error)) {
       const status = statusForServiceError(error);
+      const message = translateServiceError(request, error);
       const payload: ErrorPayload = {
         code: error.code,
-        message: error.message
+        message
       };
 
       if (status >= 500) {
@@ -184,7 +263,11 @@ export const registerErrorHandler = (app: FastifyInstance): void => {
 
         return reply.code(status).send({
           code: 'VALIDATION_ERROR',
-          message: error.message,
+          message: translateGeneric(
+            request,
+            'common.validationError',
+            error.message
+          ),
           details: error.validation
         });
       }
@@ -204,7 +287,11 @@ export const registerErrorHandler = (app: FastifyInstance): void => {
 
     return reply.code(500).send({
       code: 'INTERNAL_ERROR',
-      message: 'Erro interno do servidor.'
+      message: translateGeneric(
+        request,
+        'common.internalError',
+        'Erro interno do servidor.'
+      )
     });
   });
 };
