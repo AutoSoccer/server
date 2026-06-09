@@ -68,6 +68,50 @@ export const findOpponentSnapshot = async (
   const ratio = Number(playerSnapshot.victory_ratio ?? 0);
   const playerRounds = roundsPlayed(playerSnapshot);
   const excluded = [playerSnapshot.id, ...(options.excludeSnapshotIds ?? [])];
+  const exactProgressWhere = {
+    user_id: { [Op.ne]: playerSnapshot.user_id },
+    victory: playerSnapshot.victory,
+    lose: playerSnapshot.lose,
+    draw: playerSnapshot.draw
+  };
+
+  const exactOpponent = await TeamSnapshot.findOne({
+    where: {
+      ...exactProgressWhere,
+      id: { [Op.notIn]: excluded }
+    },
+    order: [['created_at', 'DESC']]
+  });
+
+  if (exactOpponent) {
+    return {
+      opponent: exactOpponent,
+      delta: Math.abs(Number(exactOpponent.victory_ratio) - ratio),
+      windowUsed: 0
+    };
+  }
+
+  // Uma snapshot com o mesmo progresso e ja enfrentada ainda e mais justa do
+  // que trocar por um adversario de outra rodada apenas para evitar repeticao.
+  if ((options.excludeSnapshotIds?.length ?? 0) > 0) {
+    const repeatedExactOpponent = await TeamSnapshot.findOne({
+      where: {
+        ...exactProgressWhere,
+        id: { [Op.ne]: playerSnapshot.id }
+      },
+      order: [['created_at', 'DESC']]
+    });
+
+    if (repeatedExactOpponent) {
+      return {
+        opponent: repeatedExactOpponent,
+        delta: Math.abs(
+          Number(repeatedExactOpponent.victory_ratio) - ratio
+        ),
+        windowUsed: 0
+      };
+    }
+  }
 
   // Ordena por proximidade de ratio e, em empate, por proximidade de rodadas
   // jogadas (RN006); por fim pelo snapshot mais recente.

@@ -377,19 +377,47 @@ const toSnapshotAthlete = (athlete: Athlete): SnapshotAthlete => ({
   name: athlete.name,
   velocity: athlete.velocity,
   attack: athlete.attack,
-  defense: athlete.defense
+  defense: athlete.defense,
+  type: athlete.type
 });
 
-const BOT_FORMATION: Array<{ type: AthleteType; row: number; col: number }> = [
-  { type: 'defender', row: 0, col: 0 },
-  { type: 'defender', row: 0, col: 2 },
-  { type: 'midfielder', row: 1, col: 0 },
-  { type: 'midfielder', row: 1, col: 2 },
-  { type: 'attacker', row: 2, col: 0 },
-  { type: 'attacker', row: 2, col: 2 }
+export type BotFormationSlot = {
+  type: AthleteType;
+  row: number;
+  col: number;
+};
+
+const FORMATION_ROWS: Array<{ type: AthleteType; row: number }> = [
+  { type: 'defender', row: 0 },
+  { type: 'midfielder', row: 1 },
+  { type: 'attacker', row: 2 }
 ];
 
-const buildBotPositions = (byType: AthleteBuckets, seed: number): SnapshotPositions => {
+export const botAthleteCountForRound = (round: number): 3 | 6 =>
+  round <= 1 ? 3 : 6;
+
+export const buildBotFormation = (
+  seed: number,
+  athleteCount: 3 | 6 = 6
+): BotFormationSlot[] => {
+  const normalizedSeed = Math.abs(Math.trunc(seed));
+
+  return FORMATION_ROWS.flatMap(({ type, row }, rowIndex) => {
+    const selectedColumn = Math.floor(normalizedSeed / 3 ** rowIndex) % 3;
+    const columns =
+      athleteCount === 3
+        ? [selectedColumn]
+        : [0, 1, 2].filter((col) => col !== selectedColumn);
+
+    return columns.map((col) => ({ type, row, col }));
+  });
+};
+
+const buildBotPositions = (
+  byType: AthleteBuckets,
+  seed: number,
+  athleteCount: 3 | 6
+): SnapshotPositions => {
   const grid = emptySnapshotPositions();
   const cursor: Record<AthleteType, number> = {
     defender: seed * 2,
@@ -397,7 +425,7 @@ const buildBotPositions = (byType: AthleteBuckets, seed: number): SnapshotPositi
     attacker: seed * 2
   };
 
-  for (const slot of BOT_FORMATION) {
+  for (const slot of buildBotFormation(seed, athleteCount)) {
     const pool = byType[slot.type];
     if (pool.length === 0) {
       throw new Error(`Nao ha atletas do tipo ${slot.type} para popular bots.`);
@@ -520,8 +548,9 @@ export const seedBotOpponents = async (): Promise<void> => {
     const bot = bots[index % bots.length];
     const key = `${state.victory}:${state.lose}:${state.draw}`;
     const existing = existingByTeam.get(bot.team.id) ?? new Map<string, TeamSnapshot>();
+    const round = state.victory + state.lose + state.draw + 1;
     const snapshotData = {
-      round: state.victory + state.lose + state.draw + 1,
+      round,
       victory: state.victory,
       lose: state.lose,
       draw: state.draw,
@@ -530,7 +559,11 @@ export const seedBotOpponents = async (): Promise<void> => {
         state.lose,
         state.draw
       ),
-      positions: buildBotPositions(byType, index)
+      positions: buildBotPositions(
+        byType,
+        index,
+        botAthleteCountForRound(round)
+      )
     };
     const existingSnapshot = existing.get(key);
 
