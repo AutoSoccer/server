@@ -16,12 +16,23 @@ const LATER_ROUND_MAX_ATHLETES = 6;
 
 export type MatchmakingErrorCode = 'NO_OPPONENT_FOUND';
 
+export type MatchmakingErrorOptions = {
+  i18nKey?: string;
+  params?: Record<string, unknown>;
+};
+
 export class MatchmakingError extends Error {
   public readonly code: MatchmakingErrorCode;
+  public readonly i18nKey: string;
+  public readonly params?: Record<string, unknown>;
 
-  constructor(code: MatchmakingErrorCode, message: string) {
-    super(message);
+  constructor(code: MatchmakingErrorCode, options: MatchmakingErrorOptions = {}) {
+    const i18nKey = options.i18nKey ?? `partida.matchmaking.${code}`;
+    super(i18nKey);
+    this.name = 'MatchmakingError';
     this.code = code;
+    this.i18nKey = i18nKey;
+    this.params = options.params;
   }
 }
 
@@ -229,8 +240,7 @@ export const findOpponentSnapshot = async (
     }
   }
 
-  throw new MatchmakingError(
-    'NO_OPPONENT_FOUND',
-    'Nenhum oponente compativel encontrado para esta rodada.'
-  );
+  throw new MatchmakingError('NO_OPPONENT_FOUND', {
+    i18nKey: 'partida.matchmaking.noOpponentFound'
+  });
 };

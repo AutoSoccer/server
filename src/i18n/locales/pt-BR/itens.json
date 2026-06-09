@@ -1,0 +1,26 @@
+{
+  "buy": {
+    "userNotFound": "Usuario nao encontrado.",
+    "itemNotFound": "Item {{itemId}} nao encontrado.",
+    "itemInactive": "Item indisponivel na loja.",
+    "insufficientBalance": "Saldo insuficiente para comprar o item."
+  },
+  "apply": {
+    "itemNotFound": "Item {{itemId}} nao encontrado.",
+    "itemInactive": "Item indisponivel.",
+    "noInventoryItem": "Voce nao possui este item disponivel no inventario.",
+    "noSnapshot": "Salve o estado da equipe (rodada) antes de aplicar itens.",
+    "athleteNotInSnapshot": "Atleta {{athleteId}} nao esta posicionado no snapshot atual.",
+    "stackNotAllowed": "O item \"{{name}}\" nao pode ser aplicado mais de uma vez no mesmo atleta nesta rodada."
+  },
+  "errors": {
+    "USER_NOT_FOUND": "Usuario nao encontrado.",
+    "ITEM_NOT_FOUND": "Item nao encontrado.",
+    "ITEM_INACTIVE": "Item indisponivel.",
+    "INSUFFICIENT_COINS": "Saldo insuficiente.",
+    "NO_INVENTORY_ITEM": "Item nao disponivel no inventario.",
+    "NO_SNAPSHOT": "Snapshot nao encontrado.",
+    "ATHLETE_NOT_IN_SNAPSHOT": "Atleta nao esta no snapshot.",
+    "STACK_NOT_ALLOWED": "Item nao pode ser empilhado neste atleta."
+  }
+}

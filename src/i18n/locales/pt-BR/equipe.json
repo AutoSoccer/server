@@ -1,0 +1,45 @@
+{
+  "buyAthlete": {
+    "userNotFound": "Usuario nao encontrado.",
+    "athleteNotAvailable": "Atleta nao esta disponivel no mercado atual.",
+    "athleteNotFound": "Atleta nao encontrado.",
+    "teamFull": "A equipe ja possui o limite de {{max}} atletas.",
+    "insufficientBalance": "Saldo insuficiente para comprar o atleta."
+  },
+  "sellAthlete": {
+    "userNotFound": "Usuario nao encontrado.",
+    "teamNotFound": "Time nao encontrado.",
+    "athleteNotOwned": "Atleta nao pertence ao seu time.",
+    "athleteNotFound": "Atleta nao encontrado."
+  },
+  "snapshot": {
+    "teamNotFound": "Voce precisa de um time para salvar o estado.",
+    "invalidBody": {
+      "positionsArray": "O campo positions precisa ser um array.",
+      "positionsObject": "Cada item de positions precisa ser objeto {{shape}}.",
+      "positionsIntegers": "athleteId, posX e posY precisam ser inteiros."
+    },
+    "wrongAthleteCount": "Equipe precisa de {{min}} a {{max}} atletas posicionados; recebido {{count}}.",
+    "outOfBounds": "Posicao ({{posX}}, {{posY}}) fora do grid {{grid}}x{{grid}}.",
+    "duplicateAthlete": "Atleta {{athleteId}} foi enviado mais de uma vez.",
+    "duplicatePosition": "A celula ({{posX}}, {{posY}}) foi atribuida a mais de um atleta.",
+    "athleteNotInTeam": "Atletas nao pertencem ao seu time: {{ids}}.",
+    "athleteNoLongerInTeam": "Um ou mais atletas nao pertencem mais ao seu time.",
+    "itemNotInInventory": "Sistema de itens ainda nao foi implementado (Sprint 5)."
+  },
+  "errors": {
+    "USER_NOT_FOUND": "Usuario nao encontrado.",
+    "TEAM_NOT_FOUND": "Time nao encontrado.",
+    "ATHLETE_NOT_AVAILABLE": "Atleta nao disponivel.",
+    "ATHLETE_NOT_OWNED": "Atleta nao pertence ao seu time.",
+    "INSUFFICIENT_COINS": "Saldo insuficiente.",
+    "TEAM_FULL": "A equipe ja esta cheia.",
+    "INVALID_BODY": "Payload invalido.",
+    "WRONG_ATHLETE_COUNT": "Numero de atletas posicionados invalido.",
+    "DUPLICATE_ATHLETE": "Atleta duplicado.",
+    "DUPLICATE_POSITION": "Posicao duplicada.",
+    "OUT_OF_BOUNDS": "Posicao fora do grid.",
+    "ATHLETE_NOT_IN_TEAM": "Atleta nao pertence ao seu time.",
+    "ITEM_NOT_IN_INVENTORY": "Item nao disponivel no inventario."
+  }
+}

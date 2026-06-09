@@ -1,0 +1,26 @@
+{
+  "buy": {
+    "userNotFound": "User not found.",
+    "itemNotFound": "Item {{itemId}} not found.",
+    "itemInactive": "Item unavailable in the shop.",
+    "insufficientBalance": "Insufficient balance to buy the item."
+  },
+  "apply": {
+    "itemNotFound": "Item {{itemId}} not found.",
+    "itemInactive": "Item unavailable.",
+    "noInventoryItem": "You do not have this item available in your inventory.",
+    "noSnapshot": "Save the team state (round) before applying items.",
+    "athleteNotInSnapshot": "Athlete {{athleteId}} is not positioned in the current snapshot.",
+    "stackNotAllowed": "The item \"{{name}}\" cannot be applied more than once to the same athlete this round."
+  },
+  "errors": {
+    "USER_NOT_FOUND": "User not found.",
+    "ITEM_NOT_FOUND": "Item not found.",
+    "ITEM_INACTIVE": "Item unavailable.",
+    "INSUFFICIENT_COINS": "Insufficient balance.",
+    "NO_INVENTORY_ITEM": "Item not available in inventory.",
+    "NO_SNAPSHOT": "Snapshot not found.",
+    "ATHLETE_NOT_IN_SNAPSHOT": "Athlete is not in the snapshot.",
+    "STACK_NOT_ALLOWED": "Item cannot be stacked on this athlete."
+  }
+}

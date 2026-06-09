@@ -36,12 +36,39 @@ type AuthResponse = {
 
 type ServiceErrorCode = 'CONFLICT' | 'INVALID_CREDENTIALS' | 'NOT_FOUND';
 
+export type ServiceErrorOptions = {
+  /**
+   * Chave hierarquica i18n (ex.: `auth.login.invalidCredentials`). Quando
+   * presente, o errorHandler usa-a com prioridade ao resolver a mensagem via
+   * `req.t(i18nKey, params)`.
+   */
+  i18nKey?: string;
+  /** Parametros usados na interpolacao da chave i18n. */
+  params?: Record<string, unknown>;
+};
+
 export class ServiceError extends Error {
   public readonly code: ServiceErrorCode;
+  public readonly i18nKey: string;
+  public readonly params?: Record<string, unknown>;
 
-  constructor(code: ServiceErrorCode, message: string) {
-    super(message);
+  constructor(code: ServiceErrorCode, options: ServiceErrorOptions = {}) {
+    const i18nKey = options.i18nKey ?? `auth.errors.${code}`;
+    // Fallback usado em logs e quando o i18next nao tem a chave: inclui o
+    // proprio i18nKey + params relevantes (alem de preservar contratos antigos
+    // de teste que checam `expect.stringContaining('nickname')`).
+    const paramSummary = options.params
+      ? Object.entries(options.params)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${key}=${String(value)}`)
+          .join(' ')
+      : '';
+    const fallback = paramSummary ? `${i18nKey} (${paramSummary})` : i18nKey;
+    super(fallback);
+    this.name = 'ServiceError';
     this.code = code;
+    this.i18nKey = i18nKey;
+    this.params = options.params;
   }
 }
 
@@ -123,13 +150,16 @@ export const registerUser = async (input: RegisterInput): Promise<AuthResponse> 
   const phoneNumber = trimOrUndefined(input.phone_number);
 
   if (name.length === 0) {
-    throw new ServiceError('CONFLICT', 'Field name is required.');
+    throw new ServiceError('CONFLICT', { i18nKey: 'auth.register.nameRequired' });
   }
 
   const duplicatedField = await findDuplicatedField(nickname, email, phoneNumber);
 
   if (duplicatedField) {
-    throw new ServiceError('CONFLICT', `Field already in use: ${duplicatedField}`);
+    throw new ServiceError('CONFLICT', {
+      i18nKey: 'auth.register.fieldInUse',
+      params: { field: duplicatedField }
+    });
   }
 
   const hashedPassword = await bcrypt.hash(input.password, 12);
@@ -152,7 +182,9 @@ export const registerUser = async (input: RegisterInput): Promise<AuthResponse> 
     };
   } catch (error: unknown) {
     if (error instanceof UniqueConstraintError) {
-      throw new ServiceError('CONFLICT', 'Nickname, email or phone_number already in use.');
+      throw new ServiceError('CONFLICT', {
+        i18nKey: 'auth.register.uniqueConstraint'
+      });
     }
 
     throw error;
@@ -206,14 +238,14 @@ export const createGuest = async (): Promise<AuthResponse> => {
     }
   }
 
-  throw new ServiceError('CONFLICT', 'Nao foi possivel criar convidado, tente novamente.');
+  throw new ServiceError('CONFLICT', { i18nKey: 'auth.guest.createFailed' });
 };
 
 export const getMe = async (userId: number): Promise<AuthResponse['user']> => {
   const user = await User.findByPk(userId);
 
   if (!user) {
-    throw new ServiceError('NOT_FOUND', 'Usuario nao encontrado.');
+    throw new ServiceError('NOT_FOUND', { i18nKey: 'auth.me.userNotFound' });
   }
 
   return sanitizeUser(user);
@@ -236,13 +268,17 @@ export const loginUser = async (input: LoginInput): Promise<AuthResponse> => {
   });
 
   if (!user) {
-    throw new ServiceError('INVALID_CREDENTIALS', 'Invalid credentials.');
+    throw new ServiceError('INVALID_CREDENTIALS', {
+      i18nKey: 'auth.login.invalidCredentials'
+    });
   }
 
   const isPasswordValid = await bcrypt.compare(input.password, user.hashed_password);
 
   if (!isPasswordValid) {
-    throw new ServiceError('INVALID_CREDENTIALS', 'Invalid credentials.');
+    throw new ServiceError('INVALID_CREDENTIALS', {
+      i18nKey: 'auth.login.invalidCredentials'
+    });
   }
 
   return {

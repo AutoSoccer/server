@@ -53,30 +53,40 @@ export type TeamSnapshotErrorCode =
   | 'ATHLETE_NOT_IN_TEAM'
   | 'ITEM_NOT_IN_INVENTORY';
 
+export type TeamSnapshotErrorOptions = {
+  i18nKey?: string;
+  params?: Record<string, unknown>;
+};
+
 export class TeamSnapshotError extends Error {
   public readonly code: TeamSnapshotErrorCode;
+  public readonly i18nKey: string;
+  public readonly params?: Record<string, unknown>;
 
-  constructor(code: TeamSnapshotErrorCode, message: string) {
-    super(message);
+  constructor(code: TeamSnapshotErrorCode, options: TeamSnapshotErrorOptions = {}) {
+    const i18nKey = options.i18nKey ?? `equipe.errors.${code}`;
+    super(i18nKey);
+    this.name = 'TeamSnapshotError';
     this.code = code;
+    this.i18nKey = i18nKey;
+    this.params = options.params;
   }
 }
 
 const ensurePositionsShape = (positions: unknown): AthletePositionInput[] => {
   if (!Array.isArray(positions)) {
-    throw new TeamSnapshotError(
-      'INVALID_BODY',
-      'O campo positions precisa ser um array.'
-    );
+    throw new TeamSnapshotError('INVALID_BODY', {
+      i18nKey: 'equipe.snapshot.invalidBody.positionsArray'
+    });
   }
 
   const normalized: AthletePositionInput[] = [];
   for (const entry of positions) {
     if (!entry || typeof entry !== 'object') {
-      throw new TeamSnapshotError(
-        'INVALID_BODY',
-        'Cada item de positions precisa ser objeto { athleteId, posX, posY }.'
-      );
+      throw new TeamSnapshotError('INVALID_BODY', {
+        i18nKey: 'equipe.snapshot.invalidBody.positionsObject',
+        params: { shape: '{ athleteId, posX, posY }' }
+      });
     }
     const athleteId = Number((entry as { athleteId?: unknown }).athleteId);
     const posX = Number((entry as { posX?: unknown }).posX);
@@ -87,10 +97,9 @@ const ensurePositionsShape = (positions: unknown): AthletePositionInput[] => {
       !Number.isInteger(posX) ||
       !Number.isInteger(posY)
     ) {
-      throw new TeamSnapshotError(
-        'INVALID_BODY',
-        'athleteId, posX e posY precisam ser inteiros.'
-      );
+      throw new TeamSnapshotError('INVALID_BODY', {
+        i18nKey: 'equipe.snapshot.invalidBody.positionsIntegers'
+      });
     }
     normalized.push({ athleteId, posX, posY });
   }
@@ -103,10 +112,14 @@ const ensureValidPositions = (positions: AthletePositionInput[]): void => {
     positions.length < MIN_POSITIONED_ATHLETES ||
     positions.length > MAX_POSITIONED_ATHLETES
   ) {
-    throw new TeamSnapshotError(
-      'WRONG_ATHLETE_COUNT',
-      `Equipe precisa de ${MIN_POSITIONED_ATHLETES} a ${MAX_POSITIONED_ATHLETES} atletas posicionados; recebido ${positions.length}.`
-    );
+    throw new TeamSnapshotError('WRONG_ATHLETE_COUNT', {
+      i18nKey: 'equipe.snapshot.wrongAthleteCount',
+      params: {
+        min: MIN_POSITIONED_ATHLETES,
+        max: MAX_POSITIONED_ATHLETES,
+        count: positions.length
+      }
+    });
   }
 
   const athleteIds = new Set<number>();
@@ -119,26 +132,26 @@ const ensureValidPositions = (positions: AthletePositionInput[]): void => {
       entry.posY < 0 ||
       entry.posY >= GRID_SIZE
     ) {
-      throw new TeamSnapshotError(
-        'OUT_OF_BOUNDS',
-        `Posicao (${entry.posX}, ${entry.posY}) fora do grid ${GRID_SIZE}x${GRID_SIZE}.`
-      );
+      throw new TeamSnapshotError('OUT_OF_BOUNDS', {
+        i18nKey: 'equipe.snapshot.outOfBounds',
+        params: { posX: entry.posX, posY: entry.posY, grid: GRID_SIZE }
+      });
     }
 
     if (athleteIds.has(entry.athleteId)) {
-      throw new TeamSnapshotError(
-        'DUPLICATE_ATHLETE',
-        `Atleta ${entry.athleteId} foi enviado mais de uma vez.`
-      );
+      throw new TeamSnapshotError('DUPLICATE_ATHLETE', {
+        i18nKey: 'equipe.snapshot.duplicateAthlete',
+        params: { athleteId: entry.athleteId }
+      });
     }
     athleteIds.add(entry.athleteId);
 
     const cellKey = `${entry.posX},${entry.posY}`;
     if (cells.has(cellKey)) {
-      throw new TeamSnapshotError(
-        'DUPLICATE_POSITION',
-        `A celula (${entry.posX}, ${entry.posY}) foi atribuida a mais de um atleta.`
-      );
+      throw new TeamSnapshotError('DUPLICATE_POSITION', {
+        i18nKey: 'equipe.snapshot.duplicatePosition',
+        params: { posX: entry.posX, posY: entry.posY }
+      });
     }
     cells.add(cellKey);
   }
@@ -164,10 +177,9 @@ const loadUserTeam = async (
   });
 
   if (!team) {
-    throw new TeamSnapshotError(
-      'TEAM_NOT_FOUND',
-      'Voce precisa de um time para salvar o estado.'
-    );
+    throw new TeamSnapshotError('TEAM_NOT_FOUND', {
+      i18nKey: 'equipe.snapshot.teamNotFound'
+    });
   }
 
   const athletes = ((team.get('athletes') as AthleteModel[] | undefined) ?? []).filter(
@@ -194,10 +206,10 @@ const ensureAthletesBelongToTeam = (
   }
 
   if (missing.length > 0) {
-    throw new TeamSnapshotError(
-      'ATHLETE_NOT_IN_TEAM',
-      `Atletas nao pertencem ao seu time: ${missing.join(', ')}.`
-    );
+    throw new TeamSnapshotError('ATHLETE_NOT_IN_TEAM', {
+      i18nKey: 'equipe.snapshot.athleteNotInTeam',
+      params: { ids: missing.join(', ') }
+    });
   }
 
   return ownership;
@@ -247,10 +259,9 @@ export const salvarEstadoEquipe = async (
 
   if (input.items && input.items.length > 0) {
     // Sprint 5 — Sistema de Itens ainda nao existe; impedimos uso ate la.
-    throw new TeamSnapshotError(
-      'ITEM_NOT_IN_INVENTORY',
-      'Sistema de itens ainda nao foi implementado (Sprint 5).'
-    );
+    throw new TeamSnapshotError('ITEM_NOT_IN_INVENTORY', {
+      i18nKey: 'equipe.snapshot.itemNotInInventory'
+    });
   }
 
   return sequelize.transaction(async (transaction) => {
@@ -266,10 +277,9 @@ export const salvarEstadoEquipe = async (
       transaction
     });
     if (stillOwned.length !== requestedIds.length) {
-      throw new TeamSnapshotError(
-        'ATHLETE_NOT_IN_TEAM',
-        'Um ou mais atletas nao pertencem mais ao seu time.'
-      );
+      throw new TeamSnapshotError('ATHLETE_NOT_IN_TEAM', {
+        i18nKey: 'equipe.snapshot.athleteNoLongerInTeam'
+      });
     }
 
     const victoryRatio = computeVictoryRatio(

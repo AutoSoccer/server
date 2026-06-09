@@ -8,6 +8,7 @@ import { mercadoRoutes } from './modules/mercado/mercado.routes';
 import { partidaRoutes } from './modules/partida/partida.routes';
 import { rankingRoutes } from './modules/ranking/ranking.routes';
 import { registerErrorHandler } from './plugins/errorHandler';
+import { registerI18n } from './plugins/i18n';
 import { registerSwagger } from './plugins/swagger';
 
 const parseCorsOrigin = (raw: string): boolean | string | string[] => {
@@ -44,6 +45,10 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   });
 
   await registerSwagger(app);
+
+  // i18n precisa estar ativo antes do error handler para que `req.t` esteja
+  // disponivel ao traduzir o `code` dos erros de servico (WS-02).
+  await registerI18n(app);
 
   registerErrorHandler(app);
 

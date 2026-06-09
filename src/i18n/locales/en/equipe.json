@@ -1,0 +1,45 @@
+{
+  "buyAthlete": {
+    "userNotFound": "User not found.",
+    "athleteNotAvailable": "Athlete is not available in the current market.",
+    "athleteNotFound": "Athlete not found.",
+    "teamFull": "The team already has the maximum of {{max}} athletes.",
+    "insufficientBalance": "Insufficient balance to buy the athlete."
+  },
+  "sellAthlete": {
+    "userNotFound": "User not found.",
+    "teamNotFound": "Team not found.",
+    "athleteNotOwned": "Athlete does not belong to your team.",
+    "athleteNotFound": "Athlete not found."
+  },
+  "snapshot": {
+    "teamNotFound": "You need a team to save the state.",
+    "invalidBody": {
+      "positionsArray": "The positions field must be an array.",
+      "positionsObject": "Each positions item must be an object {{shape}}.",
+      "positionsIntegers": "athleteId, posX and posY must be integers."
+    },
+    "wrongAthleteCount": "Team must have between {{min}} and {{max}} positioned athletes; received {{count}}.",
+    "outOfBounds": "Position ({{posX}}, {{posY}}) outside the {{grid}}x{{grid}} grid.",
+    "duplicateAthlete": "Athlete {{athleteId}} was sent more than once.",
+    "duplicatePosition": "Cell ({{posX}}, {{posY}}) was assigned to more than one athlete.",
+    "athleteNotInTeam": "Athletes do not belong to your team: {{ids}}.",
+    "athleteNoLongerInTeam": "One or more athletes no longer belong to your team.",
+    "itemNotInInventory": "Item system has not been implemented yet (Sprint 5)."
+  },
+  "errors": {
+    "USER_NOT_FOUND": "User not found.",
+    "TEAM_NOT_FOUND": "Team not found.",
+    "ATHLETE_NOT_AVAILABLE": "Athlete not available.",
+    "ATHLETE_NOT_OWNED": "Athlete does not belong to your team.",
+    "INSUFFICIENT_COINS": "Insufficient balance.",
+    "TEAM_FULL": "Team is full.",
+    "INVALID_BODY": "Invalid payload.",
+    "WRONG_ATHLETE_COUNT": "Invalid number of positioned athletes.",
+    "DUPLICATE_ATHLETE": "Duplicated athlete.",
+    "DUPLICATE_POSITION": "Duplicated position.",
+    "OUT_OF_BOUNDS": "Position out of grid.",
+    "ATHLETE_NOT_IN_TEAM": "Athlete does not belong to your team.",
+    "ITEM_NOT_IN_INVENTORY": "Item not available in inventory."
+  }
+}

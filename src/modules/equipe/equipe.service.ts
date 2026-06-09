@@ -14,12 +14,25 @@ export type EquipeServiceErrorCode =
   | 'TEAM_NOT_FOUND'
   | 'USER_NOT_FOUND';
 
+export type EquipeServiceErrorOptions = {
+  /** Chave hierarquica i18n (ex.: `equipe.buyAthlete.insufficientBalance`). */
+  i18nKey?: string;
+  /** Parametros usados na interpolacao i18n. */
+  params?: Record<string, unknown>;
+};
+
 export class EquipeServiceError extends Error {
   public readonly code: EquipeServiceErrorCode;
+  public readonly i18nKey: string;
+  public readonly params?: Record<string, unknown>;
 
-  constructor(code: EquipeServiceErrorCode, message: string) {
-    super(message);
+  constructor(code: EquipeServiceErrorCode, options: EquipeServiceErrorOptions = {}) {
+    const i18nKey = options.i18nKey ?? `equipe.errors.${code}`;
+    super(i18nKey);
+    this.name = 'EquipeServiceError';
     this.code = code;
+    this.i18nKey = i18nKey;
+    this.params = options.params;
   }
 }
 
@@ -162,7 +175,9 @@ export const buyAthlete = async (
     });
 
     if (!user) {
-      throw new EquipeServiceError('USER_NOT_FOUND', 'Usuario nao encontrado.');
+      throw new EquipeServiceError('USER_NOT_FOUND', {
+        i18nKey: 'equipe.buyAthlete.userNotFound'
+      });
     }
 
     const marketEntry = await MarketWindow.findOne({
@@ -175,19 +190,17 @@ export const buyAthlete = async (
     });
 
     if (!marketEntry) {
-      throw new EquipeServiceError(
-        'ATHLETE_NOT_AVAILABLE',
-        'Atleta nao esta disponivel no mercado atual.'
-      );
+      throw new EquipeServiceError('ATHLETE_NOT_AVAILABLE', {
+        i18nKey: 'equipe.buyAthlete.athleteNotAvailable'
+      });
     }
 
     const athlete = await Athlete.findByPk(athleteId, { transaction });
 
     if (!athlete) {
-      throw new EquipeServiceError(
-        'ATHLETE_NOT_AVAILABLE',
-        'Atleta nao encontrado.'
-      );
+      throw new EquipeServiceError('ATHLETE_NOT_AVAILABLE', {
+        i18nKey: 'equipe.buyAthlete.athleteNotFound'
+      });
     }
 
     const team = await ensureTeam(userId, transaction);
@@ -198,19 +211,18 @@ export const buyAthlete = async (
     });
 
     if (athleteCount >= TEAM_MAX_ATHLETES) {
-      throw new EquipeServiceError(
-        'TEAM_FULL',
-        `A equipe ja possui o limite de ${TEAM_MAX_ATHLETES} atletas.`
-      );
+      throw new EquipeServiceError('TEAM_FULL', {
+        i18nKey: 'equipe.buyAthlete.teamFull',
+        params: { max: TEAM_MAX_ATHLETES }
+      });
     }
 
     const cost = athlete.cost;
 
     if (user.coins < cost) {
-      throw new EquipeServiceError(
-        'INSUFFICIENT_COINS',
-        'Saldo insuficiente para comprar o atleta.'
-      );
+      throw new EquipeServiceError('INSUFFICIENT_COINS', {
+        i18nKey: 'equipe.buyAthlete.insufficientBalance'
+      });
     }
 
     user.coins -= cost;
@@ -257,7 +269,9 @@ export const sellAthlete = async (
     });
 
     if (!user) {
-      throw new EquipeServiceError('USER_NOT_FOUND', 'Usuario nao encontrado.');
+      throw new EquipeServiceError('USER_NOT_FOUND', {
+        i18nKey: 'equipe.sellAthlete.userNotFound'
+      });
     }
 
     const team = await Team.findOne({
@@ -268,7 +282,9 @@ export const sellAthlete = async (
     });
 
     if (!team) {
-      throw new EquipeServiceError('TEAM_NOT_FOUND', 'Time nao encontrado.');
+      throw new EquipeServiceError('TEAM_NOT_FOUND', {
+        i18nKey: 'equipe.sellAthlete.teamNotFound'
+      });
     }
 
     const teamAthlete = await TeamAthlete.findOne({
@@ -281,18 +297,16 @@ export const sellAthlete = async (
     });
 
     if (!teamAthlete) {
-      throw new EquipeServiceError(
-        'ATHLETE_NOT_OWNED',
-        'Atleta nao pertence ao seu time.'
-      );
+      throw new EquipeServiceError('ATHLETE_NOT_OWNED', {
+        i18nKey: 'equipe.sellAthlete.athleteNotOwned'
+      });
     }
 
     const athlete = await Athlete.findByPk(athleteId, { transaction });
     if (!athlete) {
-      throw new EquipeServiceError(
-        'ATHLETE_NOT_AVAILABLE',
-        'Atleta nao encontrado.'
-      );
+      throw new EquipeServiceError('ATHLETE_NOT_AVAILABLE', {
+        i18nKey: 'equipe.sellAthlete.athleteNotFound'
+      });
     }
 
     await teamAthlete.destroy({ transaction });
