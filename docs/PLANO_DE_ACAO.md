@@ -555,3 +555,23 @@ Cada agente abre uma branch por workstream, faz PR para `main`, merge ao conclui
 
 > **Documento gerado a partir de auditoria automatizada (6 agentes paralelos) em `2026-06-09`.**
 > Base: `server/main` em `12d91b5`, `front/main` em `d12ca86`.
+
+---
+
+## WS-16 — Padronizacao de rotas em ingles (concluido)
+
+Renomeacao de URLs e tags Swagger expostas pela API para o idioma ingles,
+mantendo identificadores Typescript dos modulos (`equipeRoutes`, services,
+namespaces de erro i18n) inalterados.
+
+| Antes | Depois |
+|---|---|
+| `/mercado`, `/mercado/refresh` | `/market`, `/market/refresh` |
+| `/equipe`, `/equipe/comprar-atleta`, `/equipe/vender-atleta`, `/equipe/salvar-estado` | `/team`, `/team/buy-athlete`, `/team/sell-athlete`, `/team/save-state` |
+| `/itens`, `/itens/comprar`, `/itens/aplicar` | `/items`, `/items/buy`, `/items/apply` |
+| `/partida/iniciar`, `/partida/desistir`, `/partida/jogar`, `/partida/jogar-rodada` | `/match/start`, `/match/abandon`, `/match/play`, `/match/play-round` |
+
+Swagger tags: `Mercado/Equipe/Itens/Partida/Sistema` ->
+`Market/Team/Items/Match/System`. Chaves do namespace `swagger` no i18n
+(pt-BR e en) renomeadas de forma analoga. `/auth/*`, `/ranking`, `/health`,
+`/healthz` e `/docs` permanecem inalterados.

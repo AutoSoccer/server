@@ -18,7 +18,7 @@ const run = async (): Promise<void> => {
     '/health',
     {
       schema: {
-        tags: ['Sistema'],
+        tags: ['System'],
         summary: 'Health check',
         response: { 200: { type: 'object' } }
       }
@@ -29,7 +29,7 @@ const run = async (): Promise<void> => {
     '/healthz',
     {
       schema: {
-        tags: ['Sistema'],
+        tags: ['System'],
         summary: 'Health check (alias)',
         response: { 200: { type: 'object' } }
       }
@@ -37,10 +37,10 @@ const run = async (): Promise<void> => {
     async () => ({ ok: true })
   );
   await app.register(authRoutes, { prefix: '/auth' });
-  await app.register(mercadoRoutes, { prefix: '/mercado' });
-  await app.register(equipeRoutes, { prefix: '/equipe' });
-  await app.register(itensRoutes, { prefix: '/itens' });
-  await app.register(partidaRoutes, { prefix: '/partida' });
+  await app.register(mercadoRoutes, { prefix: '/market' });
+  await app.register(equipeRoutes, { prefix: '/team' });
+  await app.register(itensRoutes, { prefix: '/items' });
+  await app.register(partidaRoutes, { prefix: '/match' });
   await app.register(rankingRoutes, { prefix: '/ranking' });
 
   await app.ready();

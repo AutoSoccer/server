@@ -312,13 +312,13 @@ const abandonCampaignResponseSchema = {
 
 export const partidaRoutes: FastifyPluginAsync = async (app) => {
   app.post<{ Body: StartCampaignBody }>(
-    '/iniciar',
+    '/start',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Partida'],
-        summary: tSwagger('partida.iniciar.summary'),
-        description: tSwagger('partida.iniciar.description'),
+        tags: ['Match'],
+        summary: tSwagger('match.start.summary'),
+        description: tSwagger('match.start.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -349,13 +349,13 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
   );
 
   app.post(
-    '/desistir',
+    '/abandon',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Partida'],
-        summary: tSwagger('partida.desistir.summary'),
-        description: tSwagger('partida.desistir.description'),
+        tags: ['Match'],
+        summary: tSwagger('match.abandon.summary'),
+        description: tSwagger('match.abandon.description'),
         security: [{ BearerAuth: [] }],
         response: {
           200: abandonCampaignResponseSchema,
@@ -370,13 +370,13 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
   );
 
   app.post<{ Body: JogarPartidaBody }>(
-    '/jogar',
+    '/play',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Partida'],
-        summary: tSwagger('partida.jogar.summary'),
-        description: tSwagger('partida.jogar.description'),
+        tags: ['Match'],
+        summary: tSwagger('match.play.summary'),
+        description: tSwagger('match.play.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -433,13 +433,13 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
   );
 
   app.post<{ Body: JogarRodadaBody }>(
-    '/jogar-rodada',
+    '/play-round',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Partida'],
-        summary: tSwagger('partida.jogarRodada.summary'),
-        description: tSwagger('partida.jogarRodada.description'),
+        tags: ['Match'],
+        summary: tSwagger('match.playRound.summary'),
+        description: tSwagger('match.playRound.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',

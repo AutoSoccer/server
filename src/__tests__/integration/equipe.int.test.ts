@@ -47,14 +47,14 @@ import { bearer, buildTestApp, signTestToken } from '../helpers/buildApp';
 
 const token = signTestToken({ id: 1, nickname: 'lucas' });
 
-const buildApp = () => buildTestApp([{ plugin: equipeRoutes, prefix: '/equipe' }]);
+const buildApp = () => buildTestApp([{ plugin: equipeRoutes, prefix: '/team' }]);
 
-describe('integration: /equipe', () => {
+describe('integration: /team', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('GET /equipe responde 200 com o resumo do time autenticado', async () => {
+  it('GET /team responde 200 com o resumo do time autenticado', async () => {
     const app = await buildApp();
     mocks.getMyTeam.mockResolvedValue({
       id: 10,
@@ -69,7 +69,7 @@ describe('integration: /equipe', () => {
 
     const response = await app.inject({
       method: 'GET',
-      url: '/equipe',
+      url: '/team',
       headers: bearer(token)
     });
 
@@ -80,10 +80,10 @@ describe('integration: /equipe', () => {
     await app.close();
   });
 
-  it('GET /equipe responde 401 sem bearer', async () => {
+  it('GET /team responde 401 sem bearer', async () => {
     const app = await buildApp();
 
-    const response = await app.inject({ method: 'GET', url: '/equipe' });
+    const response = await app.inject({ method: 'GET', url: '/team' });
 
     expect(response.statusCode).toBe(401);
     expect(mocks.getMyTeam).not.toHaveBeenCalled();
@@ -91,7 +91,7 @@ describe('integration: /equipe', () => {
     await app.close();
   });
 
-  it('POST /equipe/comprar-atleta responde 201 quando ok', async () => {
+  it('POST /team/buy-athlete responde 201 quando ok', async () => {
     const app = await buildApp();
     mocks.buyAthlete.mockResolvedValue({
       user: { id: 1, coins: 8 },
@@ -101,7 +101,7 @@ describe('integration: /equipe', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/equipe/comprar-atleta',
+      url: '/team/buy-athlete',
       headers: bearer(token),
       payload: { atleta_id: 5 }
     });
@@ -112,7 +112,7 @@ describe('integration: /equipe', () => {
     await app.close();
   });
 
-  it('POST /equipe/comprar-atleta responde 400 quando saldo insuficiente', async () => {
+  it('POST /team/buy-athlete responde 400 quando saldo insuficiente', async () => {
     const app = await buildApp();
     mocks.buyAthlete.mockRejectedValue(
       new EquipeServiceError('INSUFFICIENT_COINS')
@@ -120,7 +120,7 @@ describe('integration: /equipe', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/equipe/comprar-atleta',
+      url: '/team/buy-athlete',
       headers: bearer(token),
       payload: { atleta_id: 5 }
     });
@@ -131,7 +131,7 @@ describe('integration: /equipe', () => {
     await app.close();
   });
 
-  it('POST /equipe/comprar-atleta responde 404 quando atleta nao esta no mercado', async () => {
+  it('POST /team/buy-athlete responde 404 quando atleta nao esta no mercado', async () => {
     const app = await buildApp();
     mocks.buyAthlete.mockRejectedValue(
       new EquipeServiceError('ATHLETE_NOT_AVAILABLE')
@@ -139,7 +139,7 @@ describe('integration: /equipe', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/equipe/comprar-atleta',
+      url: '/team/buy-athlete',
       headers: bearer(token),
       payload: { atleta_id: 5 }
     });
@@ -150,7 +150,7 @@ describe('integration: /equipe', () => {
     await app.close();
   });
 
-  it('POST /equipe/vender-atleta responde 200 quando ok', async () => {
+  it('POST /team/sell-athlete responde 200 quando ok', async () => {
     const app = await buildApp();
     mocks.sellAthlete.mockResolvedValue({
       user: { id: 1, coins: 12 },
@@ -160,7 +160,7 @@ describe('integration: /equipe', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/equipe/vender-atleta',
+      url: '/team/sell-athlete',
       headers: bearer(token),
       payload: { atleta_id: 5 }
     });
@@ -171,7 +171,7 @@ describe('integration: /equipe', () => {
     await app.close();
   });
 
-  it('POST /equipe/vender-atleta responde 404 quando atleta nao pertence', async () => {
+  it('POST /team/sell-athlete responde 404 quando atleta nao pertence', async () => {
     const app = await buildApp();
     mocks.sellAthlete.mockRejectedValue(
       new EquipeServiceError('ATHLETE_NOT_OWNED')
@@ -179,7 +179,7 @@ describe('integration: /equipe', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/equipe/vender-atleta',
+      url: '/team/sell-athlete',
       headers: bearer(token),
       payload: { atleta_id: 5 }
     });
@@ -189,7 +189,7 @@ describe('integration: /equipe', () => {
     await app.close();
   });
 
-  it('POST /equipe/salvar-estado responde 200 com snapshotId', async () => {
+  it('POST /team/save-state responde 200 com snapshotId', async () => {
     const app = await buildApp();
     mocks.salvarEstadoEquipe.mockResolvedValue({
       snapshotId: 77,
@@ -203,7 +203,7 @@ describe('integration: /equipe', () => {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/equipe/salvar-estado',
+      url: '/team/save-state',
       headers: bearer(token),
       payload: {
         positions: [{ athleteId: 21, posX: 0, posY: 0 }]
