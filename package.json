@@ -16,6 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run src/__tests__/integration",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
