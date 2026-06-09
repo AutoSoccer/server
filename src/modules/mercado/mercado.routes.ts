@@ -19,7 +19,7 @@ const marketAthleteSchema = {
     },
     type: {
       type: 'string',
-      enum: ['goalkeeper', 'defender', 'attacker']
+      enum: ['defender', 'midfielder', 'attacker']
     },
     overall: { type: 'integer' },
     cost: { type: 'integer' },
