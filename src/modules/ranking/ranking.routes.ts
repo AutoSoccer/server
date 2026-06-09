@@ -1,6 +1,7 @@
 import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
+import { tSwagger } from '../../i18n/swagger';
 import { authenticate } from '../auth/auth.middleware';
 import {
   getRanking,
@@ -83,9 +84,8 @@ export const rankingRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Ranking'],
-        summary: 'Ranking geral de usuarios por trofeus',
-        description:
-          'Lista contas reais com campanhas concluidas. Ordena por trofeus, vitorias, menos derrotas e cadastro mais antigo. Convidados podem consultar, mas nao aparecem.',
+        summary: tSwagger('ranking.list.summary'),
+        description: tSwagger('ranking.list.description'),
         security: [{ BearerAuth: [] }],
         querystring: {
           type: 'object',

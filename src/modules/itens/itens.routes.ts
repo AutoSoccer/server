@@ -1,6 +1,7 @@
 import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
+import { tSwagger } from '../../i18n/swagger';
 import { authenticate } from '../auth/auth.middleware';
 import { aplicarItem, comprarItem, listarItens } from './itens.service';
 
@@ -39,7 +40,8 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Itens'],
-        summary: 'Lista o catalogo de itens ativos da loja (Task 4.1)',
+        summary: tSwagger('itens.list.summary'),
+        description: tSwagger('itens.list.description'),
         security: [{ BearerAuth: [] }]
       }
     },
@@ -55,9 +57,8 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Itens'],
-        summary: 'Compra um item na loja (RF014, Task 4.1)',
-        description:
-          'Debita os coins do usuario e adiciona uma instancia do item ao inventario (consumed=false), tudo em uma transacao.',
+        summary: tSwagger('itens.comprar.summary'),
+        description: tSwagger('itens.comprar.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -125,9 +126,8 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Itens'],
-        summary: 'Aplica o bonus de um item a um atleta do snapshot da rodada (RF014, Task 4.1)',
-        description:
-          'Valida posse/uso e empilhamento (stacking), atrela o buff ao atleta no Snapshot atual e consome o item — tudo numa unica transacao.',
+        summary: tSwagger('itens.aplicar.summary'),
+        description: tSwagger('itens.aplicar.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',

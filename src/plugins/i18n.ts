@@ -14,6 +14,7 @@ export const DEFAULT_LOCALE: SupportedLocale = 'pt-BR';
 
 export const NAMESPACES = [
   'common',
+  'abilities',
   'auth',
   'equipe',
   'itens',

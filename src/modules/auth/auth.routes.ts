@@ -1,6 +1,7 @@
 import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
+import { tSwagger } from '../../i18n/swagger';
 import { authenticate } from './auth.middleware';
 import { createGuest, getMe, loginUser, registerUser, ServiceError } from './auth.service';
 
@@ -54,7 +55,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     {
       schema: {
         tags: ['Auth'],
-        summary: 'Cadastra um novo usuario',
+        summary: tSwagger('auth.register.summary'),
+        description: tSwagger('auth.register.description'),
         body: {
           type: 'object',
           required: ['name', 'nickname', 'password', 'email'],
@@ -104,7 +106,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Auth'],
-        summary: 'Retorna o usuario autenticado',
+        summary: tSwagger('auth.me.summary'),
+        description: tSwagger('auth.me.description'),
         security: [{ BearerAuth: [] }],
         response: {
           200: userResponseSchema,
@@ -132,9 +135,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     {
       schema: {
         tags: ['Auth'],
-        summary: 'Cria uma conta de convidado e retorna um token JWT (RF005)',
-        description:
-          'Cria um usuario efemero com is_guest=true para jogar sem cadastro. Convidados nao acumulam trofeus nem entram no ranking geral.',
+        summary: tSwagger('auth.guest.summary'),
+        description: tSwagger('auth.guest.description'),
         response: {
           201: authResponseSchema,
           500: errorSchema
@@ -152,7 +154,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     {
       schema: {
         tags: ['Auth'],
-        summary: 'Autentica um usuario e retorna um token JWT',
+        summary: tSwagger('auth.login.summary'),
+        description: tSwagger('auth.login.description'),
         body: {
           type: 'object',
           required: ['identifier', 'password'],

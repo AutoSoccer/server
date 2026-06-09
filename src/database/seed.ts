@@ -56,16 +56,79 @@ const ABILITY_BY_TYPE: Record<AthleteType, string> = {
   attacker: 'Chute Potente'
 };
 
-const DEFAULT_ABILITIES = [
-  { name: 'Chute Potente', description: 'Aumenta a forca de finalizacao em jogadas longas.' },
-  { name: 'Drible Rapido', description: 'Permite ganhar espaco em duelos um contra um.' },
-  { name: 'Defesa Solida', description: 'Reduz danos sofridos em disputas defensivas.' },
-  { name: 'Visao de Jogo', description: 'Melhora a leitura de passes e o domínio de bola.' },
-  { name: 'Velocidade Extrema', description: 'Aumenta a velocidade em arrancadas curtas.' }
+/**
+ * Habilidades padrao (5) com chaves estaveis (`nameKey` / `descriptionKey`)
+ * para o sistema i18n (WS-03). O texto persistido em banco continua em pt-BR
+ * (default), mantendo IDs estaveis para registros ja existentes; a UI pode
+ * usar as chaves para resolver o nome/descricao no idioma ativo via
+ * `req.t('abilities.<slug>.name')` etc.
+ */
+export type SeedAbility = {
+  slug: string;
+  nameKey: string;
+  descriptionKey: string;
+  name: string;
+  description: string;
+};
+
+export const DEFAULT_ABILITIES: SeedAbility[] = [
+  {
+    slug: 'chute-potente',
+    nameKey: 'abilities.chute-potente.name',
+    descriptionKey: 'abilities.chute-potente.description',
+    name: 'Chute Potente',
+    description: 'Aumenta a forca de finalizacao em jogadas longas.'
+  },
+  {
+    slug: 'drible-rapido',
+    nameKey: 'abilities.drible-rapido.name',
+    descriptionKey: 'abilities.drible-rapido.description',
+    name: 'Drible Rapido',
+    description: 'Permite ganhar espaco em duelos um contra um.'
+  },
+  {
+    slug: 'defesa-solida',
+    nameKey: 'abilities.defesa-solida.name',
+    descriptionKey: 'abilities.defesa-solida.description',
+    name: 'Defesa Solida',
+    description: 'Reduz danos sofridos em disputas defensivas.'
+  },
+  {
+    slug: 'visao-de-jogo',
+    nameKey: 'abilities.visao-de-jogo.name',
+    descriptionKey: 'abilities.visao-de-jogo.description',
+    name: 'Visao de Jogo',
+    description: 'Melhora a leitura de passes e o dominio de bola.'
+  },
+  {
+    slug: 'velocidade-extrema',
+    nameKey: 'abilities.velocidade-extrema.name',
+    descriptionKey: 'abilities.velocidade-extrema.description',
+    name: 'Velocidade Extrema',
+    description: 'Aumenta a velocidade em arrancadas curtas.'
+  }
 ];
 
 const DEFAULT_PASSWORD = '123456';
 
+/**
+ * Estrategia de nomes de atletas (WS-03):
+ *
+ * OPCAO A escolhida — manter os nomes como dados literais (nomes proprios)
+ * em pt-BR. Justificativa:
+ *   - Sao nomes proprios (Marquinhos, Casemiro, Raphinha, etc.) e nao
+ *     devem ser traduzidos por idioma; a identidade do atleta e a mesma
+ *     em qualquer locale.
+ *   - Permite manter `Athlete.name` como chave estavel (usada em buscas
+ *     `findOne({ where: { name } })`) sem precisar de mapa por idioma.
+ *   - Reduz drift entre locales — qualquer traducao de nome de pessoa real
+ *     seria potencialmente ofensiva ou incorreta.
+ *
+ * Se no futuro for necessario um "pool por locale" (OPCAO B), bastaria
+ * trocar a lista por `Record<SupportedLocale, CuratedPlayer[]>` e ler o
+ * locale do contexto do seed; a coluna `name` no banco poderia receber a
+ * variante pt-BR como fallback.
+ */
 const CURATED_PLAYER_POOL: CuratedPlayer[] = [
   { name: 'Marquinhos', type: 'defender', tier: 'legend' },
   { name: 'Gabriel Magalhaes', type: 'defender', tier: 'epic' },
@@ -294,8 +357,32 @@ export const seedDefaultAthletes = async (): Promise<void> => {
   }
 };
 
-const DEFAULT_ITEMS = [
+/**
+ * Itens padrao (5) com chaves estaveis (`nameKey` / `descriptionKey`)
+ * para o sistema i18n (WS-03). A persistencia em banco mantem `name` e
+ * `description` em pt-BR (default) para compatibilidade com registros
+ * pre-existentes; a camada de servico/UI pode resolver a traducao via
+ * `req.t('itens.catalog.<slug>.name')` quando precisar exibir em outro
+ * idioma. O `slug` e o identificador estavel usado nas chaves i18n.
+ */
+export type SeedItem = {
+  slug: string;
+  nameKey: string;
+  descriptionKey: string;
+  name: string;
+  description: string;
+  modifier_attack: number;
+  modifier_defense: number;
+  modifier_velocity: number;
+  cost: number;
+  stackable: boolean;
+};
+
+export const DEFAULT_ITEMS: SeedItem[] = [
   {
+    slug: 'chuteira-de-ouro',
+    nameKey: 'itens.catalog.chuteira-de-ouro.name',
+    descriptionKey: 'itens.catalog.chuteira-de-ouro.description',
     name: 'Chuteira de Ouro',
     description: 'Aumenta a forca de finalizacao do atleta.',
     modifier_attack: 12,
@@ -305,6 +392,9 @@ const DEFAULT_ITEMS = [
     stackable: false
   },
   {
+    slug: 'luvas-reforcadas',
+    nameKey: 'itens.catalog.luvas-reforcadas.name',
+    descriptionKey: 'itens.catalog.luvas-reforcadas.description',
     name: 'Luvas Reforcadas',
     description: 'Reforca a defesa do atleta.',
     modifier_attack: 0,
@@ -314,6 +404,9 @@ const DEFAULT_ITEMS = [
     stackable: false
   },
   {
+    slug: 'tornozeleira-leve',
+    nameKey: 'itens.catalog.tornozeleira-leve.name',
+    descriptionKey: 'itens.catalog.tornozeleira-leve.description',
     name: 'Tornozeleira Leve',
     description: 'Ganho de velocidade nas arrancadas.',
     modifier_attack: 0,
@@ -323,6 +416,9 @@ const DEFAULT_ITEMS = [
     stackable: false
   },
   {
+    slug: 'energetico',
+    nameKey: 'itens.catalog.energetico.name',
+    descriptionKey: 'itens.catalog.energetico.description',
     name: 'Energetico',
     description: 'Pequeno bonus geral; pode ser empilhado.',
     modifier_attack: 5,
@@ -332,6 +428,9 @@ const DEFAULT_ITEMS = [
     stackable: true
   },
   {
+    slug: 'faixa-de-capitao',
+    nameKey: 'itens.catalog.faixa-de-capitao.name',
+    descriptionKey: 'itens.catalog.faixa-de-capitao.description',
     name: 'Faixa de Capitao',
     description: 'Inspira o atleta: ataque e defesa.',
     modifier_attack: 6,
@@ -340,13 +439,37 @@ const DEFAULT_ITEMS = [
     cost: 200,
     stackable: false
   }
-] as const;
+];
 
 export const seedDefaultItems = async (): Promise<void> => {
   for (const data of DEFAULT_ITEMS) {
+    // Persistimos apenas as colunas reais da tabela `items`; `slug`,
+    // `nameKey` e `descriptionKey` sao metadados in-memory expostos para
+    // que servicos/UI possam resolver via i18n (WS-03). O texto salvo em
+    // banco continua em pt-BR para manter compatibilidade com registros
+    // ja existentes na base.
+    const {
+      name,
+      description,
+      modifier_attack,
+      modifier_defense,
+      modifier_velocity,
+      cost,
+      stackable
+    } = data;
+
     await Item.findOrCreate({
-      where: { name: data.name },
-      defaults: { ...data, is_active: true }
+      where: { name },
+      defaults: {
+        name,
+        description,
+        modifier_attack,
+        modifier_defense,
+        modifier_velocity,
+        cost,
+        stackable,
+        is_active: true
+      }
     });
   }
 };

@@ -1,6 +1,7 @@
 import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
+import { tSwagger } from '../../i18n/swagger';
 import { authenticate } from '../auth/auth.middleware';
 import { buyAthlete, getMyTeam, sellAthlete } from './equipe.service';
 import {
@@ -79,14 +80,34 @@ const salvarEstadoResponseSchema = {
 } as const;
 
 export const equipeRoutes: FastifyPluginAsync = async (app) => {
-  app.get('/', { preHandler: [authenticate] }, async (request, reply) => {
-    const team = await getMyTeam(request.user!.id);
-    return reply.code(200).send(team);
-  });
+  app.get(
+    '/',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Equipe'],
+        summary: tSwagger('equipe.get.summary'),
+        description: tSwagger('equipe.get.description'),
+        security: [{ BearerAuth: [] }]
+      }
+    },
+    async (request, reply) => {
+      const team = await getMyTeam(request.user!.id);
+      return reply.code(200).send(team);
+    }
+  );
 
   app.post<{ Body: BuyAthleteBody }>(
     '/comprar-atleta',
-    { preHandler: [authenticate] },
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Equipe'],
+        summary: tSwagger('equipe.buyAthlete.summary'),
+        description: tSwagger('equipe.buyAthlete.description'),
+        security: [{ BearerAuth: [] }]
+      }
+    },
     async (request, reply) => {
       const body = request.body;
       const athleteId = Number(body?.atleta_id);
@@ -113,7 +134,15 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
 
   app.post<{ Body: SellAthleteBody }>(
     '/vender-atleta',
-    { preHandler: [authenticate] },
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Equipe'],
+        summary: tSwagger('equipe.sellAthlete.summary'),
+        description: tSwagger('equipe.sellAthlete.description'),
+        security: [{ BearerAuth: [] }]
+      }
+    },
     async (request, reply) => {
       const body = request.body;
       const athleteId = Number(body?.atleta_id);
@@ -144,9 +173,8 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Equipe'],
-        summary: 'Salva o snapshot da equipe para a rodada atual (Task 3.2)',
-        description:
-          'Persiste imutavelmente a formacao da equipe (1 a 6 atletas em um grid 3x3) em team_snapshots. Bloqueia atletas que nao pertencem ao inventario do usuario e impede salvamento vazio. Itens estao reservados para a Sprint 5.',
+        summary: tSwagger('equipe.salvarEstado.summary'),
+        description: tSwagger('equipe.salvarEstado.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
