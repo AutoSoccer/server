@@ -1,23 +1,39 @@
-import { Sequelize } from 'sequelize';
+import { Sequelize, type Options } from 'sequelize';
 
 import { env } from './env';
 
 const sequelizeLogging = env.nodeEnv === 'development' ? console.log : false;
 
-export const sequelize = new Sequelize(env.dbName, env.dbUser, env.dbPassword, {
-  host: env.dbHost,
-  port: env.dbPort,
-  dialect: 'mysql',
-  logging: sequelizeLogging,
-  dialectOptions: env.dbSsl
-    ? {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        }
+const dialectOptions = env.dbSsl
+  ? {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
       }
-    : undefined
-});
+    }
+  : undefined;
+
+const buildSequelize = (): Sequelize => {
+  if (env.databaseUrl) {
+    const options: Options = {
+      dialect: 'mysql',
+      logging: sequelizeLogging,
+      dialectOptions
+    };
+
+    return new Sequelize(env.databaseUrl, options);
+  }
+
+  return new Sequelize(env.dbName, env.dbUser, env.dbPassword, {
+    host: env.dbHost,
+    port: env.dbPort,
+    dialect: 'mysql',
+    logging: sequelizeLogging,
+    dialectOptions
+  });
+};
+
+export const sequelize = buildSequelize();
 
 export const connectDatabase = async (): Promise<void> => {
   await sequelize.authenticate();
