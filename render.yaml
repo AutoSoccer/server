@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: autosoccer-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci && npm run build && npm run db:migrate
+    startCommand: node dist/index.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 5d
+      - key: CORS_ORIGIN
+        value: https://autosoccer.vercel.app
+      - key: APP_HOST
+        value: 0.0.0.0
+      - key: DB_SSL
+        value: "true"
