@@ -15,21 +15,21 @@ import {
 describe('resolveMatchStatus (RN001/RN002)', () => {
   it('continua em andamento abaixo dos limites', () => {
     expect(resolveMatchStatus(0, 0)).toBe('in_progress');
-    expect(resolveMatchStatus(6, 3)).toBe('in_progress');
+    expect(resolveMatchStatus(9, 4)).toBe('in_progress');
   });
 
-  it('vence a partida com 7 rodadas ganhas (RN001)', () => {
+  it('vence a partida com 10 rodadas ganhas (RN001)', () => {
     expect(resolveMatchStatus(WINS_TO_WIN_MATCH, 0)).toBe('won');
-    expect(resolveMatchStatus(7, 3)).toBe('won');
+    expect(resolveMatchStatus(10, 4)).toBe('won');
   });
 
-  it('perde a partida com 4 rodadas perdidas (RN002)', () => {
+  it('perde a partida com 5 rodadas perdidas (RN002)', () => {
     expect(resolveMatchStatus(0, LOSSES_TO_LOSE_MATCH)).toBe('lost');
-    expect(resolveMatchStatus(6, 4)).toBe('lost'); // 6 vitorias nao bastam; 4 derrotas encerram
+    expect(resolveMatchStatus(9, 5)).toBe('lost'); // 9 vitorias nao bastam; 5 derrotas encerram
   });
 
   it('vitoria tem prioridade quando ambos os limites sao atingidos', () => {
-    expect(resolveMatchStatus(7, 4)).toBe('won');
+    expect(resolveMatchStatus(10, 5)).toBe('won');
   });
 });
 

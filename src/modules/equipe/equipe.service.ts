@@ -4,11 +4,14 @@ import { sequelize } from '../../config/database';
 import { Athlete, MarketWindow, Team, TeamAthlete, User } from '../../database/models';
 
 export const TEAM_MAX_ATHLETES = 6;
+export const ATHLETE_SELL_REFUND = 2;
 
 export type EquipeServiceErrorCode =
   | 'INSUFFICIENT_COINS'
   | 'TEAM_FULL'
   | 'ATHLETE_NOT_AVAILABLE'
+  | 'ATHLETE_NOT_OWNED'
+  | 'TEAM_NOT_FOUND'
   | 'USER_NOT_FOUND';
 
 export class EquipeServiceError extends Error {
@@ -33,6 +36,24 @@ export type BuyAthleteResult = {
     id: number;
     name: string;
     cost: number;
+    tier: string;
+    type: string;
+  };
+};
+
+export type SellAthleteResult = {
+  user: {
+    id: number;
+    coins: number;
+  };
+  team: {
+    id: number;
+    athletes_count: number;
+  };
+  athlete: {
+    id: number;
+    name: string;
+    refund: number;
     tier: string;
     type: string;
   };
@@ -218,6 +239,85 @@ export const buyAthlete = async (
         id: athlete.id,
         name: athlete.name,
         cost,
+        tier: athlete.tier,
+        type: athlete.type
+      }
+    };
+  });
+};
+
+export const sellAthlete = async (
+  userId: number,
+  athleteId: number
+): Promise<SellAthleteResult> => {
+  return sequelize.transaction(async (transaction) => {
+    const user = await User.findByPk(userId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE
+    });
+
+    if (!user) {
+      throw new EquipeServiceError('USER_NOT_FOUND', 'Usuario nao encontrado.');
+    }
+
+    const team = await Team.findOne({
+      where: { user_id: userId },
+      order: [['id', 'ASC']],
+      transaction,
+      lock: transaction.LOCK.UPDATE
+    });
+
+    if (!team) {
+      throw new EquipeServiceError('TEAM_NOT_FOUND', 'Time nao encontrado.');
+    }
+
+    const teamAthlete = await TeamAthlete.findOne({
+      where: {
+        team_id: team.id,
+        athlete_id: athleteId
+      },
+      transaction,
+      lock: transaction.LOCK.UPDATE
+    });
+
+    if (!teamAthlete) {
+      throw new EquipeServiceError(
+        'ATHLETE_NOT_OWNED',
+        'Atleta nao pertence ao seu time.'
+      );
+    }
+
+    const athlete = await Athlete.findByPk(athleteId, { transaction });
+    if (!athlete) {
+      throw new EquipeServiceError(
+        'ATHLETE_NOT_AVAILABLE',
+        'Atleta nao encontrado.'
+      );
+    }
+
+    await teamAthlete.destroy({ transaction });
+
+    user.coins += ATHLETE_SELL_REFUND;
+    await user.save({ transaction });
+
+    const athleteCount = await TeamAthlete.count({
+      where: { team_id: team.id },
+      transaction
+    });
+
+    return {
+      user: {
+        id: user.id,
+        coins: user.coins
+      },
+      team: {
+        id: team.id,
+        athletes_count: athleteCount
+      },
+      athlete: {
+        id: athlete.id,
+        name: athlete.name,
+        refund: ATHLETE_SELL_REFUND,
         tier: athlete.tier,
         type: athlete.type
       }

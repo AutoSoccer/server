@@ -30,15 +30,30 @@ cp .env.example .env
 yarn db:up
 ```
 
-4. Inicie a API em modo desenvolvimento:
+4. Aplique as migrations:
+
+```bash
+yarn db:migrate
+```
+
+5. Inicie a API em modo desenvolvimento:
 
 ```bash
 yarn dev
 ```
+
+API local: `http://localhost:3333`
+
+Documentacao Swagger: `http://localhost:3333/docs`
 
 ## Comandos uteis
 
 ```bash
 yarn db:logs  # logs do MySQL
 yarn db:down  # derruba containers e rede
+yarn test     # executa os testes
+yarn typecheck
 ```
+
+O contrato usado pelo frontend esta documentado em
+[`docs/api-equipe.md`](docs/api-equipe.md).

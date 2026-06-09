@@ -2,14 +2,26 @@ import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
 import { authenticate } from '../auth/auth.middleware';
-import { buyAthlete, EquipeServiceError, getMyTeam } from './equipe.service';
 import {
+  buyAthlete,
+  EquipeServiceError,
+  getMyTeam,
+  sellAthlete
+} from './equipe.service';
+import {
+  MAX_POSITIONED_ATHLETES,
+  MIN_POSITIONED_ATHLETES,
   salvarEstadoEquipe,
   TeamSnapshotError,
   type SalvarEstadoInput
 } from './team-snapshot.service';
 
 type BuyAthleteBody = {
+  atleta_id: number;
+  user_id?: number;
+};
+
+type SellAthleteBody = {
   atleta_id: number;
   user_id?: number;
 };
@@ -121,6 +133,50 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
     }
   );
 
+  app.post<{ Body: SellAthleteBody }>(
+    '/vender-atleta',
+    { preHandler: [authenticate] },
+    async (request, reply) => {
+      const body = request.body;
+      const athleteId = Number(body?.atleta_id);
+
+      if (!Number.isInteger(athleteId) || athleteId <= 0) {
+        return reply.code(400).send({ message: 'Campo atleta_id invalido.' });
+      }
+
+      const authenticatedUserId = request.user!.id;
+
+      if (
+        body?.user_id !== undefined &&
+        Number(body.user_id) !== authenticatedUserId
+      ) {
+        return reply
+          .code(403)
+          .send({ message: 'user_id nao corresponde ao usuario autenticado.' });
+      }
+
+      try {
+        const result = await sellAthlete(authenticatedUserId, athleteId);
+        return reply.code(200).send(result);
+      } catch (error: unknown) {
+        if (error instanceof EquipeServiceError) {
+          if (
+            error.code === 'USER_NOT_FOUND' ||
+            error.code === 'TEAM_NOT_FOUND' ||
+            error.code === 'ATHLETE_NOT_AVAILABLE' ||
+            error.code === 'ATHLETE_NOT_OWNED'
+          ) {
+            return reply.code(404).send({ message: error.message, code: error.code });
+          }
+
+          return reply.code(400).send({ message: error.message, code: error.code });
+        }
+
+        throw error;
+      }
+    }
+  );
+
   app.post<{ Body: SalvarEstadoBody }>(
     '/salvar-estado',
     {
@@ -129,7 +185,7 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
         tags: ['Equipe'],
         summary: 'Salva o snapshot da equipe para a rodada atual (Task 3.2)',
         description:
-          'Persiste imutavelmente a formacao da equipe (exatamente 6 atletas em um grid 3x3) em team_snapshots. Bloqueia atletas que nao pertencem ao inventario do usuario e impede salvamento incompleto. Itens estao reservados para a Sprint 5.',
+          'Persiste imutavelmente a formacao da equipe (1 a 6 atletas em um grid 3x3) em team_snapshots. Bloqueia atletas que nao pertencem ao inventario do usuario e impede salvamento vazio. Itens estao reservados para a Sprint 5.',
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -143,8 +199,8 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
             },
             positions: {
               type: 'array',
-              minItems: 6,
-              maxItems: 6,
+              minItems: MIN_POSITIONED_ATHLETES,
+              maxItems: MAX_POSITIONED_ATHLETES,
               items: positionSchema
             },
             items: {

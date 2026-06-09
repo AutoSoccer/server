@@ -4,12 +4,15 @@ export type AttributeBonus = {
   velocity?: number;
 };
 
+export type AthleteRole = 'defender' | 'midfielder' | 'attacker';
+
 export class Athlete {
   id: number = 0;
   name: string = '';
   velocity: number = 50;
   attack: number = 50;
   defense: number = 50;
+  type: AthleteRole = 'midfielder';
   /**
    * Bonus acumulado de itens aplicados nesta rodada (Task 4.1).
    * Somado aos atributos base ao calcular cada disputa (RN012).
@@ -35,8 +38,28 @@ export class TeamDTO {
 }
 
 export type Possession = 'player' | 'opponent';
-export type BallRow = 0 | 1 | 2;
-export type DisputeKind = 'pass' | 'tackle' | 'shot' | 'turnover';
+export type FieldColumn = 0 | 1 | 2;
+export type BallRow = 0 | 1 | 2 | 3 | 4 | 5;
+export type DisputeKind = 'move' | 'pass' | 'tackle' | 'shot' | 'turnover';
+
+export type FieldPosition = {
+  x: FieldColumn;
+  y: BallRow;
+};
+
+export type FieldMovement = {
+  team: Possession;
+  athleteId: number;
+  from: FieldPosition;
+  to: FieldPosition;
+};
+
+export type BallState = {
+  team: Possession;
+  athleteId: number;
+  athleteName: string;
+  position: FieldPosition;
+};
 
 /**
  * Resultado bruto de uma disputa individual resolvida por uma Strategy (RN012).
@@ -69,8 +92,12 @@ export type TurnEvent = {
   defenderName: string | null;
   attackerRoll: number;
   defenderRoll: number;
+  successChance: number;
+  randomRoll: number;
   success: boolean;
   goal: boolean;
+  movements: FieldMovement[];
+  ball: BallState;
   description: string;
 };
 
@@ -87,7 +114,15 @@ export type MatchResult = {
   score: MatchScore;
   winner: MatchWinner;
   totalTurns: number;
+  initialBall: BallState;
   events: TurnEvent[];
+};
+
+export type InitiativeResult = {
+  playerLeadVelocity: number;
+  opponentLeadVelocity: number;
+  startsWith: Possession;
+  carrier: BallState;
 };
 
 export type RandomFn = () => number;
@@ -99,7 +134,10 @@ export type SimulationOptions = {
   totalTurns?: number;
   /**
    * Time que comeca com a posse de bola (RN009).
-   * Quando omitido, o motor sorteia via RNG.
+   * Quando omitido, o motor calcula pela soma de velocidade da linha mais a
+   * frente de cada time.
    */
   initialPossession?: Possession;
+  /** Portador inicial ja calculado pelo orquestrador. */
+  initialCarrierId?: number;
 };

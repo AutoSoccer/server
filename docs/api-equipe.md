@@ -1,39 +1,87 @@
-# API - Equipe (Time do jogador)
+# API de equipe, mercado e partida
 
-Este documento descreve como a API de equipe funciona, para integrar o frontend.
+Este documento descreve o contrato usado pelo frontend no fluxo principal:
+carregar mercado, comprar ou vender atletas, montar a formacao e jogar uma
+rodada contra um snapshot assincrono.
 
 ## Autenticacao
 
-Todas as rotas exigem Bearer Token (JWT) no header:
+Todas as rotas abaixo exigem JWT:
 
-```
+```http
 Authorization: Bearer <token>
 ```
 
-O `user_id` considerado e sempre o do token. Se o body enviar `user_id`, ele precisa bater com o usuario autenticado.
+Quando `user_id` for enviado, ele precisa ser igual ao usuario do token. O
+backend sempre considera o usuario autenticado.
 
-## Dados principais (visao do backend)
+## Regras atuais
 
-- `teams`: time do usuario (nome, rodada, vitorias, derrotas).
-- `team_athletes`: tabela de ligacao time <-> atletas.
-- `team_snapshots`: snapshot imutavel da formacao por rodada (grid 3x3), usado pelo matchmaking/simulacao.
+- Usuario novo comeca com 10 moedas.
+- Cada atleta custa 3 moedas.
+- O mercado exibe no maximo 3 atletas.
+- Atualizar o mercado custa 1 moeda.
+- A venda de um atleta devolve 2 moedas.
+- O time pode ter no maximo 6 atletas.
+- E permitido jogar com uma formacao de 1 a 6 atletas.
+- Cada rodada define o saldo do jogador como 10 moedas; o valor nao acumula.
+- Vitorias nao concedem bonus adicional de moedas.
+- A campanha termina com 10 vitorias ou 5 derrotas.
+- Cada derrota remove uma vida; o jogador comeca com 5 vidas.
+- Empates avancam a rodada, mas nao alteram vitorias, derrotas ou vidas.
+- Ao terminar a campanha, o progresso e a equipe atual sao zerados.
+- Snapshots anteriores permanecem salvos para o multiplayer assincrono.
+- Os adversarios iniciais usam formacoes variadas entre esquerda, centro e direita.
+- Na rodada 1, os adversarios iniciais possuem 3 atletas: um por setor.
+- A partir da rodada 2, as snapshots dos adversarios podem possuir ate 6 atletas.
+- O matchmaking prioriza o mesmo total de vitorias, derrotas e empates, mesmo
+  que precise repetir uma snapshot ja enfrentada.
+- Tipos ativos de atleta: `defender`, `midfielder` e `attacker`.
 
-## Endpoints
+## GET /mercado
 
-### GET /equipe
+Retorna os atletas disponiveis no mercado do usuario.
 
-Retorna o time do usuario autenticado.
-
-**Resposta 200**
-
+```json
+{
+  "refresh_cost": 1,
+  "refreshed_at": null,
+  "coins": 10,
+  "athletes": [
+    {
+      "id": 21,
+      "name": "Jogador X",
+      "velocity": 70,
+      "attack": 80,
+      "defense": 60,
+      "ability_id": 4,
+      "tier": "gold",
+      "type": "attacker",
+      "overall": 70,
+      "cost": 3,
+      "status": "MARKET"
+    }
+  ]
+}
 ```
+
+## POST /mercado/refresh
+
+Desconta 1 moeda, sorteia uma nova selecao de no maximo 3 atletas e retorna o
+mesmo formato de `GET /mercado`, incluindo o saldo atualizado em `coins`.
+
+## GET /equipe
+
+Retorna o time atual. Quando o usuario ainda nao possui time, retorna `null`.
+
+```json
 {
   "id": 1,
   "name": "Equipe 1",
   "round": 1,
   "victory": 0,
   "lose": 0,
-  "athletes_count": 3,
+  "athletes_count": 1,
   "max_athletes": 6,
   "athletes": [
     {
@@ -52,39 +100,27 @@ Retorna o time do usuario autenticado.
 }
 ```
 
-**Resposta 200 (sem time criado)**
+## POST /equipe/comprar-atleta
 
-```
-null
-```
+Compra um atleta disponivel no mercado.
 
-### POST /equipe/comprar-atleta
-
-Compra um atleta do mercado atual e adiciona no time do usuario.
-
-**Body**
-
-```
+```json
 {
-  "atleta_id": 21,
-  "user_id": 1
+  "atleta_id": 21
 }
 ```
 
-`user_id` e opcional. Se enviado, precisa bater com o token.
+Resposta `201`:
 
-**Resposta 201**
-
-```
+```json
 {
-    
   "user": {
     "id": 1,
     "coins": 7
   },
   "team": {
     "id": 1,
-    "athletes_count": 4
+    "athletes_count": 1
   },
   "athlete": {
     "id": 21,
@@ -96,167 +132,275 @@ Compra um atleta do mercado atual e adiciona no time do usuario.
 }
 ```
 
-**Erros possiveis**
+Erros principais:
 
-- `400 TEAM_FULL`: time ja possui 6 atletas.
-- `400 INSUFFICIENT_COINS`: moedas insuficientes.
-- `404 USER_NOT_FOUND`: usuario nao encontrado.
-- `404 ATHLETE_NOT_AVAILABLE`: atleta nao esta disponivel no mercado atual ou nao existe.
+- `400 TEAM_FULL`
+- `400 INSUFFICIENT_COINS`
+- `404 USER_NOT_FOUND`
+- `404 ATHLETE_NOT_AVAILABLE`
 
-### POST /equipe/salvar-estado
+## POST /equipe/vender-atleta
 
-Salva o snapshot da formacao atual da equipe para a rodada (grid 3x3). Exige exatamente 6 atletas posicionados.
+Remove um atleta do time e credita 2 moedas.
 
-**Body**
-
-```
+```json
 {
-  "user_id": 1,
-  "positions": [
-    { "athleteId": 21, "posX": 0, "posY": 0 },
-    { "athleteId": 22, "posX": 1, "posY": 0 },
-    { "athleteId": 23, "posX": 2, "posY": 0 },
-    { "athleteId": 24, "posX": 0, "posY": 1 },
-    { "athleteId": 25, "posX": 1, "posY": 1 },
-    { "athleteId": 26, "posX": 2, "posY": 1 }
-  ],
-  "items": []
+  "atleta_id": 21
 }
 ```
 
-`items` esta reservado (Sprint 5). Se enviar itens, a API retorna erro.
+Resposta `200`:
 
-**Resposta 200**
-
-```
+```json
 {
-  "snapshotId": 10,
-  "teamId": 1,
-  "round": 1,
-  "victory": 0,
-  "lose": 0,
-  "victoryRatio": 0,
+  "user": {
+    "id": 1,
+    "coins": 12
+  },
+  "team": {
+    "id": 1,
+    "athletes_count": 0
+  },
+  "athlete": {
+    "id": 21,
+    "name": "Jogador X",
+    "refund": 2,
+    "tier": "gold",
+    "type": "attacker"
+  }
+}
+```
+
+Erros principais:
+
+- `404 TEAM_NOT_FOUND`
+- `404 ATHLETE_NOT_OWNED`
+- `404 ATHLETE_NOT_AVAILABLE`
+- `404 USER_NOT_FOUND`
+
+## POST /partida/jogar
+
+Este e o endpoint principal do botao **Jogar**. Ele:
+
+1. valida a formacao atual;
+2. salva um snapshot imutavel;
+3. encontra um snapshot adversario com campanha semelhante;
+4. simula a rodada;
+5. persiste resultado, moedas e progresso da campanha.
+
+### Regras da simulacao
+
+- Os dois grids 3x3 sao espelhados em um campo compartilhado 3x6.
+- A iniciativa usa a soma de velocidade da linha ocupada mais avancada de cada
+  time. Em empate, o inicio e sorteado.
+- A bola comeca com o atleta mais veloz dessa linha.
+- Cada movimento, passe ou chute consome uma das 12 acoes da rodada.
+- Uma disputa faz parte da acao que a causou e nao consome uma acao adicional.
+- Somente o portador da bola se movimenta.
+- O portador prioriza avancar reto; quando bloqueado por companheiro, tenta
+  diagonal para frente e depois movimento lateral.
+- Defensores e meias tentam passar para o atacante mais proximo. Sem atacante,
+  escolhem o companheiro elegivel mais proximo.
+- O passe pode atravessar mais de uma casa.
+- O adversario mais proximo do receptor tenta interceptar o passe.
+- Interceptacao usa `velocidade_receptor / (velocidade_receptor +
+  velocidade_interceptor)`.
+- Disputa durante o avanco usa `ataque_portador / (ataque_portador +
+  defesa_adversario)`.
+- Ao perder uma disputa na zona de ataque, o portador recua para uma vaga livre
+  da propria defesa.
+- Na ultima linha, a chance de gol e igual ao ataque do portador em percentual.
+  Exemplo: 75 de ataque representa 75% de chance.
+- Se o chute falhar, o adversario mais proximo recebe a bola. Empates de
+  distancia sao resolvidos por RNG.
+- O primeiro gol encerra a rodada.
+- Sem gol depois de 12 acoes, a rodada termina empatada.
+- A posicao original do atleta nao concede bonus nem penalidade de atributos.
+- Na primeira rodada, o matchmaking ignora snapshots adversarios com mais de
+  tres atletas, inclusive snapshots antigos de jogadores reais.
+
+Body com 1 a 6 atletas:
+
+```json
+{
   "positions": [
-    [
-      { "id": 21, "name": "Jogador X", "velocity": 70, "attack": 80, "defense": 60 },
-      { "id": 22, "name": "Jogador Y", "velocity": 65, "attack": 75, "defense": 55 },
-      { "id": 23, "name": "Jogador Z", "velocity": 60, "attack": 70, "defense": 50 }
-    ],
-    [
-      { "id": 24, "name": "Jogador A", "velocity": 68, "attack": 72, "defense": 58 },
-      { "id": 25, "name": "Jogador B", "velocity": 66, "attack": 74, "defense": 62 },
-      { "id": 26, "name": "Jogador C", "velocity": 64, "attack": 76, "defense": 54 }
-    ],
-    [
-      null,
-      null,
-      null
-    ]
+    {
+      "athleteId": 21,
+      "posX": 0,
+      "posY": 2
+    }
   ]
 }
 ```
 
-**Erros possiveis**
+As coordenadas validas sao de `0` a `2`, formando um grid 3x3. Nao e
+permitido repetir atleta nem celula.
 
-- `400 INVALID_BODY`: payload invalido (ex: positions nao e array).
-- `400 WRONG_ATHLETE_COUNT`: precisa de exatamente 6 atletas.
-- `400 DUPLICATE_ATHLETE`: mesmo atleta enviado duas vezes.
-- `400 DUPLICATE_POSITION`: duas entradas na mesma celula.
-- `400 OUT_OF_BOUNDS`: posicao fora do grid 3x3.
-- `400 ATHLETE_NOT_IN_TEAM`: atleta nao pertence ao time do usuario.
-- `400 ITEM_NOT_IN_INVENTORY`: itens ainda nao implementados.
-- `404 TEAM_NOT_FOUND`: usuario nao possui time.
+Resposta `200` resumida:
 
-## Regras importantes
-
-- O time do usuario pode ser criado automaticamente ao comprar o primeiro atleta.
-- O time suporta no maximo 6 atletas.
-- O snapshot e imutavel: salva o estado atual (grid) e usa essa foto para rodada/matchmaking.
-- `positions` e um grid 3x3 com atletas ou `null`.
-- Todo atleta custa 3 moedas/reais.
-- Usuario novo comeca com 10 moedas/reais.
-- A cada rodada jogada, o usuario recebe 10 moedas/reais.
-- O ganho por rodada e fixo e nao acumula no saldo.
-- Nao existe bonus extra por vitoria.
-
-## Notas para o frontend
-
-- Use o `GET /equipe` para montar a tela do time e mostrar elenco atual.
-- Apos comprar atleta, atualize `coins` do usuario e o contador `athletes_count`.
-- Para salvar formacao, envie exatamente 6 atletas e posicoes unicas no grid 3x3.
-- Chame `POST /equipe/salvar-estado` somente ao final da organizacao do time.
-- O payload deve ser apenas `positions` com as coordenadas do grid (posX, posY) para cada atleta.
-- Se receber `null` no `GET /equipe`, trate como "time ainda nao criado".
-
-## Exemplos de chamadas
-
-### cURL
-
-GET /equipe
-
-```
-curl -X GET "https://api.seudominio.com/equipe" \
-  -H "Authorization: Bearer SEU_TOKEN"
-```
-
-POST /equipe/comprar-atleta
-
-```
-curl -X POST "https://api.seudominio.com/equipe/comprar-atleta" \
-  -H "Authorization: Bearer SEU_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{\"atleta_id\":21}"
-```
-
-POST /equipe/salvar-estado
-
-```
-curl -X POST "https://api.seudominio.com/equipe/salvar-estado" \
-  -H "Authorization: Bearer SEU_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{\"positions\":[{\"athleteId\":21,\"posX\":0,\"posY\":0},{\"athleteId\":22,\"posX\":1,\"posY\":0},{\"athleteId\":23,\"posX\":2,\"posY\":0},{\"athleteId\":24,\"posX\":0,\"posY\":1},{\"athleteId\":25,\"posX\":1,\"posY\":1},{\"athleteId\":26,\"posX\":2,\"posY\":1}]}"
-```
-
-### Axios (frontend)
-
-```ts
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'https://api.seudominio.com',
-  headers: { Authorization: `Bearer ${token}` }
-});
-
-export async function carregarEquipe() {
-  const { data } = await api.get('/equipe');
-  return data; // pode ser null
+```json
+{
+  "lineups": {
+    "player": {
+      "snapshotId": 10,
+      "teamId": 1,
+      "name": "Equipe 1",
+      "positions": [
+        [null, null, null],
+        [null, null, null],
+        [
+          {
+            "id": 21,
+            "name": "Jogador X",
+            "velocity": 70,
+            "attack": 80,
+            "defense": 60
+          },
+          null,
+          null
+        ]
+      ]
+    },
+    "opponent": {
+      "snapshotId": 42,
+      "teamId": 8,
+      "name": "Canela Nervosa FC",
+      "positions": [
+        [null, null, null],
+        [null, null, null],
+        [null, null, null]
+      ]
+    }
+  },
+  "score": {
+    "player": 1,
+    "opponent": 0
+  },
+  "winner": "player",
+  "totalTurns": 12,
+  "initialBall": {
+    "team": "player",
+    "athleteId": 21,
+    "athleteName": "Jogador X",
+    "position": {
+      "x": 0,
+      "y": 2
+    }
+  },
+  "events": [
+    {
+      "turn": 1,
+      "possession": "player",
+      "ballRow": 3,
+      "kind": "move",
+      "attackerId": 21,
+      "success": true,
+      "goal": false,
+      "movements": [
+        {
+          "team": "player",
+          "athleteId": 21,
+          "from": { "x": 0, "y": 2 },
+          "to": { "x": 0, "y": 3 }
+        }
+      ],
+      "ball": {
+        "team": "player",
+        "athleteId": 21,
+        "athleteName": "Jogador X",
+        "position": { "x": 0, "y": 3 }
+      },
+      "description": "Jogador X avanca com a bola para (0, 3)."
+    }
+  ],
+  "persisted": {
+    "teamId": 1,
+    "victory": 1,
+    "lose": 0,
+    "round": 2
+  },
+  "resolution": {
+    "matchStatus": "in_progress",
+    "matchEnded": false,
+    "trophiesDelta": 0,
+    "trophies": 0,
+    "coinsEarned": 10,
+    "coins": 10,
+    "userVictory": 0,
+    "userDefeat": 0,
+    "isGuest": false,
+    "roundLogId": 15
+  }
 }
+```
 
-export async function comprarAtleta(atletaId: number) {
-  const { data } = await api.post('/equipe/comprar-atleta', {
-    atleta_id: atletaId
-  });
-  return data;
-}
+`lineups.player.positions` e `lineups.opponent.positions` formam o estado
+inicial. O oponente deve ser espelhado no campo 3x6. Cada entrada de `events`
+informa movimentos e o estado da bola depois da acao, alimentando o log e a
+animacao da batalha.
 
-export async function salvarEstadoEquipe(positions: Array<{ athleteId: number; posX: number; posY: number }>) {
-  const { data } = await api.post('/equipe/salvar-estado', {
-    positions
-  });
-  return data;
+Erros de formacao:
+
+- `400 WRONG_ATHLETE_COUNT`: precisa de 1 a 6 atletas.
+- `400 DUPLICATE_ATHLETE`
+- `400 DUPLICATE_POSITION`
+- `400 OUT_OF_BOUNDS`
+- `400 ATHLETE_NOT_IN_TEAM`
+- `404 TEAM_NOT_FOUND`
+
+## POST /equipe/salvar-estado
+
+Rota de baixo nivel para salvar somente o snapshot, sem jogar a rodada. Aceita
+o mesmo array `positions` de 1 a 6 atletas. O frontend principal deve preferir
+`POST /partida/jogar`, que salva e joga em uma unica operacao.
+
+## POST /partida/desistir
+
+Abandona a campanha autenticada sem registrar derrota nem alterar trofeus.
+
+Ao confirmar a desistencia, o backend executa tudo em uma unica transacao:
+
+- restaura o saldo para 10 moedas;
+- zera vitorias, derrotas e empates;
+- retorna a equipe para a rodada 1;
+- remove todos os atletas da equipe atual;
+- preserva snapshots e logs anteriores como historico.
+
+O endpoint nao exige corpo e retorna o estado inicial do usuario e da equipe.
+
+## POST /partida/iniciar
+
+Inicia uma campanha nova com o nome de time escolhido pelo usuario.
+
+```json
+{
+  "name": "Canela de Vidro FC"
 }
 ```
 
-## Fluxos recomendados de tela
+O nome e obrigatorio, nao precisa ser unico e deve ter entre 1 e 40
+caracteres. Sempre que este endpoint e chamado:
 
-### Tela "Meu Time"
+- a equipe e criada ou recebe o novo nome;
+- o saldo volta para 10 moedas;
+- vitorias, derrotas, empates e rodada voltam ao estado inicial;
+- os atletas atuais sao removidos;
+- a janela do mercado e renovada ao abrir a nova campanha;
+- trofeus, snapshots e logs historicos sao preservados.
 
-1. Chame `GET /equipe` ao abrir a tela.
-2. Se vier `null`, mostre estado vazio e um CTA para comprar atleta no mercado.
-3. Se vier time, renderize elenco e contador `athletes_count/max_athletes`.
+## POST /partida/jogar-rodada
 
-### Tela "Salvar Formacao"
+Rota de baixo nivel para executar a simulacao usando um snapshot existente. O
+frontend principal nao precisa chama-la diretamente.
 
-1. Valide no frontend se existem exatamente 6 atletas no grid 3x3.
-2. Envie `POST /equipe/salvar-estado`.
-3. Se sucesso, use `positions` retornado para confirmar o layout salvo.
+## Fluxo recomendado no frontend
+
+1. No menu principal, solicitar o nome do time.
+2. Enviar o nome para `POST /partida/iniciar`.
+3. Carregar `/auth/me`, `/mercado` e `/equipe`.
+4. Comprar ou vender atletas e atualizar moedas com a resposta da API.
+5. Permitir posicionar de 1 a 6 atletas no grid.
+6. Enviar a formacao para `POST /partida/jogar`.
+7. Renderizar os campos a partir de `lineups`.
+8. Animar os eventos e mostrar o resultado retornado pelo backend.
+9. Voltar ao mercado e recarregar o estado persistido.

@@ -3,6 +3,7 @@ import {
   Athlete as AthleteModel,
   RoundLog,
   Team,
+  TeamAthlete,
   TeamSnapshot,
   User
 } from '../../database/models';
@@ -10,6 +11,10 @@ import {
   type SnapshotAthlete,
   type SnapshotPositions
 } from '../../database/models/team-snapshot.model';
+import {
+  salvarEstadoEquipe,
+  type AthletePositionInput
+} from '../equipe/team-snapshot.service';
 import {
   computeVictoryRatio,
   findOpponentSnapshot,
@@ -24,8 +29,9 @@ import {
 } from './rodada.logic';
 import {
   Athlete as SimAthlete,
+  computeInitiative,
+  type InitiativeResult,
   type MatchResult,
-  type Possession,
   processarRodada,
   type SimulationOptions,
   TeamDTO
@@ -56,7 +62,24 @@ export type JogarRodadaInput = {
   snapshotId?: number;
 };
 
+export type JogarRodadaComFormacaoInput = {
+  userId: number;
+  positions: AthletePositionInput[];
+  items?: number[];
+};
+
+type InitialLineup = {
+  snapshotId: number;
+  teamId: number;
+  name: string;
+  positions: SnapshotPositions;
+};
+
 export type JogarRodadaResult = MatchResult & {
+  lineups: {
+    player: InitialLineup;
+    opponent: InitialLineup;
+  };
   matchmaking: {
     snapshotId: number;
     opponentSnapshotId: number;
@@ -65,11 +88,7 @@ export type JogarRodadaResult = MatchResult & {
     delta: number;
     windowUsed: number;
   };
-  initiative: {
-    playerLeadVelocity: number;
-    opponentLeadVelocity: number;
-    startsWith: Possession;
-  };
+  initiative: InitiativeResult;
   persisted: {
     teamId: number;
     victory: number;
@@ -91,8 +110,11 @@ export type JogarRodadaResult = MatchResult & {
 };
 
 const rowForType = (type: string | undefined): number => {
-  if (type === 'goalkeeper' || type === 'defender') {
+  if (type === 'defender') {
     return 0;
+  }
+  if (type === 'midfielder') {
+    return 1;
   }
   if (type === 'attacker') {
     return 2;
@@ -110,7 +132,8 @@ const toSnapshotAthlete = (athlete: AthleteModel): SnapshotAthlete => ({
   name: athlete.name,
   velocity: athlete.velocity,
   attack: athlete.attack,
-  defense: athlete.defense
+  defense: athlete.defense,
+  type: athlete.type
 });
 
 const placeOnGrid = <T>(
@@ -149,7 +172,7 @@ const snapshotToTeamDto = (
   dto.turn = snapshot.round;
   dto.victorys = snapshot.victory;
   dto.loses = snapshot.lose;
-  dto.athletesPositions = snapshot.positions.map((row) =>
+  dto.athletesPositions = snapshot.positions.map((row, rowIndex) =>
     row.map((cell) => {
       if (!cell) {
         return null;
@@ -160,6 +183,13 @@ const snapshotToTeamDto = (
       a.velocity = cell.velocity;
       a.attack = cell.attack;
       a.defense = cell.defense;
+      a.type =
+        cell.type ??
+        (rowIndex === 0
+          ? 'defender'
+          : rowIndex === 2
+            ? 'attacker'
+            : 'midfielder');
       // Task 4.1: leva os buffs de itens e a ancoragem (RN011) para o motor.
       if (cell.bonus) {
         a.bonus = cell.bonus;
@@ -240,47 +270,6 @@ const loadOrCreateSnapshot = async (
   });
 };
 
-const getLeadVelocity = (team: TeamDTO): number => {
-  // RN009: atleta "mais a frente" e o da linha de ataque (row 2).
-  for (let row = team.athletesPositions.length - 1; row >= 0; row--) {
-    const cols = team.athletesPositions[row];
-    let bestInRow = -Infinity;
-    for (const cell of cols) {
-      if (cell && typeof cell.velocity === 'number') {
-        bestInRow = Math.max(bestInRow, cell.velocity);
-      }
-    }
-    if (bestInRow !== -Infinity) {
-      return bestInRow;
-    }
-  }
-  return 0;
-};
-
-const computeInitiative = (
-  player: TeamDTO,
-  opponent: TeamDTO,
-  rng: () => number
-): { playerLeadVelocity: number; opponentLeadVelocity: number; startsWith: Possession } => {
-  const playerLead = getLeadVelocity(player);
-  const opponentLead = getLeadVelocity(opponent);
-
-  let startsWith: Possession;
-  if (playerLead > opponentLead) {
-    startsWith = 'player';
-  } else if (opponentLead > playerLead) {
-    startsWith = 'opponent';
-  } else {
-    startsWith = rng() < 0.5 ? 'player' : 'opponent';
-  }
-
-  return {
-    playerLeadVelocity: playerLead,
-    opponentLeadVelocity: opponentLead,
-    startsWith
-  };
-};
-
 type RoundResolution = {
   persisted: { teamId: number; victory: number; lose: number; round: number };
   matchStatus: MatchStatus;
@@ -307,7 +296,7 @@ type FinalizeRoundInput = {
  * Task 4.6 — encerra a rodada e aplica as consequencias numa unica transacao:
  *  - atualiza victory/lose/round do time (progresso da partida);
  *  - grava o log da rodada (round_logs);
- *  - RN001/RN002: detecta o fim da partida (7 vitorias ou 4 derrotas);
+ *  - RN001/RN002: detecta o fim da partida (10 vitorias ou 5 derrotas);
  *  - RF004/RF005: ao encerrar, soma/subtrai trofeus e atualiza o perfil do
  *    usuario, exceto convidado (is_guest); zera o progresso para a proxima.
  */
@@ -385,7 +374,12 @@ const finalizeRound = async (input: FinalizeRoundInput): Promise<RoundResolution
     if (matchEnded) {
       team.victory = 0;
       team.lose = 0;
+      team.draw = 0;
       team.round = 1;
+      await TeamAthlete.destroy({
+        where: { team_id: team.id },
+        transaction
+      });
     }
     await team.save({ transaction });
 
@@ -414,7 +408,8 @@ const finalizeRound = async (input: FinalizeRoundInput): Promise<RoundResolution
  * Task 4.3 — orquestra a rodada completa:
  * 1. Garante o snapshot da equipe do jogador (RN: usa o informado ou cria um novo).
  * 2. Busca oponente fantasma com victory_ratio proximo (RN006).
- * 3. Reconstroi TeamDTOs e calcula iniciativa pela velocidade do atacante (RN009).
+ * 3. Reconstroi TeamDTOs e calcula iniciativa pela soma de velocidade da linha
+ *    mais avancada de cada time (RN009).
  * 4. Aciona o motor de 12 turnos (Task 4.2) com a posse inicial calculada.
  * 5. Persiste victory/lose/round no time do jogador.
  */
@@ -472,17 +467,19 @@ export const jogarRodada = async (
     );
   }
 
+  const opponentFallbackName = `Adversario fantasma #${opponentSnapshot.team_id}`;
+  const opponentTeam = await Team.findByPk(opponentSnapshot.team_id);
+  const opponentName = opponentTeam?.name ?? opponentFallbackName;
+
   const playerDto = snapshotToTeamDto(playerSnapshot, playerTeam.name);
-  const opponentDto = snapshotToTeamDto(
-    opponentSnapshot,
-    `Adversario fantasma #${opponentSnapshot.team_id}`
-  );
+  const opponentDto = snapshotToTeamDto(opponentSnapshot, opponentName);
 
   const initiative = computeInitiative(playerDto, opponentDto, rng);
 
   const result = processarRodada(playerDto, opponentDto, {
     ...options,
-    initialPossession: initiative.startsWith
+    initialPossession: initiative.startsWith,
+    initialCarrierId: initiative.carrier.athleteId
   });
 
   const resolution = await finalizeRound({
@@ -495,6 +492,20 @@ export const jogarRodada = async (
 
   return {
     ...result,
+    lineups: {
+      player: {
+        snapshotId: playerSnapshot.id,
+        teamId: playerSnapshot.team_id,
+        name: playerTeam.name,
+        positions: playerSnapshot.positions
+      },
+      opponent: {
+        snapshotId: opponentSnapshot.id,
+        teamId: opponentSnapshot.team_id,
+        name: opponentName,
+        positions: opponentSnapshot.positions
+      }
+    },
     matchmaking: {
       snapshotId: playerSnapshot.id,
       opponentSnapshotId: opponentSnapshot.id,
@@ -518,4 +529,27 @@ export const jogarRodada = async (
       roundLogId: resolution.roundLogId
     }
   };
+};
+
+/**
+ * Fluxo do botao Jogar no front: salva um snapshot novo da formacao atual e
+ * roda a rodada usando exatamente esse snapshot.
+ */
+export const jogarRodadaComFormacao = async (
+  input: JogarRodadaComFormacaoInput,
+  options?: SimulationOptions
+): Promise<JogarRodadaResult> => {
+  const snapshot = await salvarEstadoEquipe({
+    userId: input.userId,
+    positions: input.positions,
+    items: input.items
+  });
+
+  return jogarRodada(
+    {
+      userId: input.userId,
+      snapshotId: snapshot.snapshotId
+    },
+    options
+  );
 };

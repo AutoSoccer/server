@@ -9,7 +9,7 @@ import {
 import { sequelize } from '../../config/database';
 
 export const ATHLETE_TIERS = ['bronze', 'silver', 'gold', 'epic', 'legend'] as const;
-export const ATHLETE_TYPES = ['goalkeeper', 'defender', 'attacker'] as const;
+export const ATHLETE_TYPES = ['defender', 'midfielder', 'attacker'] as const;
 
 export class Athlete extends Model<InferAttributes<Athlete>, InferCreationAttributes<Athlete>> {
   declare id: CreationOptional<number>;

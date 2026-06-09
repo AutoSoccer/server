@@ -1,10 +1,23 @@
 import { Op, type Transaction, type WhereOptions } from 'sequelize';
 
 import { sequelize } from '../../config/database';
-import { Athlete, MarketWindow, TeamAthlete } from '../../database/models';
+import { Athlete, MarketWindow, TeamAthlete, User } from '../../database/models';
 
-const DEFAULT_MARKET_SIZE = 5;
-const REFRESH_COST = 0;
+export const MARKET_SIZE = 3;
+export const REFRESH_COST = 1;
+
+export type MercadoServiceErrorCode =
+  | 'INSUFFICIENT_COINS'
+  | 'USER_NOT_FOUND';
+
+export class MercadoServiceError extends Error {
+  public readonly code: MercadoServiceErrorCode;
+
+  constructor(code: MercadoServiceErrorCode, message: string) {
+    super(message);
+    this.code = code;
+  }
+}
 
 export type MarketAthleteStatus = 'MARKET' | 'OWNED';
 
@@ -25,6 +38,7 @@ export type MarketAthlete = {
 export type MarketResponse = {
   refresh_cost: number;
   refreshed_at: string | null;
+  coins: number;
   athletes: MarketAthlete[];
 };
 
@@ -57,16 +71,19 @@ const loadOwnedAthleteIds = async (transaction?: Transaction): Promise<Set<numbe
 
 const mapWindowResponse = async (
   entries: MarketWindow[],
-  options?: { cost?: number; refreshedAt?: Date; transaction?: Transaction }
+  coins: number,
+  options?: { refreshedAt?: Date; transaction?: Transaction }
 ): Promise<MarketResponse> => {
   const ownedAthleteIds = await loadOwnedAthleteIds(options?.transaction);
 
   return {
-    refresh_cost: options?.cost ?? REFRESH_COST,
+    refresh_cost: REFRESH_COST,
     refreshed_at:
       options?.refreshedAt?.toISOString() ?? entries[0]?.refreshed_at?.toISOString() ?? null,
+    coins,
     athletes: entries
       .sort((left, right) => left.slot - right.slot)
+      .slice(0, MARKET_SIZE)
       .map((entry) => sanitizeAthlete(entry.get('athlete') as Athlete, ownedAthleteIds))
   };
 };
@@ -110,13 +127,28 @@ const drawAvailableAthletes = async (
 };
 
 export const refreshMarket = async (
-  userId: number,
-  options?: { cost?: number; size?: number }
+  userId: number
 ): Promise<MarketResponse> => {
-  const size = options?.size ?? DEFAULT_MARKET_SIZE;
-  const cost = options?.cost ?? REFRESH_COST;
-
   return sequelize.transaction(async (transaction) => {
+    const user = await User.findByPk(userId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE
+    });
+
+    if (!user) {
+      throw new MercadoServiceError('USER_NOT_FOUND', 'Usuario nao encontrado.');
+    }
+
+    if (user.coins < REFRESH_COST) {
+      throw new MercadoServiceError(
+        'INSUFFICIENT_COINS',
+        'Saldo insuficiente para atualizar o mercado.'
+      );
+    }
+
+    user.coins -= REFRESH_COST;
+    await user.save({ transaction });
+
     await MarketWindow.destroy({
       where: {
         user_id: userId
@@ -124,7 +156,7 @@ export const refreshMarket = async (
       transaction
     });
 
-    const athletes = await drawAvailableAthletes(size, transaction);
+    const athletes = await drawAvailableAthletes(MARKET_SIZE, transaction);
     const refreshedAt = new Date();
 
     if (athletes.length > 0) {
@@ -140,16 +172,51 @@ export const refreshMarket = async (
     }
 
     const entries = await loadCurrentWindow(userId, transaction);
-    return mapWindowResponse(entries, { cost, refreshedAt, transaction });
+    return mapWindowResponse(entries, user.coins, { refreshedAt, transaction });
   });
 };
 
 export const getMarket = async (userId: number): Promise<MarketResponse> => {
   const existingEntries = await loadCurrentWindow(userId);
+  const user = await User.findByPk(userId);
 
-  if (existingEntries.length > 0) {
-    return mapWindowResponse(existingEntries);
+  if (!user) {
+    throw new MercadoServiceError('USER_NOT_FOUND', 'Usuario nao encontrado.');
   }
 
-  return refreshMarket(userId);
+  if (existingEntries.length > 0) {
+    if (existingEntries.length > MARKET_SIZE) {
+      await MarketWindow.destroy({
+        where: {
+          user_id: userId,
+          slot: { [Op.gte]: MARKET_SIZE }
+        }
+      });
+    }
+
+    return mapWindowResponse(existingEntries, user.coins);
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    const athletes = await drawAvailableAthletes(MARKET_SIZE, transaction);
+    const refreshedAt = new Date();
+
+    if (athletes.length > 0) {
+      await MarketWindow.bulkCreate(
+        athletes.map((athlete, index) => ({
+          user_id: userId,
+          athlete_id: athlete.id,
+          slot: index,
+          refreshed_at: refreshedAt
+        })),
+        { transaction }
+      );
+    }
+
+    const entries = await loadCurrentWindow(userId, transaction);
+    return mapWindowResponse(entries, user.coins, {
+      refreshedAt,
+      transaction
+    });
+  });
 };

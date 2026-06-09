@@ -1,252 +1,419 @@
 import { describe, expect, it } from 'vitest';
 
 import { computeSuccessChance, effectiveAttribute } from './formula';
-import { moveAthleteToDefense, retreatOnPossessionLoss } from './movement';
-import { processarRodada, TOTAL_TURNS } from './simulador.service';
-import { dribbleVsTackle, shotVsKeeper, strategyForBallRow } from './strategies';
-import { Athlete, type RandomFn, TeamDTO } from './types';
+import {
+  computeInitiative,
+  processarRodada,
+  TOTAL_TURNS
+} from './simulador.service';
+import {
+  Athlete,
+  type AthleteRole,
+  type RandomFn,
+  TeamDTO
+} from './types';
 
-// ---------------------------------------------------------------------------
-// Helpers de teste — RNG deterministico e construcao de times com atributos falsos.
-// ---------------------------------------------------------------------------
-
-/** RNG que sempre devolve o mesmo valor. */
 const constant = (value: number): RandomFn => () => value;
 
-/** RNG que percorre uma sequencia ciclicamente — torna a simulacao reproduzivel. */
 const sequence = (values: number[]): RandomFn => {
   let index = 0;
   return () => values[index++ % values.length];
 };
 
-const athlete = (over: Partial<Athlete>): Athlete => Object.assign(new Athlete(), over);
+type Placement = {
+  id: number;
+  row: number;
+  col: number;
+  type: AthleteRole;
+  velocity?: number;
+  attack?: number;
+  defense?: number;
+};
 
-const emptyGrid = (): (Athlete | null)[][] =>
-  Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => null as Athlete | null));
+const athlete = (placement: Placement): Athlete =>
+  Object.assign(new Athlete(), {
+    id: placement.id,
+    name: `Atleta ${placement.id}`,
+    type: placement.type,
+    velocity: placement.velocity ?? 50,
+    attack: placement.attack ?? 50,
+    defense: placement.defense ?? 50
+  });
 
-/** Monta um time com 6 atletas (2 por linha: defesa/meio/ataque) e atributos uniformes. */
 const team = (
   id: number,
   name: string,
-  attrs?: { atk?: number; def?: number; vel?: number }
+  placements: Placement[]
 ): TeamDTO => {
   const dto = new TeamDTO();
   dto.id = id;
   dto.name = name;
-  const grid = emptyGrid();
-  let counter = id * 10;
-  for (let row = 0; row < 3; row++) {
-    for (let col = 0; col < 2; col++) {
-      counter += 1;
-      grid[row][col] = athlete({
-        id: counter,
-        name: `${name}-${row}-${col}`,
-        velocity: attrs?.vel ?? 50,
-        attack: attrs?.atk ?? 50,
-        defense: attrs?.def ?? 50
-      });
-    }
+
+  for (const placement of placements) {
+    dto.athletesPositions[placement.row][placement.col] =
+      athlete(placement);
   }
-  dto.athletesPositions = grid;
-  dto.athlethes = grid.flat().filter((a): a is Athlete => a !== null);
+
+  dto.athlethes = dto.athletesPositions
+    .flat()
+    .filter((entry): entry is Athlete => entry !== null);
   return dto;
 };
 
-// ---------------------------------------------------------------------------
-// RN012 — fórmula de chance
-// ---------------------------------------------------------------------------
-
-describe('computeSuccessChance (RN012)', () => {
-  it('e justa: atributos iguais => 50%', () => {
-    expect(computeSuccessChance(50, 50)).toBe(0.5);
-    expect(computeSuccessChance(80, 80)).toBe(0.5);
-  });
-
-  it('e monotonica: mais ataque => mais chance, menos => menos', () => {
-    expect(computeSuccessChance(80, 20)).toBeCloseTo(0.8, 5);
-    expect(computeSuccessChance(20, 80)).toBeCloseTo(0.2, 5);
-  });
-
-  it('nunca sai do intervalo [0, 1] (impede loop infinito)', () => {
-    const samples = [
-      [0, 0],
-      [1, 999],
-      [999, 1],
-      [50, 50],
-      [-10, 70],
-      [70, -10]
-    ];
-    for (const [atk, def] of samples) {
-      const chance = computeSuccessChance(atk, def);
-      expect(chance).toBeGreaterThanOrEqual(0);
-      expect(chance).toBeLessThanOrEqual(1);
+const singleAttackerTeam = (
+  id: number,
+  attack = 50,
+  velocity = 50,
+  column = 1
+): TeamDTO =>
+  team(id, `Time ${id}`, [
+    {
+      id: id * 10 + 1,
+      row: 2,
+      col: column,
+      type: 'attacker',
+      attack,
+      velocity,
+      defense: 50
     }
+  ]);
+
+describe('computeSuccessChance', () => {
+  it('usa a proporcao entre os dois atributos', () => {
+    expect(computeSuccessChance(75, 25)).toBe(0.75);
+    expect(computeSuccessChance(45, 45)).toBe(0.5);
   });
 
-  it('com ambos zerados, cai no neutro 50%', () => {
+  it('mantem o resultado entre zero e um', () => {
+    expect(computeSuccessChance(-10, 80)).toBe(0);
+    expect(computeSuccessChance(80, -10)).toBe(1);
     expect(computeSuccessChance(0, 0)).toBe(0.5);
   });
 });
 
-// ---------------------------------------------------------------------------
-// Atributo efetivo (base + buffs de itens — Task 4.1)
-// ---------------------------------------------------------------------------
+describe('effectiveAttribute', () => {
+  it('considera bonus de item sem aplicar bonus por posicao', () => {
+    const entry = athlete({
+      id: 1,
+      row: 0,
+      col: 0,
+      type: 'defender',
+      attack: 60
+    });
+    entry.bonus = { attack: 15 };
 
-describe('effectiveAttribute (buffs de itens)', () => {
-  it('retorna o atributo base quando nao ha bonus', () => {
-    expect(effectiveAttribute(athlete({ velocity: 60 }), 'velocity')).toBe(60);
-  });
-
-  it('soma o bonus de itens ao atributo base', () => {
-    const buffed = athlete({ attack: 60, bonus: { attack: 15 } });
-    expect(effectiveAttribute(buffed, 'attack')).toBe(75);
-  });
-
-  it('usa fallback neutro para atributo ausente/invalido', () => {
-    expect(effectiveAttribute(athlete({ attack: 0 }), 'attack')).toBe(50);
-  });
-
-  it('atleta indefinido vale 0 (sem marcacao)', () => {
-    expect(effectiveAttribute(undefined, 'defense')).toBe(0);
+    expect(effectiveAttribute(entry, 'attack')).toBe(75);
   });
 });
 
-// ---------------------------------------------------------------------------
-// Strategy pattern — selecao e resolucao
-// ---------------------------------------------------------------------------
+describe('computeInitiative', () => {
+  it('soma a velocidade de todos os atletas da linha mais avancada', () => {
+    const player = team(1, 'Player', [
+      {
+        id: 11,
+        row: 2,
+        col: 0,
+        type: 'attacker',
+        velocity: 45
+      },
+      {
+        id: 12,
+        row: 2,
+        col: 2,
+        type: 'attacker',
+        velocity: 55
+      }
+    ]);
+    const opponent = team(2, 'Opponent', [
+      {
+        id: 21,
+        row: 2,
+        col: 1,
+        type: 'attacker',
+        velocity: 90
+      }
+    ]);
 
-describe('strategyForBallRow (Strategy pattern)', () => {
-  it('defesa/meio usam Drible vs Desarme (velocidade, sem gol)', () => {
-    expect(strategyForBallRow(0)).toBe(dribbleVsTackle);
-    expect(strategyForBallRow(1)).toBe(dribbleVsTackle);
-    expect(dribbleVsTackle.attackerAttribute).toBe('velocity');
-    expect(dribbleVsTackle.scoresGoal).toBe(false);
+    const initiative = computeInitiative(player, opponent, constant(0.9));
+
+    expect(initiative.playerLeadVelocity).toBe(100);
+    expect(initiative.opponentLeadVelocity).toBe(90);
+    expect(initiative.startsWith).toBe('player');
+    expect(initiative.carrier.athleteId).toBe(12);
   });
 
-  it('ataque usa Chute vs Defesa do Goleiro (ataque, marca gol)', () => {
-    expect(strategyForBallRow(2)).toBe(shotVsKeeper);
-    expect(shotVsKeeper.attackerAttribute).toBe('attack');
-    expect(shotVsKeeper.scoresGoal).toBe(true);
+  it('usa a linha ocupada mais avancada e sorteia o empate', () => {
+    const player = team(1, 'Player', [
+      {
+        id: 11,
+        row: 1,
+        col: 1,
+        type: 'midfielder',
+        velocity: 60
+      }
+    ]);
+    const opponent = team(2, 'Opponent', [
+      {
+        id: 21,
+        row: 1,
+        col: 1,
+        type: 'midfielder',
+        velocity: 60
+      }
+    ]);
+
+    expect(
+      computeInitiative(player, opponent, constant(0.49)).startsWith
+    ).toBe('player');
+    expect(
+      computeInitiative(player, opponent, constant(0.5)).startsWith
+    ).toBe('opponent');
   });
 });
 
-describe('resolucao das disputas', () => {
-  it('drible: sorteio abaixo da chance => avanca (sem gol)', () => {
-    const out = dribbleVsTackle.resolve(athlete({ velocity: 50 }), athlete({ defense: 50 }), constant(0.4));
-    expect(out.success).toBe(true);
-    expect(out.goal).toBe(false);
+describe('passes', () => {
+  const passingTeam = () =>
+    team(1, 'Player', [
+      {
+        id: 11,
+        row: 0,
+        col: 1,
+        type: 'defender',
+        velocity: 50
+      },
+      {
+        id: 12,
+        row: 2,
+        col: 1,
+        type: 'attacker',
+        velocity: 80
+      }
+    ]);
+
+  it('defensor passa para o atacante mais proximo e o passe atravessa linhas', () => {
+    const opponent = singleAttackerTeam(2, 30, 40, 1);
+    const result = processarRodada(passingTeam(), opponent, {
+      totalTurns: 1,
+      initialPossession: 'player',
+      initialCarrierId: 11,
+      rng: constant(0.5)
+    });
+
+    const event = result.events[0];
+    expect(event.kind).toBe('pass');
+    expect(event.success).toBe(true);
+    expect(event.attackerId).toBe(12);
+    expect(event.ball.team).toBe('player');
+    expect(event.ball.athleteId).toBe(12);
   });
 
-  it('drible: sorteio acima da chance => perde a posse', () => {
-    const out = dribbleVsTackle.resolve(athlete({ velocity: 50 }), athlete({ defense: 50 }), constant(0.6));
-    expect(out.success).toBe(false);
-  });
+  it('o adversario mais proximo intercepta usando velocidade', () => {
+    const opponent = singleAttackerTeam(2, 30, 90, 1);
+    const result = processarRodada(passingTeam(), opponent, {
+      totalTurns: 1,
+      initialPossession: 'player',
+      initialCarrierId: 11,
+      rng: constant(0.9)
+    });
 
-  it('chute: sucesso vira gol (RN003/RN004)', () => {
-    const out = shotVsKeeper.resolve(athlete({ attack: 50 }), athlete({ defense: 50 }), constant(0.1));
-    expect(out.success).toBe(true);
-    expect(out.goal).toBe(true);
+    const event = result.events[0];
+    expect(event.kind).toBe('pass');
+    expect(event.success).toBe(false);
+    expect(event.defenderId).toBe(21);
+    expect(event.ball.team).toBe('opponent');
+    expect(event.ball.athleteId).toBe(21);
   });
+});
 
-  it('buff de item aumenta a chance de sucesso do atacante', () => {
-    const base = dribbleVsTackle.resolve(athlete({ velocity: 50 }), athlete({ defense: 50 }), constant(0));
-    const buffed = dribbleVsTackle.resolve(
-      athlete({ velocity: 50, bonus: { velocity: 50 } }),
-      athlete({ defense: 50 }),
-      constant(0)
+describe('movimento e disputa', () => {
+  it('o portador avanca reto quando a casa esta livre', () => {
+    const result = processarRodada(
+      singleAttackerTeam(1),
+      singleAttackerTeam(2, 50, 50, 0),
+      {
+        totalTurns: 1,
+        initialPossession: 'player',
+        rng: constant(0)
+      }
     );
-    expect(buffed.successChance).toBeGreaterThan(base.successChance);
+
+    const event = result.events[0];
+    expect(event.kind).toBe('move');
+    expect(event.movements[0]).toMatchObject({
+      athleteId: 11,
+      from: { x: 1, y: 2 },
+      to: { x: 1, y: 3 }
+    });
+    expect(event.ball.position).toEqual({ x: 1, y: 3 });
+  });
+
+  it('a disputa normal usa ataque contra defesa', () => {
+    const player = singleAttackerTeam(1, 75, 50, 1);
+    const opponent = team(2, 'Opponent', [
+      {
+        id: 21,
+        row: 2,
+        col: 1,
+        type: 'attacker',
+        defense: 25
+      }
+    ]);
+    const result = processarRodada(player, opponent, {
+      totalTurns: 1,
+      initialPossession: 'player',
+      rng: constant(0.7)
+    });
+
+    const event = result.events[0];
+    expect(event.kind).toBe('tackle');
+    expect(event.successChance).toBe(0.75);
+    expect(event.success).toBe(true);
+    expect(event.ball.team).toBe('player');
+  });
+
+  it('ao perder a disputa no ataque, perde a posse e recua para a defesa', () => {
+    const player = singleAttackerTeam(1, 25, 50, 1);
+    const opponent = team(2, 'Opponent', [
+      {
+        id: 21,
+        row: 2,
+        col: 1,
+        type: 'attacker',
+        defense: 75
+      }
+    ]);
+    const result = processarRodada(player, opponent, {
+      totalTurns: 1,
+      initialPossession: 'player',
+      rng: constant(0.9)
+    });
+
+    const event = result.events[0];
+    expect(event.success).toBe(false);
+    expect(event.ball.team).toBe('opponent');
+    expect(event.ball.athleteId).toBe(21);
+    expect(event.movements[0]).toMatchObject({
+      athleteId: 11,
+      from: { x: 1, y: 2 },
+      to: { x: 1, y: 0 }
+    });
+  });
+
+  it('tambem recua quando a disputa perdida comeca no meio-campo', () => {
+    const player = team(1, 'Player', [
+      {
+        id: 11,
+        row: 1,
+        col: 1,
+        type: 'attacker',
+        attack: 25,
+        defense: 75
+      }
+    ]);
+    const opponent = team(2, 'Opponent', [
+      {
+        id: 21,
+        row: 2,
+        col: 1,
+        type: 'attacker',
+        attack: 25,
+        defense: 75
+      }
+    ]);
+    opponent.athlethes[0].holdsPosition = true;
+    const result = processarRodada(player, opponent, {
+      totalTurns: 3,
+      initialPossession: 'opponent',
+      rng: sequence([0.9, 0.9])
+    });
+
+    const event = result.events[2];
+    expect(event.success).toBe(false);
+    expect(event.movements[0]).toMatchObject({
+      athleteId: 11,
+      from: { x: 1, y: 1 },
+      to: { x: 1, y: 0 }
+    });
   });
 });
 
-// ---------------------------------------------------------------------------
-// RN011 — movimentacao tática (recuo)
-// ---------------------------------------------------------------------------
+describe('finalizacao', () => {
+  it('usa o ataque como porcentagem direta e o gol encerra a rodada', () => {
+    const result = processarRodada(
+      singleAttackerTeam(1, 75),
+      singleAttackerTeam(2, 20, 40, 0),
+      {
+        totalTurns: 12,
+        initialPossession: 'player',
+        rng: constant(0.5)
+      }
+    );
 
-describe('movimentacao RN011', () => {
-  it('recua o atleta do ataque para uma vaga livre na defesa', () => {
-    const t = team(1, 'Alpha');
-    const attacker = t.athletesPositions[2][0]!;
-    expect(moveAthleteToDefense(t, attacker.id)).toBe(true);
-    // saiu do ataque...
-    expect(t.athletesPositions[2][0]).toBeNull();
-    // ...e reapareceu na defesa.
-    expect(t.athletesPositions[0].some((slot) => slot?.id === attacker.id)).toBe(true);
-  });
-
-  it('recua ao perder a posse na linha de ataque', () => {
-    const t = team(1, 'Alpha');
-    const attacker = t.athletesPositions[2][0]!;
-    expect(retreatOnPossessionLoss(t, attacker, 2)).toBe(true);
-  });
-
-  it('NAO recua se o atleta tem habilidade que ancora a posicao (holdsPosition)', () => {
-    const t = team(1, 'Alpha');
-    const anchored = t.athletesPositions[2][0]!;
-    anchored.holdsPosition = true;
-    expect(retreatOnPossessionLoss(t, anchored, 2)).toBe(false);
-    expect(t.athletesPositions[2][0]?.id).toBe(anchored.id);
-  });
-
-  it('NAO recua quando a perda nao foi na linha de ataque', () => {
-    const t = team(1, 'Alpha');
-    const midfielder = t.athletesPositions[1][0]!;
-    expect(retreatOnPossessionLoss(t, midfielder, 1)).toBe(false);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Motor completo — RN007, RN008, RN005, RN009
-// ---------------------------------------------------------------------------
-
-describe('processarRodada (motor)', () => {
-  it('RN008: nunca passa de 12 turnos e sempre termina (sem loop infinito)', () => {
-    const result = processarRodada(team(1, 'Alpha'), team(2, 'Beta'), {
-      rng: sequence([0.1, 0.9, 0.3, 0.7, 0.5, 0.2, 0.8])
-    });
-    expect(result.events.length).toBeLessThanOrEqual(TOTAL_TURNS);
-    expect(result.totalTurns).toBeLessThanOrEqual(TOTAL_TURNS);
-    expect(result.totalTurns).toBeGreaterThan(0);
-  });
-
-  it('RN007: o gol encerra a rodada imediatamente (placar maximo 1x0)', () => {
-    const result = processarRodada(team(1, 'Alpha'), team(2, 'Beta'), {
-      rng: constant(0),
-      initialPossession: 'player'
-    });
     expect(result.score).toEqual({ player: 1, opponent: 0 });
     expect(result.winner).toBe('player');
-    expect(result.events.at(-1)?.goal).toBe(true);
-    // 3 avancos (defesa -> meio -> ataque -> gol) => break antes dos 12 turnos.
-    expect(result.totalTurns).toBeLessThan(TOTAL_TURNS);
-    // so o ultimo evento e gol.
-    expect(result.events.filter((event) => event.goal)).toHaveLength(1);
+    expect(result.totalTurns).toBe(4);
+    expect(result.events.at(-1)).toMatchObject({
+      kind: 'shot',
+      successChance: 0.75,
+      goal: true
+    });
   });
 
-  it('RN009: respeita a posse inicial informada', () => {
-    const result = processarRodada(team(1, 'Alpha'), team(2, 'Beta'), {
-      rng: constant(0),
-      initialPossession: 'opponent'
+  it('no chute perdido, o adversario mais proximo recebe a bola e o empate e sorteado', () => {
+    const player = singleAttackerTeam(1, 40, 50, 1);
+    const opponent = team(2, 'Opponent', [
+      {
+        id: 21,
+        row: 0,
+        col: 0,
+        type: 'defender'
+      },
+      {
+        id: 22,
+        row: 0,
+        col: 2,
+        type: 'defender'
+      }
+    ]);
+    const result = processarRodada(player, opponent, {
+      totalTurns: 4,
+      initialPossession: 'player',
+      rng: sequence([0.9, 0.75])
     });
-    expect(result.winner).toBe('opponent');
-    expect(result.score).toEqual({ player: 0, opponent: 1 });
-  });
 
-  it('RN005: sem gol em 12 turnos => empate 0x0', () => {
-    const result = processarRodada(team(1, 'Alpha'), team(2, 'Beta'), {
-      rng: constant(0.999),
-      initialPossession: 'player'
+    const shot = result.events.at(-1)!;
+    expect(shot.kind).toBe('shot');
+    expect(shot.goal).toBe(false);
+    expect(shot.ball.team).toBe('opponent');
+    expect(shot.ball.athleteId).toBe(22);
+  });
+});
+
+describe('limites da rodada', () => {
+  it('termina empatada depois de 12 acoes sem gol', () => {
+    const player = singleAttackerTeam(1, 1);
+    const opponent = singleAttackerTeam(2, 1);
+    const result = processarRodada(player, opponent, {
+      initialPossession: 'player',
+      rng: constant(0.999)
     });
+
+    expect(result.totalTurns).toBe(TOTAL_TURNS);
+    expect(result.events).toHaveLength(TOTAL_TURNS);
     expect(result.winner).toBe('draw');
     expect(result.score).toEqual({ player: 0, opponent: 0 });
-    expect(result.totalTurns).toBe(TOTAL_TURNS);
-    expect(result.events.every((event) => event.goal === false)).toBe(true);
   });
 
-  it('nao muta os times originais passados por parametro', () => {
-    const player = team(1, 'Alpha');
-    const snapshotBefore = JSON.stringify(player.athletesPositions);
-    processarRodada(player, team(2, 'Beta'), { rng: constant(0), initialPossession: 'player' });
-    expect(JSON.stringify(player.athletesPositions)).toBe(snapshotBefore);
+  it('nao altera os times recebidos por parametro', () => {
+    const player = singleAttackerTeam(1, 75);
+    const before = JSON.stringify(player);
+
+    processarRodada(player, singleAttackerTeam(2), {
+      totalTurns: 1,
+      initialPossession: 'player',
+      rng: constant(0)
+    });
+
+    expect(JSON.stringify(player)).toBe(before);
   });
 });

@@ -2,11 +2,36 @@ import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
 import { authenticate } from '../auth/auth.middleware';
-import { jogarRodada, RodadaServiceError } from './rodada.service';
+import {
+  MAX_POSITIONED_ATHLETES,
+  MIN_POSITIONED_ATHLETES,
+  TeamSnapshotError,
+  type SalvarEstadoInput
+} from '../equipe/team-snapshot.service';
+import {
+  jogarRodada,
+  jogarRodadaComFormacao,
+  RodadaServiceError
+} from './rodada.service';
+import {
+  abandonCampaign,
+  CampaignServiceError,
+  startCampaign
+} from './campaign.service';
 
 type JogarRodadaBody = {
   user_id?: number;
   snapshot_id?: number;
+};
+
+type JogarPartidaBody = {
+  user_id?: number;
+  positions: SalvarEstadoInput['positions'];
+  items?: number[];
+};
+
+type StartCampaignBody = {
+  name: string;
 };
 
 const athleteSimSchema = {
@@ -16,7 +41,51 @@ const athleteSimSchema = {
     name: { type: 'string' },
     velocity: { type: 'integer' },
     attack: { type: 'integer' },
-    defense: { type: 'integer' }
+    defense: { type: 'integer' },
+    type: { type: 'string', enum: ['defender', 'midfielder', 'attacker'] }
+  }
+} as const;
+
+const snapshotAthleteSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'integer' },
+    name: { type: 'string' },
+    velocity: { type: 'integer' },
+    attack: { type: 'integer' },
+    defense: { type: 'integer' },
+    type: { type: 'string', enum: ['defender', 'midfielder', 'attacker'] }
+  }
+} as const;
+
+const snapshotGridSchema = {
+  type: 'array',
+  description: 'Grid 3x3 inicial salvo no snapshot antes da simulacao.',
+  items: {
+    type: 'array',
+    items: {
+      oneOf: [snapshotAthleteSchema, { type: 'null' }]
+    }
+  }
+} as const;
+
+const lineupSchema = {
+  type: 'object',
+  properties: {
+    snapshotId: { type: 'integer' },
+    teamId: { type: 'integer' },
+    name: { type: 'string' },
+    positions: snapshotGridSchema
+  }
+} as const;
+
+const positionSchema = {
+  type: 'object',
+  required: ['athleteId', 'posX', 'posY'],
+  properties: {
+    athleteId: { type: 'integer', example: 21 },
+    posX: { type: 'integer', minimum: 0, maximum: 2, example: 0 },
+    posY: { type: 'integer', minimum: 0, maximum: 2, example: 0 }
   }
 } as const;
 
@@ -47,10 +116,10 @@ const turnEventSchema = {
   properties: {
     turn: { type: 'integer', example: 1 },
     possession: { type: 'string', enum: ['player', 'opponent'] },
-    ballRow: { type: 'integer', enum: [0, 1, 2] },
+    ballRow: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] },
     kind: {
       type: 'string',
-      enum: ['pass', 'tackle', 'shot', 'turnover']
+      enum: ['move', 'pass', 'tackle', 'shot', 'turnover']
     },
     attackerTeamId: { type: 'integer' },
     defenderTeamId: { type: 'integer' },
@@ -60,8 +129,49 @@ const turnEventSchema = {
     defenderName: { type: ['string', 'null'] },
     attackerRoll: { type: 'number' },
     defenderRoll: { type: 'number' },
+    successChance: { type: 'number' },
+    randomRoll: { type: 'number' },
     success: { type: 'boolean' },
     goal: { type: 'boolean' },
+    movements: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          team: { type: 'string', enum: ['player', 'opponent'] },
+          athleteId: { type: 'integer' },
+          from: {
+            type: 'object',
+            properties: {
+              x: { type: 'integer', enum: [0, 1, 2] },
+              y: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] }
+            }
+          },
+          to: {
+            type: 'object',
+            properties: {
+              x: { type: 'integer', enum: [0, 1, 2] },
+              y: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] }
+            }
+          }
+        }
+      }
+    },
+    ball: {
+      type: 'object',
+      properties: {
+        team: { type: 'string', enum: ['player', 'opponent'] },
+        athleteId: { type: 'integer' },
+        athleteName: { type: 'string' },
+        position: {
+          type: 'object',
+          properties: {
+            x: { type: 'integer', enum: [0, 1, 2] },
+            y: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] }
+          }
+        }
+      }
+    },
     description: { type: 'string' }
   }
 } as const;
@@ -69,6 +179,15 @@ const turnEventSchema = {
 const rodadaResultSchema = {
   type: 'object',
   properties: {
+    lineups: {
+      type: 'object',
+      description:
+        'Formacoes iniciais salvas nos snapshots antes do motor movimentar atletas.',
+      properties: {
+        player: lineupSchema,
+        opponent: lineupSchema
+      }
+    },
     player: teamDtoSchema,
     opponent: teamDtoSchema,
     score: {
@@ -80,6 +199,21 @@ const rodadaResultSchema = {
     },
     winner: { type: 'string', enum: ['player', 'opponent', 'draw'] },
     totalTurns: { type: 'integer', example: 12 },
+    initialBall: {
+      type: 'object',
+      properties: {
+        team: { type: 'string', enum: ['player', 'opponent'] },
+        athleteId: { type: 'integer' },
+        athleteName: { type: 'string' },
+        position: {
+          type: 'object',
+          properties: {
+            x: { type: 'integer', enum: [0, 1, 2] },
+            y: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] }
+          }
+        }
+      }
+    },
     events: { type: 'array', items: turnEventSchema },
     matchmaking: {
       type: 'object',
@@ -97,9 +231,30 @@ const rodadaResultSchema = {
       type: 'object',
       description: 'Resultado da RN009 — quem comeca com a posse',
       properties: {
-        playerLeadVelocity: { type: 'integer' },
-        opponentLeadVelocity: { type: 'integer' },
-        startsWith: { type: 'string', enum: ['player', 'opponent'] }
+        playerLeadVelocity: {
+          type: 'integer',
+          description: 'Soma de velocidade da linha mais avancada do jogador.'
+        },
+        opponentLeadVelocity: {
+          type: 'integer',
+          description: 'Soma de velocidade da linha mais avancada do oponente.'
+        },
+        startsWith: { type: 'string', enum: ['player', 'opponent'] },
+        carrier: {
+          type: 'object',
+          properties: {
+            team: { type: 'string', enum: ['player', 'opponent'] },
+            athleteId: { type: 'integer' },
+            athleteName: { type: 'string' },
+            position: {
+              type: 'object',
+              properties: {
+                x: { type: 'integer', enum: [0, 1, 2] },
+                y: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] }
+              }
+            }
+          }
+        }
       }
     },
     persisted: {
@@ -138,7 +293,218 @@ const errorSchema = {
   }
 } as const;
 
+const abandonCampaignResponseSchema = {
+  type: 'object',
+  properties: {
+    user: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer' },
+        coins: { type: 'integer' },
+        trophies: { type: 'integer' }
+      }
+    },
+    team: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            id: { type: 'integer' },
+            name: { type: 'string' },
+            round: { type: 'integer' },
+            victory: { type: 'integer' },
+            lose: { type: 'integer' },
+            draw: { type: 'integer' },
+            athletesCount: { type: 'integer' }
+          }
+        },
+        { type: 'null' }
+      ]
+    }
+  }
+} as const;
+
+const statusForRodadaError = (error: RodadaServiceError): number => {
+  if (
+    error.code === 'TEAM_NOT_FOUND' ||
+    error.code === 'SNAPSHOT_NOT_FOUND' ||
+    error.code === 'USER_NOT_FOUND'
+  ) {
+    return 404;
+  }
+
+  if (error.code === 'SNAPSHOT_FORBIDDEN') {
+    return 403;
+  }
+
+  return 400;
+};
+
+const statusForSnapshotError = (error: TeamSnapshotError): number =>
+  error.code === 'TEAM_NOT_FOUND' ? 404 : 400;
+
 export const partidaRoutes: FastifyPluginAsync = async (app) => {
+  app.post<{ Body: StartCampaignBody }>(
+    '/iniciar',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Partida'],
+        summary: 'Inicia uma nova campanha com o nome escolhido',
+        description:
+          'Sempre inicia uma campanha limpa: define o nome da equipe, restaura 10 moedas, zera o progresso e remove os atletas atuais. Nao altera trofeus nem o historico.',
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: 'object',
+          required: ['name'],
+          additionalProperties: false,
+          properties: {
+            name: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 40
+            }
+          }
+        },
+        response: {
+          200: abandonCampaignResponseSchema,
+          400: errorSchema,
+          404: errorSchema
+        }
+      }
+    },
+    async (request, reply) => {
+      try {
+        const result = await startCampaign(
+          request.user!.id,
+          request.body.name
+        );
+        return reply.code(200).send(result);
+      } catch (error: unknown) {
+        if (error instanceof CampaignServiceError) {
+          const status = error.code === 'USER_NOT_FOUND' ? 404 : 400;
+          return reply
+            .code(status)
+            .send({ message: error.message, code: error.code });
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  app.post(
+    '/desistir',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Partida'],
+        summary: 'Abandona a campanha atual',
+        description:
+          'Zera rodada, vitorias, derrotas e empates, remove os atletas da equipe e restaura 10 moedas. Nao registra derrota, nao altera trofeus e preserva snapshots e logs historicos.',
+        security: [{ BearerAuth: [] }],
+        response: {
+          200: abandonCampaignResponseSchema,
+          404: errorSchema
+        }
+      }
+    },
+    async (request, reply) => {
+      try {
+        const result = await abandonCampaign(request.user!.id);
+        return reply.code(200).send(result);
+      } catch (error: unknown) {
+        if (error instanceof CampaignServiceError) {
+          return reply
+            .code(404)
+            .send({ message: error.message, code: error.code });
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  app.post<{ Body: JogarPartidaBody }>(
+    '/jogar',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Partida'],
+        summary: 'Salva a formacao atual e joga uma rodada',
+        description:
+          'Fluxo principal do botao Jogar: cria um snapshot imutavel da formacao enviada (1 a 6 atletas), busca um adversario por matchmaking e executa a simulacao.',
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: 'object',
+          required: ['positions'],
+          additionalProperties: false,
+          properties: {
+            user_id: {
+              type: 'integer',
+              description:
+                'Opcional. Quando informado deve coincidir com o usuario autenticado; o backend usa sempre o id do token.'
+            },
+            positions: {
+              type: 'array',
+              minItems: MIN_POSITIONED_ATHLETES,
+              maxItems: MAX_POSITIONED_ATHLETES,
+              items: positionSchema
+            },
+            items: {
+              type: 'array',
+              items: { type: 'integer' },
+              description: 'IDs de itens aplicados (reservado para integracao futura).'
+            }
+          }
+        },
+        response: {
+          200: rodadaResultSchema,
+          400: errorSchema,
+          403: errorSchema,
+          404: errorSchema
+        }
+      }
+    },
+    async (request, reply) => {
+      const authenticatedUserId = request.user!.id;
+      const body = request.body;
+
+      if (
+        body.user_id !== undefined &&
+        Number(body.user_id) !== authenticatedUserId
+      ) {
+        return reply.code(403).send({
+          message: 'user_id nao corresponde ao usuario autenticado.',
+          code: 'USER_MISMATCH'
+        });
+      }
+
+      try {
+        const result = await jogarRodadaComFormacao({
+          userId: authenticatedUserId,
+          positions: body.positions,
+          items: body.items
+        });
+        return reply.code(200).send(result);
+      } catch (error: unknown) {
+        if (error instanceof TeamSnapshotError) {
+          return reply
+            .code(statusForSnapshotError(error))
+            .send({ message: error.message, code: error.code });
+        }
+
+        if (error instanceof RodadaServiceError) {
+          return reply
+            .code(statusForRodadaError(error))
+            .send({ message: error.message, code: error.code });
+        }
+
+        throw error;
+      }
+    }
+  );
+
   app.post<{ Body: JogarRodadaBody }>(
     '/jogar-rodada',
     {
@@ -196,18 +562,8 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
         return reply.code(200).send(result);
       } catch (error: unknown) {
         if (error instanceof RodadaServiceError) {
-          let status = 400;
-          if (
-            error.code === 'TEAM_NOT_FOUND' ||
-            error.code === 'SNAPSHOT_NOT_FOUND' ||
-            error.code === 'USER_NOT_FOUND'
-          ) {
-            status = 404;
-          } else if (error.code === 'SNAPSHOT_FORBIDDEN') {
-            status = 403;
-          }
           return reply
-            .code(status)
+            .code(statusForRodadaError(error))
             .send({ message: error.message, code: error.code });
         }
         throw error;

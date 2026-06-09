@@ -2,7 +2,11 @@ import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
 import { authenticate } from '../auth/auth.middleware';
-import { getMarket, refreshMarket } from './mercado.service';
+import {
+  getMarket,
+  MercadoServiceError,
+  refreshMarket
+} from './mercado.service';
 
 const marketAthleteSchema = {
   type: 'object',
@@ -19,7 +23,7 @@ const marketAthleteSchema = {
     },
     type: {
       type: 'string',
-      enum: ['goalkeeper', 'defender', 'attacker']
+      enum: ['defender', 'midfielder', 'attacker']
     },
     overall: { type: 'integer' },
     cost: { type: 'integer' },
@@ -32,7 +36,16 @@ const marketResponseSchema = {
   properties: {
     refresh_cost: { type: 'integer' },
     refreshed_at: { type: ['string', 'null'], format: 'date-time' },
+    coins: { type: 'integer' },
     athletes: { type: 'array', items: marketAthleteSchema }
+  }
+} as const;
+
+const errorSchema = {
+  type: 'object',
+  properties: {
+    code: { type: 'string' },
+    message: { type: 'string' }
   }
 } as const;
 
@@ -45,12 +58,25 @@ export const mercadoRoutes: FastifyPluginAsync = async (app) => {
         tags: ['Mercado'],
         summary: 'Retorna a janela de mercado do usuario',
         security: [{ BearerAuth: [] }],
-        response: { 200: marketResponseSchema }
+        response: {
+          200: marketResponseSchema,
+          404: errorSchema
+        }
       }
     },
     async (request, reply) => {
-      const market = await getMarket(request.user!.id);
-      return reply.code(200).send(market);
+      try {
+        const market = await getMarket(request.user!.id);
+        return reply.code(200).send(market);
+      } catch (error: unknown) {
+        if (error instanceof MercadoServiceError) {
+          return reply.code(404).send({
+            code: error.code,
+            message: error.message
+          });
+        }
+        throw error;
+      }
     }
   );
 
@@ -61,16 +87,30 @@ export const mercadoRoutes: FastifyPluginAsync = async (app) => {
       schema: {
         tags: ['Mercado'],
         summary: 'Sorteia uma nova janela de atletas no mercado',
+        description: 'Desconta 1 moeda e sorteia ate 3 novos atletas.',
         security: [{ BearerAuth: [] }],
-        response: { 200: marketResponseSchema }
+        response: {
+          200: marketResponseSchema,
+          400: errorSchema,
+          404: errorSchema
+        }
       }
     },
     async (request, reply) => {
-      const market = await refreshMarket(request.user!.id, {
-        cost: 0
-      });
+      try {
+        const market = await refreshMarket(request.user!.id);
 
-      return reply.code(200).send(market);
+        return reply.code(200).send(market);
+      } catch (error: unknown) {
+        if (error instanceof MercadoServiceError) {
+          const status = error.code === 'USER_NOT_FOUND' ? 404 : 400;
+          return reply.code(status).send({
+            code: error.code,
+            message: error.message
+          });
+        }
+        throw error;
+      }
     }
   );
 };

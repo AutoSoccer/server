@@ -1,9 +1,17 @@
-import { retreatOnPossessionLoss } from './movement';
-import { strategyForBallRow } from './strategies';
+import {
+  computeSuccessChance,
+  effectiveAttribute,
+  type SimAttribute
+} from './formula';
 import {
   Athlete,
   type BallRow,
+  type BallState,
   type DisputeOutcome,
+  type FieldColumn,
+  type FieldMovement,
+  type FieldPosition,
+  type InitiativeResult,
   type MatchResult,
   type MatchWinner,
   type Possession,
@@ -13,77 +21,694 @@ import {
   type TurnEvent
 } from './types';
 
-/**
- * RN008: a partida dura no maximo 12 turnos automaticos. A rodada pode encerrar
- * antes por gol (RN007). Constante usada como default, sobrescrita apenas em testes.
- */
 export const TOTAL_TURNS = 12;
 
+const FIELD_COLUMNS = 3;
+const FIELD_ROWS = 6;
 const defaultRandom: RandomFn = Math.random;
 
-const cloneTeam = (team: TeamDTO): TeamDTO => JSON.parse(JSON.stringify(team)) as TeamDTO;
-
-const pickRandom = <T>(items: T[], rng: RandomFn): T | undefined => {
-  if (items.length === 0) {
-    return undefined;
-  }
-  return items[Math.floor(rng() * items.length)];
+type FieldAthlete = {
+  team: Possession;
+  athlete: Athlete;
+  position: FieldPosition;
 };
 
-const getRowAthletes = (team: TeamDTO, row: number): Athlete[] => {
-  const cols = team.athletesPositions[row];
-  if (!cols) {
+type FieldState = Record<Possession, FieldAthlete[]>;
+
+const cloneTeam = (team: TeamDTO): TeamDTO =>
+  JSON.parse(JSON.stringify(team)) as TeamDTO;
+
+const directionFor = (team: Possession): 1 | -1 =>
+  team === 'player' ? 1 : -1;
+
+const goalRowFor = (team: Possession): BallRow =>
+  team === 'player' ? 5 : 0;
+
+const opponentOf = (team: Possession): Possession =>
+  team === 'player' ? 'opponent' : 'player';
+
+const toPosition = (x: number, y: number): FieldPosition => ({
+  x: x as FieldColumn,
+  y: y as BallRow
+});
+
+const isInsideField = (x: number, y: number): boolean =>
+  x >= 0 && x < FIELD_COLUMNS && y >= 0 && y < FIELD_ROWS;
+
+const samePosition = (left: FieldPosition, right: FieldPosition): boolean =>
+  left.x === right.x && left.y === right.y;
+
+const distanceBetween = (
+  left: FieldPosition,
+  right: FieldPosition
+): number =>
+  Math.max(
+    Math.abs(left.x - right.x),
+    Math.abs(left.y - right.y)
+  );
+
+const buildFieldTeam = (
+  team: TeamDTO,
+  side: Possession
+): FieldAthlete[] => {
+  const athletes: FieldAthlete[] = [];
+
+  team.athletesPositions.forEach((row, rowIndex) => {
+    row.forEach((athlete, columnIndex) => {
+      if (!athlete) {
+        return;
+      }
+
+      athlete.type =
+        athlete.type ??
+        (rowIndex === 0
+          ? 'defender'
+          : rowIndex === 2
+            ? 'attacker'
+            : 'midfielder');
+
+      athletes.push({
+        team: side,
+        athlete,
+        position: toPosition(
+          columnIndex,
+          side === 'player' ? rowIndex : FIELD_ROWS - 1 - rowIndex
+        )
+      });
+    });
+  });
+
+  return athletes;
+};
+
+const buildField = (player: TeamDTO, opponent: TeamDTO): FieldState => ({
+  player: buildFieldTeam(player, 'player'),
+  opponent: buildFieldTeam(opponent, 'opponent')
+});
+
+const frontLineAthletes = (
+  athletes: FieldAthlete[],
+  side: Possession
+): FieldAthlete[] => {
+  if (athletes.length === 0) {
     return [];
   }
-  return cols.filter((entry): entry is Athlete => entry !== null);
+
+  const frontRow = athletes.reduce(
+    (current, entry) =>
+      side === 'player'
+        ? Math.max(current, entry.position.y)
+        : Math.min(current, entry.position.y),
+    side === 'player' ? -Infinity : Infinity
+  );
+
+  return athletes.filter((entry) => entry.position.y === frontRow);
 };
 
-const collectAllPositioned = (team: TeamDTO): Athlete[] => {
-  const result: Athlete[] = [];
-  for (const row of team.athletesPositions) {
-    for (const entry of row) {
-      if (entry !== null) {
-        result.push(entry);
+const velocityOf = (entry: FieldAthlete): number =>
+  effectiveAttribute(entry.athlete, 'velocity');
+
+const strongestByVelocity = (athletes: FieldAthlete[]): FieldAthlete => {
+  const ordered = [...athletes].sort((left, right) => {
+    const velocityDelta = velocityOf(right) - velocityOf(left);
+    if (velocityDelta !== 0) {
+      return velocityDelta;
+    }
+    const attackDelta =
+      effectiveAttribute(right.athlete, 'attack') -
+      effectiveAttribute(left.athlete, 'attack');
+    if (attackDelta !== 0) {
+      return attackDelta;
+    }
+    return left.athlete.id - right.athlete.id;
+  });
+
+  const selected = ordered[0];
+  if (!selected) {
+    throw new Error('Nao ha atletas disponiveis para receber a bola.');
+  }
+  return selected;
+};
+
+const ballFor = (entry: FieldAthlete): BallState => ({
+  team: entry.team,
+  athleteId: entry.athlete.id,
+  athleteName: entry.athlete.name,
+  position: { ...entry.position }
+});
+
+export const computeInitiative = (
+  player: TeamDTO,
+  opponent: TeamDTO,
+  rng: RandomFn = defaultRandom
+): InitiativeResult => {
+  const field = buildField(player, opponent);
+  const playerFront = frontLineAthletes(field.player, 'player');
+  const opponentFront = frontLineAthletes(field.opponent, 'opponent');
+  const playerVelocity = playerFront.reduce(
+    (total, entry) => total + velocityOf(entry),
+    0
+  );
+  const opponentVelocity = opponentFront.reduce(
+    (total, entry) => total + velocityOf(entry),
+    0
+  );
+
+  let startsWith: Possession;
+  if (playerVelocity > opponentVelocity) {
+    startsWith = 'player';
+  } else if (opponentVelocity > playerVelocity) {
+    startsWith = 'opponent';
+  } else {
+    startsWith = rng() < 0.5 ? 'player' : 'opponent';
+  }
+
+  const carrier = strongestByVelocity(
+    startsWith === 'player' ? playerFront : opponentFront
+  );
+
+  return {
+    playerLeadVelocity: playerVelocity,
+    opponentLeadVelocity: opponentVelocity,
+    startsWith,
+    carrier: ballFor(carrier)
+  };
+};
+
+const athleteAt = (
+  athletes: FieldAthlete[],
+  position: FieldPosition
+): FieldAthlete | undefined =>
+  athletes.find((entry) => samePosition(entry.position, position));
+
+const fieldAthleteById = (
+  field: FieldState,
+  side: Possession,
+  athleteId: number
+): FieldAthlete | undefined =>
+  field[side].find((entry) => entry.athlete.id === athleteId);
+
+const resolveAttributeContest = (
+  attacker: Athlete,
+  attackerAttribute: SimAttribute,
+  defender: Athlete | undefined,
+  defenderAttribute: SimAttribute,
+  rng: RandomFn
+): DisputeOutcome => {
+  const attackValue = effectiveAttribute(attacker, attackerAttribute);
+  const defenseValue = effectiveAttribute(defender, defenderAttribute);
+  const successChance = computeSuccessChance(attackValue, defenseValue);
+  const roll = rng();
+  const success = roll < successChance;
+
+  return {
+    attackerAttribute: attackValue,
+    defenderAttribute: defenseValue,
+    successChance,
+    roll,
+    success,
+    goal: false
+  };
+};
+
+const moveAthlete = (
+  entry: FieldAthlete,
+  destination: FieldPosition
+): FieldMovement => {
+  const movement: FieldMovement = {
+    team: entry.team,
+    athleteId: entry.athlete.id,
+    from: { ...entry.position },
+    to: { ...destination }
+  };
+  entry.position = { ...destination };
+  return movement;
+};
+
+const opponentResistanceAt = (
+  field: FieldState,
+  side: Possession,
+  position: FieldPosition
+): number => {
+  const defender = athleteAt(field[opponentOf(side)], position);
+  return defender
+    ? effectiveAttribute(defender.athlete, 'defense')
+    : 0;
+};
+
+const bestMovementOption = (
+  field: FieldState,
+  side: Possession,
+  positions: FieldPosition[]
+): FieldPosition | null => {
+  const available = positions.filter(
+    (position) => !athleteAt(field[side], position)
+  );
+  if (available.length === 0) {
+    return null;
+  }
+
+  return [...available].sort((left, right) => {
+    const resistanceDelta =
+      opponentResistanceAt(field, side, left) -
+      opponentResistanceAt(field, side, right);
+    if (resistanceDelta !== 0) {
+      return resistanceDelta;
+    }
+    const centerDelta =
+      Math.abs(left.x - 1) - Math.abs(right.x - 1);
+    if (centerDelta !== 0) {
+      return centerDelta;
+    }
+    return left.x - right.x;
+  })[0];
+};
+
+const chooseMovementTarget = (
+  field: FieldState,
+  carrier: FieldAthlete
+): FieldPosition | null => {
+  const direction = directionFor(carrier.team);
+  const forwardY = carrier.position.y + direction;
+  if (!isInsideField(carrier.position.x, forwardY)) {
+    return null;
+  }
+
+  const straight = toPosition(carrier.position.x, forwardY);
+  if (!athleteAt(field[carrier.team], straight)) {
+    return straight;
+  }
+
+  const diagonals = [-1, 1]
+    .map((offset) => ({
+      x: carrier.position.x + offset,
+      y: forwardY
+    }))
+    .filter(({ x, y }) => isInsideField(x, y))
+    .map(({ x, y }) => toPosition(x, y));
+  const diagonal = bestMovementOption(field, carrier.team, diagonals);
+  if (diagonal) {
+    return diagonal;
+  }
+
+  const lateral = [-1, 1]
+    .map((offset) => ({
+      x: carrier.position.x + offset,
+      y: carrier.position.y
+    }))
+    .filter(({ x, y }) => isInsideField(x, y))
+    .map(({ x, y }) => toPosition(x, y));
+
+  return bestMovementOption(field, carrier.team, lateral);
+};
+
+const passPriority = (
+  carrier: FieldAthlete,
+  target: FieldAthlete
+): { category: number; distance: number } | null => {
+  const direction = directionFor(carrier.team);
+  const forwardDistance =
+    (target.position.y - carrier.position.y) * direction;
+  const lateralDistance = Math.abs(target.position.x - carrier.position.x);
+
+  if (forwardDistance > 0 && lateralDistance === 0) {
+    return {
+      category: 0,
+      distance: forwardDistance
+    };
+  }
+
+  if (forwardDistance > 0 && lateralDistance > 0) {
+    return {
+      category: 1,
+      distance: Math.max(forwardDistance, lateralDistance)
+    };
+  }
+
+  if (forwardDistance === 0 && lateralDistance > 0) {
+    return {
+      category: 2,
+      distance: lateralDistance
+    };
+  }
+
+  return null;
+};
+
+const choosePassTarget = (
+  field: FieldState,
+  carrier: FieldAthlete
+): FieldAthlete | null => {
+  const teammates = field[carrier.team].filter(
+    (entry) => entry.athlete.id !== carrier.athlete.id
+  );
+  const attackers = teammates.filter(
+    (entry) => entry.athlete.type === 'attacker'
+  );
+  const pool = attackers.length > 0 ? attackers : teammates;
+
+  const ranked = pool
+    .map((entry) => ({
+      entry,
+      priority: passPriority(carrier, entry)
+    }))
+    .filter(
+      (
+        candidate
+      ): candidate is {
+        entry: FieldAthlete;
+        priority: { category: number; distance: number };
+      } => candidate.priority !== null
+    )
+    .sort((left, right) => {
+      const categoryDelta =
+        left.priority.category - right.priority.category;
+      if (categoryDelta !== 0) {
+        return categoryDelta;
       }
+      const distanceDelta =
+        left.priority.distance - right.priority.distance;
+      if (distanceDelta !== 0) {
+        return distanceDelta;
+      }
+      const velocityDelta =
+        velocityOf(right.entry) - velocityOf(left.entry);
+      if (velocityDelta !== 0) {
+        return velocityDelta;
+      }
+      return left.entry.athlete.id - right.entry.athlete.id;
+    });
+
+  return ranked[0]?.entry ?? null;
+};
+
+const nearestOpponents = (
+  field: FieldState,
+  side: Possession,
+  position: FieldPosition
+): FieldAthlete[] => {
+  const opponents = field[opponentOf(side)];
+  if (opponents.length === 0) {
+    return [];
+  }
+
+  const nearestDistance = Math.min(
+    ...opponents.map((entry) =>
+      distanceBetween(entry.position, position)
+    )
+  );
+  return opponents.filter(
+    (entry) =>
+      distanceBetween(entry.position, position) === nearestDistance
+  );
+};
+
+const strongestInterceptor = (
+  candidates: FieldAthlete[]
+): FieldAthlete | undefined =>
+  [...candidates].sort((left, right) => {
+    const velocityDelta = velocityOf(right) - velocityOf(left);
+    if (velocityDelta !== 0) {
+      return velocityDelta;
+    }
+    return left.athlete.id - right.athlete.id;
+  })[0];
+
+const randomCandidate = (
+  candidates: FieldAthlete[],
+  rng: RandomFn
+): FieldAthlete | undefined => {
+  if (candidates.length === 0) {
+    return undefined;
+  }
+  if (candidates.length === 1) {
+    return candidates[0];
+  }
+  const index = Math.min(
+    candidates.length - 1,
+    Math.floor(rng() * candidates.length)
+  );
+  return candidates[index];
+};
+
+const retreatAfterLoss = (
+  field: FieldState,
+  carrier: FieldAthlete
+): FieldMovement[] => {
+  const defenseY = carrier.team === 'player' ? 0 : 5;
+  if (
+    carrier.athlete.holdsPosition ||
+    carrier.position.y === defenseY
+  ) {
+    return [];
+  }
+
+  const columnOrder = [
+    carrier.position.x,
+    carrier.position.x - 1,
+    carrier.position.x + 1,
+    0,
+    1,
+    2
+  ].filter(
+    (column, index, all) =>
+      column >= 0 &&
+      column < FIELD_COLUMNS &&
+      all.indexOf(column) === index
+  );
+
+  for (const column of columnOrder) {
+    const destination = toPosition(column, defenseY);
+    if (!athleteAt(field[carrier.team], destination)) {
+      return [moveAthlete(carrier, destination)];
     }
   }
-  return result;
+
+  return [];
 };
 
-const togglePossession = (possession: Possession): Possession =>
-  possession === 'player' ? 'opponent' : 'player';
+const createEvent = (
+  input: Omit<TurnEvent, 'ballRow'>
+): TurnEvent => ({
+  ...input,
+  ballRow: input.ball.position.y
+});
 
-const describeDispute = (
-  strategyName: string,
-  attacker: Athlete,
-  defender: Athlete | undefined,
-  outcome: DisputeOutcome,
-  goal: boolean
-): string => {
+const executePass = (
+  turn: number,
+  field: FieldState,
+  carrier: FieldAthlete,
+  receiver: FieldAthlete,
+  rng: RandomFn,
+  teamIds: Record<Possession, number>
+): TurnEvent => {
+  const interceptor = strongestInterceptor(
+    nearestOpponents(field, carrier.team, receiver.position)
+  );
+
+  if (!interceptor) {
+    const ball = ballFor(receiver);
+    return createEvent({
+      turn,
+      possession: carrier.team,
+      kind: 'pass',
+      attackerTeamId: teamIds[carrier.team],
+      defenderTeamId: teamIds[opponentOf(carrier.team)],
+      attackerId: receiver.athlete.id,
+      attackerName: receiver.athlete.name,
+      defenderId: null,
+      defenderName: null,
+      attackerRoll: velocityOf(receiver),
+      defenderRoll: 0,
+      successChance: 1,
+      randomRoll: 0,
+      success: true,
+      goal: false,
+      movements: [],
+      ball,
+      description: `${carrier.athlete.name} passa para ${receiver.athlete.name}, sem marcacao proxima.`
+    });
+  }
+
+  const outcome = resolveAttributeContest(
+    receiver.athlete,
+    'velocity',
+    interceptor.athlete,
+    'velocity',
+    rng
+  );
+  const ball = outcome.success
+    ? ballFor(receiver)
+    : ballFor(interceptor);
   const chance = Math.round(outcome.successChance * 100);
-  const roll = outcome.roll.toFixed(2);
-  const marker = defender
-    ? `${defender.name} (${outcome.defenderAttribute})`
-    : 'sem marcacao';
-  const tail = `${strategyName}, ${chance}% chance, sorteio ${roll}`;
-  if (goal) {
-    return `GOL! ${attacker.name} (${outcome.attackerAttribute}) vence ${marker} — ${tail}.`;
-  }
-  if (outcome.success) {
-    return `${attacker.name} (${outcome.attackerAttribute}) supera ${marker} — ${tail}.`;
-  }
-  return `${marker} interrompe ${attacker.name} (${outcome.attackerAttribute}) — ${tail}.`;
+
+  return createEvent({
+    turn,
+    possession: carrier.team,
+    kind: 'pass',
+    attackerTeamId: teamIds[carrier.team],
+    defenderTeamId: teamIds[opponentOf(carrier.team)],
+    attackerId: receiver.athlete.id,
+    attackerName: receiver.athlete.name,
+    defenderId: interceptor.athlete.id,
+    defenderName: interceptor.athlete.name,
+    attackerRoll: outcome.attackerAttribute,
+    defenderRoll: outcome.defenderAttribute,
+    successChance: outcome.successChance,
+    randomRoll: outcome.roll,
+    success: outcome.success,
+    goal: false,
+    movements: [],
+    ball,
+    description: outcome.success
+      ? `${carrier.athlete.name} encontra ${receiver.athlete.name}; ele supera ${interceptor.athlete.name} na velocidade (${chance}%).`
+      : `${interceptor.athlete.name} antecipa o passe para ${receiver.athlete.name} e toma a bola (${chance}% para o receptor).`
+  });
 };
 
-/**
- * Motor de simulacao de partida (Tasks 4.2 + 4.5).
- *
- * Executa ate TOTAL_TURNS turnos consecutivos (RN008) entre o time do jogador e
- * um adversario, resolvendo cada disputa por uma Strategy (RN012) que considera
- * os buffs de itens, recuando o atleta vencido em ataque (RN011, salvo habilidade
- * especial) e encerrando IMEDIATAMENTE a rodada quando ha gol (RN003/RN004/RN007).
- * Se nenhum gol sai em 12 turnos, a rodada termina empatada 0x0 (RN005).
- */
+const executeMovement = (
+  turn: number,
+  field: FieldState,
+  carrier: FieldAthlete,
+  destination: FieldPosition,
+  rng: RandomFn,
+  teamIds: Record<Possession, number>
+): TurnEvent => {
+  const defender = athleteAt(field[opponentOf(carrier.team)], destination);
+
+  if (!defender) {
+    const movements = [moveAthlete(carrier, destination)];
+    const ball = ballFor(carrier);
+    return createEvent({
+      turn,
+      possession: carrier.team,
+      kind: 'move',
+      attackerTeamId: teamIds[carrier.team],
+      defenderTeamId: teamIds[opponentOf(carrier.team)],
+      attackerId: carrier.athlete.id,
+      attackerName: carrier.athlete.name,
+      defenderId: null,
+      defenderName: null,
+      attackerRoll: 0,
+      defenderRoll: 0,
+      successChance: 1,
+      randomRoll: 0,
+      success: true,
+      goal: false,
+      movements,
+      ball,
+      description: `${carrier.athlete.name} avanca com a bola para (${destination.x}, ${destination.y}).`
+    });
+  }
+
+  const outcome = resolveAttributeContest(
+    carrier.athlete,
+    'attack',
+    defender.athlete,
+    'defense',
+    rng
+  );
+  const movements = outcome.success
+    ? [moveAthlete(carrier, destination)]
+    : retreatAfterLoss(field, carrier);
+  const ball = outcome.success
+    ? ballFor(carrier)
+    : ballFor(defender);
+  const chance = Math.round(outcome.successChance * 100);
+
+  return createEvent({
+    turn,
+    possession: carrier.team,
+    kind: 'tackle',
+    attackerTeamId: teamIds[carrier.team],
+    defenderTeamId: teamIds[opponentOf(carrier.team)],
+    attackerId: carrier.athlete.id,
+    attackerName: carrier.athlete.name,
+    defenderId: defender.athlete.id,
+    defenderName: defender.athlete.name,
+    attackerRoll: outcome.attackerAttribute,
+    defenderRoll: outcome.defenderAttribute,
+    successChance: outcome.successChance,
+    randomRoll: outcome.roll,
+    success: outcome.success,
+    goal: false,
+    movements,
+    ball,
+    description: outcome.success
+      ? `${carrier.athlete.name} vence ${defender.athlete.name} no ataque contra defesa (${chance}%) e segue com a bola.`
+      : `${defender.athlete.name} vence ${carrier.athlete.name} no ataque contra defesa e toma a bola (${chance}% para o atacante).`
+  });
+};
+
+const executeShot = (
+  turn: number,
+  field: FieldState,
+  carrier: FieldAthlete,
+  rng: RandomFn,
+  teamIds: Record<Possession, number>
+): TurnEvent => {
+  const attack = effectiveAttribute(carrier.athlete, 'attack');
+  const chance = Math.max(0, Math.min(1, attack / 100));
+  const roll = rng();
+  const goal = roll < chance;
+  const rebound = goal
+    ? undefined
+    : randomCandidate(
+        nearestOpponents(field, carrier.team, carrier.position),
+        rng
+      );
+  const ball = rebound ? ballFor(rebound) : ballFor(carrier);
+
+  return createEvent({
+    turn,
+    possession: carrier.team,
+    kind: 'shot',
+    attackerTeamId: teamIds[carrier.team],
+    defenderTeamId: teamIds[opponentOf(carrier.team)],
+    attackerId: carrier.athlete.id,
+    attackerName: carrier.athlete.name,
+    defenderId: rebound?.athlete.id ?? null,
+    defenderName: rebound?.athlete.name ?? null,
+    attackerRoll: attack,
+    defenderRoll: Math.max(0, 100 - attack),
+    successChance: chance,
+    randomRoll: roll,
+    success: goal,
+    goal,
+    movements: [],
+    ball,
+    description: goal
+      ? `GOL! ${carrier.athlete.name} finaliza com ${Math.round(chance * 100)}% de chance.`
+      : `${carrier.athlete.name} perde a finalizacao; ${rebound?.athlete.name ?? 'o adversario'} fica com a bola.`
+  });
+};
+
+const noSpaceEvent = (
+  turn: number,
+  carrier: FieldAthlete,
+  teamIds: Record<Possession, number>
+): TurnEvent =>
+  createEvent({
+    turn,
+    possession: carrier.team,
+    kind: 'move',
+    attackerTeamId: teamIds[carrier.team],
+    defenderTeamId: teamIds[opponentOf(carrier.team)],
+    attackerId: carrier.athlete.id,
+    attackerName: carrier.athlete.name,
+    defenderId: null,
+    defenderName: null,
+    attackerRoll: 0,
+    defenderRoll: 0,
+    successChance: 0,
+    randomRoll: 0,
+    success: false,
+    goal: false,
+    movements: [],
+    ball: ballFor(carrier),
+    description: `${carrier.athlete.name} nao encontra espaco para avancar.`
+  });
+
 export const processarRodada = (
   equipePlayer: TeamDTO,
   equipeOponente: TeamDTO,
@@ -98,120 +723,93 @@ export const processarRodada = (
 
   const player = cloneTeam(equipePlayer);
   const opponent = cloneTeam(equipeOponente);
+  const field = buildField(player, opponent);
+  const calculatedInitiative = options.initialPossession
+    ? null
+    : computeInitiative(player, opponent, rng);
+  const initialSide =
+    options.initialPossession ?? calculatedInitiative!.startsWith;
+  const initialCarrier =
+    (options.initialCarrierId
+      ? fieldAthleteById(field, initialSide, options.initialCarrierId)
+      : undefined) ??
+    strongestByVelocity(frontLineAthletes(field[initialSide], initialSide));
+  let ball = ballFor(initialCarrier);
 
+  const initialBall = {
+    ...ball,
+    position: { ...ball.position }
+  };
   const events: TurnEvent[] = [];
   const score = { player: 0, opponent: 0 };
+  const teamIds: Record<Possession, number> = {
+    player: player.id,
+    opponent: opponent.id
+  };
 
-  let possession: Possession =
-    options.initialPossession ?? (rng() < 0.5 ? 'player' : 'opponent');
-  let ballRow: BallRow = 0;
-  let turnsPlayed = 0;
-
-  for (let turn = 1; turn <= totalTurns; turn++) {
-    turnsPlayed = turn;
-
-    const attackingTeam = possession === 'player' ? player : opponent;
-    const defendingTeam = possession === 'player' ? opponent : player;
-
-    let attackers = getRowAthletes(attackingTeam, ballRow);
-    if (attackers.length === 0) {
-      attackers = collectAllPositioned(attackingTeam);
+  for (let turn = 1; turn <= totalTurns; turn += 1) {
+    const carrier = fieldAthleteById(
+      field,
+      ball.team,
+      ball.athleteId
+    );
+    if (!carrier) {
+      throw new Error(`Portador da bola ${ball.athleteId} nao encontrado.`);
     }
 
-    if (attackers.length === 0) {
-      events.push({
-        turn,
-        possession,
-        ballRow,
-        kind: 'turnover',
-        attackerTeamId: attackingTeam.id,
-        defenderTeamId: defendingTeam.id,
-        attackerId: null,
-        attackerName: null,
-        defenderId: null,
-        defenderName: null,
-        attackerRoll: 0,
-        defenderRoll: 0,
-        success: false,
-        goal: false,
-        description: `${attackingTeam.name} sem atletas em campo; posse para ${defendingTeam.name}.`
-      });
-      possession = togglePossession(possession);
-      ballRow = 0;
-      continue;
-    }
-
-    const attacker = pickRandom(attackers, rng)!;
-
-    const defendersInRow = getRowAthletes(defendingTeam, ballRow);
-    const defenders =
-      defendersInRow.length > 0 ? defendersInRow : collectAllPositioned(defendingTeam);
-    const defender = pickRandom(defenders, rng);
-
-    const strategy = strategyForBallRow(ballRow);
-    const outcome = strategy.resolve(attacker, defender, rng);
-
-    const baseEvent = {
-      turn,
-      possession,
-      ballRow,
-      attackerTeamId: attackingTeam.id,
-      defenderTeamId: defendingTeam.id,
-      attackerId: attacker.id,
-      attackerName: attacker.name,
-      defenderId: defender?.id ?? null,
-      defenderName: defender?.name ?? null,
-      attackerRoll: outcome.attackerAttribute,
-      defenderRoll: outcome.defenderAttribute
-    };
-
-    if (outcome.goal) {
-      // RN003 / RN004: vencer a ultima linha computa um gol.
-      if (possession === 'player') {
-        score.player += 1;
+    let event: TurnEvent;
+    if (carrier.athlete.type !== 'attacker') {
+      const receiver = choosePassTarget(field, carrier);
+      if (receiver) {
+        event = executePass(
+          turn,
+          field,
+          carrier,
+          receiver,
+          rng,
+          teamIds
+        );
+      } else if (carrier.position.y === goalRowFor(carrier.team)) {
+        event = executeShot(turn, field, carrier, rng, teamIds);
       } else {
-        score.opponent += 1;
+        const destination = chooseMovementTarget(field, carrier);
+        event = destination
+          ? executeMovement(
+              turn,
+              field,
+              carrier,
+              destination,
+              rng,
+              teamIds
+            )
+          : noSpaceEvent(turn, carrier, teamIds);
       }
-      events.push({
-        ...baseEvent,
-        kind: 'shot',
-        success: true,
-        goal: true,
-        description: describeDispute(strategy.name, attacker, defender, outcome, true)
-      });
-      // RN007: o gol encerra a rodada imediatamente.
+    } else if (carrier.position.y === goalRowFor(carrier.team)) {
+      event = executeShot(turn, field, carrier, rng, teamIds);
+    } else {
+      const destination = chooseMovementTarget(field, carrier);
+      event = destination
+        ? executeMovement(
+            turn,
+            field,
+            carrier,
+            destination,
+            rng,
+            teamIds
+          )
+        : noSpaceEvent(turn, carrier, teamIds);
+    }
+
+    events.push(event);
+    ball = event.ball;
+
+    if (event.goal) {
+      score[event.possession] += 1;
       break;
     }
-
-    if (outcome.success) {
-      // A bola avanca uma linha mantendo a posse.
-      events.push({
-        ...baseEvent,
-        kind: strategy.successKind,
-        success: true,
-        goal: false,
-        description: describeDispute(strategy.name, attacker, defender, outcome, false)
-      });
-      ballRow = Math.min(ballRow + 1, 2) as BallRow;
-      continue;
-    }
-
-    // Defesa vence — perda de posse.
-    events.push({
-      ...baseEvent,
-      kind: 'tackle',
-      success: false,
-      goal: false,
-      description: describeDispute(strategy.name, attacker, defender, outcome, false)
-    });
-
-    // RN011: perda na linha de ataque recua o atleta, salvo habilidade especial.
-    retreatOnPossessionLoss(attackingTeam, attacker, ballRow);
-
-    possession = togglePossession(possession);
-    ballRow = 0;
   }
 
+  const turnsPlayed = events.length;
   player.turn = turnsPlayed;
   opponent.turn = turnsPlayed;
 
@@ -225,7 +823,6 @@ export const processarRodada = (
     opponent.victorys += 1;
     player.loses += 1;
   } else {
-    // RN005: nenhum gol em 12 turnos => empate 0x0.
     winner = 'draw';
   }
 
@@ -235,16 +832,11 @@ export const processarRodada = (
     score,
     winner,
     totalTurns: turnsPlayed,
+    initialBall,
     events
   };
 };
 
-/**
- * Wrapper orientado a objetos.
- *
- * @example
- *   const result = Simulador.processarRodada(player, opponent);
- */
 export class Simulador {
   static processarRodada(
     equipePlayer: TeamDTO,
