@@ -18,13 +18,32 @@ const parseNumber = (value: string, key: string): number => {
   return parsedValue;
 };
 
+const databaseUrl = process.env.DATABASE_URL ?? '';
+const hasDatabaseUrl = databaseUrl.length > 0;
+
+const optionalDbValue = (key: string, fallback = ''): string => {
+  const value = process.env[key];
+  if (value && value.length > 0) {
+    return value;
+  }
+
+  if (hasDatabaseUrl) {
+    return fallback;
+  }
+
+  throw new Error(`Missing required environment variable: ${key}`);
+};
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
-  port: parseNumber(process.env.PORT ?? '3000', 'PORT'),
-  dbHost: requiredEnv('DB_HOST'),
+  port: parseNumber(process.env.PORT ?? process.env.APP_PORT ?? '3333', 'PORT'),
+  host: process.env.APP_HOST ?? '0.0.0.0',
+  corsOrigin: process.env.CORS_ORIGIN ?? '*',
+  databaseUrl,
+  dbHost: optionalDbValue('DB_HOST', 'localhost'),
   dbPort: parseNumber(process.env.DB_PORT ?? '3306', 'DB_PORT'),
-  dbName: requiredEnv('DB_NAME'),
-  dbUser: requiredEnv('DB_USER'),
+  dbName: optionalDbValue('DB_NAME', ''),
+  dbUser: optionalDbValue('DB_USER', ''),
   dbPassword: process.env.DB_PASSWORD ?? '',
   dbSsl: (process.env.DB_SSL ?? 'false').toLowerCase() === 'true',
   jwtSecret: requiredEnv('JWT_SECRET'),

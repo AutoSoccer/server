@@ -26,7 +26,7 @@ const startServer = async (): Promise<void> => {
   });
 
   await app.listen({
-    host: '0.0.0.0',
+    host: env.host,
     port: env.port
   });
 };
