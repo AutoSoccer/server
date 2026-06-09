@@ -5,6 +5,11 @@ export {
   TOTAL_TURNS
 } from './simulador.service';
 
+export {
+  SimuladorServiceError,
+  type SimuladorServiceErrorCode
+} from './simulador.errors';
+
 export { computeSuccessChance, effectiveAttribute, FALLBACK_ATTRIBUTE } from './formula';
 
 export {
