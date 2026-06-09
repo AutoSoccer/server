@@ -1,6 +1,9 @@
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import { type FastifyInstance } from 'fastify';
+import type { OpenAPIV3 } from 'openapi-types';
+
+import { swaggerSchemas } from './swagger.schemas';
 
 export const registerSwagger = async (app: FastifyInstance): Promise<void> => {
   await app.register(fastifySwagger, {
@@ -21,7 +24,10 @@ export const registerSwagger = async (app: FastifyInstance): Promise<void> => {
       tags: [
         { name: 'Auth', description: 'Registro, login e perfil do usuario' },
         { name: 'Mercado', description: 'Janela de mercado de atletas' },
+        { name: 'Equipe', description: 'Gerenciamento da equipe do treinador' },
+        { name: 'Itens', description: 'Loja e aplicacao de itens (RF014)' },
         { name: 'Partida', description: 'Simulacao de partidas (Task 4.1/4.2)' },
+        { name: 'Ranking', description: 'Ranking global por trofeus' },
         { name: 'Sistema', description: 'Endpoints utilitarios' }
       ],
       components: {
@@ -32,7 +38,11 @@ export const registerSwagger = async (app: FastifyInstance): Promise<void> => {
             bearerFormat: 'JWT',
             description: 'Token JWT obtido em POST /auth/login.'
           }
-        }
+        },
+        schemas: swaggerSchemas as unknown as Record<
+          string,
+          OpenAPIV3.SchemaObject
+        >
       }
     }
   });
