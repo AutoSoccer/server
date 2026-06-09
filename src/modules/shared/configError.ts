@@ -1,4 +1,7 @@
-export type ConfigErrorCode = 'CONFIG_MISSING_ENV' | 'CONFIG_INVALID_ENV';
+export type ConfigErrorCode =
+  | 'CONFIG_MISSING_ENV'
+  | 'CONFIG_INVALID_ENV'
+  | 'CONFIG_CORS_WILDCARD_IN_PRODUCTION';
 
 /**
  * Erro tipado de inicializacao/boot. Usado por configuracoes obrigatorias

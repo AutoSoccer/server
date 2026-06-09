@@ -74,7 +74,8 @@ export const ErrorCode = {
 
   // Config / boot
   ConfigMissingEnv: 'CONFIG_MISSING_ENV',
-  ConfigInvalidEnv: 'CONFIG_INVALID_ENV'
+  ConfigInvalidEnv: 'CONFIG_INVALID_ENV',
+  ConfigCorsWildcardInProduction: 'CONFIG_CORS_WILDCARD_IN_PRODUCTION'
 } as const;
 
 export type ErrorCodeKey = keyof typeof ErrorCode;

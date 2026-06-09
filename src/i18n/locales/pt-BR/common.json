@@ -1,5 +1,10 @@
 {
   "internalError": "Erro interno do servidor.",
   "validationError": "Erro de validacao no payload da requisicao.",
-  "notFound": "Recurso nao encontrado."
+  "notFound": "Recurso nao encontrado.",
+  "errors": {
+    "config": {
+      "corsWildcardInProduction": "CORS_ORIGIN nao pode ser wildcard (\"*\" ou vazio) quando NODE_ENV=production. Defina origens explicitas separadas por virgula."
+    }
+  }
 }
