@@ -105,9 +105,9 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Equipe'],
-        summary: tSwagger('equipe.get.summary'),
-        description: tSwagger('equipe.get.description'),
+        tags: ['Team'],
+        summary: tSwagger('team.get.summary'),
+        description: tSwagger('team.get.description'),
         security: [{ BearerAuth: [] }],
         response: {
           200: { $ref: 'TeamResponse#' },
@@ -123,13 +123,13 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
   );
 
   app.post<{ Body: BuyAthleteBody }>(
-    '/comprar-atleta',
+    '/buy-athlete',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Equipe'],
-        summary: tSwagger('equipe.buyAthlete.summary'),
-        description: tSwagger('equipe.buyAthlete.description'),
+        tags: ['Team'],
+        summary: tSwagger('team.buyAthlete.summary'),
+        description: tSwagger('team.buyAthlete.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -178,13 +178,13 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
   );
 
   app.post<{ Body: SellAthleteBody }>(
-    '/vender-atleta',
+    '/sell-athlete',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Equipe'],
-        summary: tSwagger('equipe.sellAthlete.summary'),
-        description: tSwagger('equipe.sellAthlete.description'),
+        tags: ['Team'],
+        summary: tSwagger('team.sellAthlete.summary'),
+        description: tSwagger('team.sellAthlete.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -232,13 +232,13 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
   );
 
   app.post<{ Body: SalvarEstadoBody }>(
-    '/salvar-estado',
+    '/save-state',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Equipe'],
-        summary: tSwagger('equipe.salvarEstado.summary'),
-        description: tSwagger('equipe.salvarEstado.description'),
+        tags: ['Team'],
+        summary: tSwagger('team.saveState.summary'),
+        description: tSwagger('team.saveState.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',

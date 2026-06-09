@@ -33,9 +33,9 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Itens'],
-        summary: tSwagger('itens.list.summary'),
-        description: tSwagger('itens.list.description'),
+        tags: ['Items'],
+        summary: tSwagger('items.list.summary'),
+        description: tSwagger('items.list.description'),
         security: [{ BearerAuth: [] }],
         response: {
           200: {
@@ -59,13 +59,13 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
   );
 
   app.post<{ Body: ComprarBody }>(
-    '/comprar',
+    '/buy',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Itens'],
-        summary: tSwagger('itens.comprar.summary'),
-        description: tSwagger('itens.comprar.description'),
+        tags: ['Items'],
+        summary: tSwagger('items.buy.summary'),
+        description: tSwagger('items.buy.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -128,13 +128,13 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
   );
 
   app.post<{ Body: AplicarBody }>(
-    '/aplicar',
+    '/apply',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Itens'],
-        summary: tSwagger('itens.aplicar.summary'),
-        description: tSwagger('itens.aplicar.description'),
+        tags: ['Items'],
+        summary: tSwagger('items.apply.summary'),
+        description: tSwagger('items.apply.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',

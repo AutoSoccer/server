@@ -64,9 +64,9 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     '/health',
     {
       schema: {
-        tags: ['Sistema'],
-        summary: tSwagger('sistema.health.summary'),
-        description: tSwagger('sistema.health.description'),
+        tags: ['System'],
+        summary: tSwagger('system.health.summary'),
+        description: tSwagger('system.health.description'),
         response: {
           200: {
             type: 'object',
@@ -85,9 +85,9 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     '/healthz',
     {
       schema: {
-        tags: ['Sistema'],
-        summary: tSwagger('sistema.healthz.summary'),
-        description: tSwagger('sistema.healthz.description'),
+        tags: ['System'],
+        summary: tSwagger('system.healthz.summary'),
+        description: tSwagger('system.healthz.description'),
         response: {
           200: {
             type: 'object',
@@ -107,19 +107,19 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   });
 
   await app.register(mercadoRoutes, {
-    prefix: '/mercado'
+    prefix: '/market'
   });
 
   await app.register(equipeRoutes, {
-    prefix: '/equipe'
+    prefix: '/team'
   });
 
   await app.register(itensRoutes, {
-    prefix: '/itens'
+    prefix: '/items'
   });
 
   await app.register(partidaRoutes, {
-    prefix: '/partida'
+    prefix: '/match'
   });
 
   await app.register(rankingRoutes, {

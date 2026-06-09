@@ -46,9 +46,9 @@ export const mercadoRoutes: FastifyPluginAsync = async (app) => {
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Mercado'],
-        summary: tSwagger('mercado.list.summary'),
-        description: tSwagger('mercado.list.description'),
+        tags: ['Market'],
+        summary: tSwagger('market.list.summary'),
+        description: tSwagger('market.list.description'),
         security: [{ BearerAuth: [] }],
         response: {
           200: marketResponseSchema,
@@ -67,9 +67,9 @@ export const mercadoRoutes: FastifyPluginAsync = async (app) => {
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Mercado'],
-        summary: tSwagger('mercado.refresh.summary'),
-        description: tSwagger('mercado.refresh.description'),
+        tags: ['Market'],
+        summary: tSwagger('market.refresh.summary'),
+        description: tSwagger('market.refresh.description'),
         security: [{ BearerAuth: [] }],
         response: {
           200: marketResponseSchema,
