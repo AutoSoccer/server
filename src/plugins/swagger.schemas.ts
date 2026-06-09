@@ -1,7 +1,9 @@
 /**
  * Schemas reutilizaveis publicados em `components.schemas` da especificacao
- * OpenAPI. Use `{ $ref: '#/components/schemas/<Nome>' }` nas rotas para evitar
- * duplicacao e manter um unico ponto de verdade para cada contrato.
+ * OpenAPI. Sao registrados em `app.addSchema()` (em `swagger.ts`) usando o
+ * proprio nome como `$id`, entao basta referencia-los nas rotas com
+ * `{ $ref: '<Nome>#' }`. O `@fastify/swagger` mapeia automaticamente cada
+ * `$id` para `#/components/schemas/<Nome>` na spec final.
  *
  * As definicoes seguem o flavor JSON Schema aceito pelo `@fastify/swagger`
  * (que e validado pelo Ajv configurado no `buildApp`).
@@ -46,7 +48,7 @@ const AuthResponse = {
   additionalProperties: true,
   properties: {
     token: { type: 'string', description: 'Token JWT (Bearer).' },
-    user: { $ref: '#/components/schemas/UserResponse' }
+    user: { $ref: 'UserResponse#' }
   }
 } as const;
 
@@ -112,11 +114,11 @@ const MarketResponse = {
   properties: {
     athletes: {
       type: 'array',
-      items: { $ref: '#/components/schemas/Athlete' }
+      items: { $ref: 'Athlete#' }
     },
     items: {
       type: 'array',
-      items: { $ref: '#/components/schemas/Item' }
+      items: { $ref: 'Item#' }
     }
   }
 } as const;
@@ -134,7 +136,7 @@ const TeamResponse = {
     draw: { type: 'integer', example: 0 },
     athletes: {
       type: 'array',
-      items: { $ref: '#/components/schemas/Athlete' }
+      items: { $ref: 'Athlete#' }
     }
   }
 } as const;

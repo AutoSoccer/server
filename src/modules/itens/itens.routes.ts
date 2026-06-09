@@ -15,13 +15,7 @@ type AplicarBody = {
   user_id?: number;
 };
 
-const errorSchema = {
-  type: 'object',
-  properties: {
-    message: { type: 'string' },
-    code: { type: 'string' }
-  }
-} as const;
+const errorRef = { $ref: 'ErrorResponse#' } as const;
 
 const modifiersSchema = {
   type: 'object',
@@ -48,11 +42,11 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
             properties: {
               items: {
                 type: 'array',
-                items: { $ref: '#/components/schemas/Item' }
+                items: { $ref: 'Item#' }
               }
             }
           },
-          401: { $ref: '#/components/schemas/ErrorResponse' }
+          401: { $ref: 'ErrorResponse#' }
         }
       }
     },
@@ -106,9 +100,9 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
               inventoryItemId: { type: 'integer' }
             }
           },
-          400: errorSchema,
-          403: errorSchema,
-          404: errorSchema
+          400: errorRef,
+          403: errorRef,
+          404: errorRef
         }
       }
     },
@@ -180,9 +174,9 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
               consumedInventoryItemId: { type: 'integer' }
             }
           },
-          400: errorSchema,
-          403: errorSchema,
-          404: errorSchema
+          400: errorRef,
+          403: errorRef,
+          404: errorRef
         }
       }
     },

@@ -1,10 +1,19 @@
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import { type FastifyInstance } from 'fastify';
-import type { OpenAPIV3 } from 'openapi-types';
 
 import { swaggerSchemas } from './swagger.schemas';
 
+/**
+ * Registra a configuracao do Swagger e os schemas compartilhados em
+ * `components.schemas`. Tambem disponibiliza UI em `/docs`.
+ *
+ * Os schemas sao adicionados via `app.addSchema()` para que tanto o serializer
+ * (`fast-json-stringify`) quanto o validador (`Ajv`) consigam resolver as
+ * referencias `$ref: '<Nome>#'` usadas pelas rotas. O `@fastify/swagger`
+ * automaticamente importa esses schemas para `components.schemas` da spec
+ * (usando o `$id` como nome), produzindo a documentacao final.
+ */
 export const registerSwagger = async (app: FastifyInstance): Promise<void> => {
   await app.register(fastifySwagger, {
     openapi: {
@@ -38,14 +47,22 @@ export const registerSwagger = async (app: FastifyInstance): Promise<void> => {
             bearerFormat: 'JWT',
             description: 'Token JWT obtido em POST /auth/login.'
           }
-        },
-        schemas: swaggerSchemas as unknown as Record<
-          string,
-          OpenAPIV3.SchemaObject
-        >
+        }
+      }
+    },
+    refResolver: {
+      buildLocalReference: (json, _baseUri, _fragment, index) => {
+        const candidate = (json as { $id?: unknown }).$id;
+        return typeof candidate === 'string' && candidate.length > 0
+          ? candidate
+          : `def-${index}`;
       }
     }
   });
+
+  for (const [name, schema] of Object.entries(swaggerSchemas)) {
+    app.addSchema({ $id: name, ...(schema as Record<string, unknown>) });
+  }
 
   await app.register(fastifySwaggerUi, {
     routePrefix: '/docs',

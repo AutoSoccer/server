@@ -26,8 +26,8 @@ type SalvarEstadoBody = {
   items?: number[];
 };
 
-const errorRef = { $ref: '#/components/schemas/ErrorResponse' } as const;
-const positionSchema = { $ref: '#/components/schemas/SnapshotPosition' } as const;
+const errorRef = { $ref: 'ErrorResponse#' } as const;
+const positionSchema = { $ref: 'SnapshotPosition#' } as const;
 
 const compraVendaResponseSchema = {
   type: 'object',
@@ -110,7 +110,7 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
           'Lista os atletas do time do usuario (campanha atual) com vitorias, derrotas e estatisticas agregadas. Retorna `null` quando ainda nao existe time.',
         security: [{ BearerAuth: [] }],
         response: {
-          200: { $ref: '#/components/schemas/TeamResponse' },
+          200: { $ref: 'TeamResponse#' },
           401: errorRef,
           404: errorRef
         }
