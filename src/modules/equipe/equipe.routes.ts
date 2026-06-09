@@ -26,21 +26,41 @@ type SalvarEstadoBody = {
   items?: number[];
 };
 
-const errorSchema = {
-  type: 'object',
-  properties: {
-    message: { type: 'string' },
-    code: { type: 'string' }
-  }
-} as const;
+const errorRef = { $ref: '#/components/schemas/ErrorResponse' } as const;
+const positionSchema = { $ref: '#/components/schemas/SnapshotPosition' } as const;
 
-const positionSchema = {
+const compraVendaResponseSchema = {
   type: 'object',
-  required: ['athleteId', 'posX', 'posY'],
+  additionalProperties: true,
   properties: {
-    athleteId: { type: 'integer', example: 21 },
-    posX: { type: 'integer', minimum: 0, maximum: 2, example: 0 },
-    posY: { type: 'integer', minimum: 0, maximum: 2, example: 0 }
+    user: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        id: { type: 'integer' },
+        coins: { type: 'integer' }
+      }
+    },
+    team: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        id: { type: 'integer' },
+        athletes_count: { type: 'integer' }
+      }
+    },
+    athlete: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        id: { type: 'integer' },
+        name: { type: 'string' },
+        cost: { type: 'integer' },
+        refund: { type: 'integer' },
+        tier: { type: 'string' },
+        type: { type: 'string', enum: ['defender', 'midfielder', 'attacker'] }
+      }
+    }
   }
 } as const;
 
@@ -79,14 +99,61 @@ const salvarEstadoResponseSchema = {
 } as const;
 
 export const equipeRoutes: FastifyPluginAsync = async (app) => {
-  app.get('/', { preHandler: [authenticate] }, async (request, reply) => {
-    const team = await getMyTeam(request.user!.id);
-    return reply.code(200).send(team);
-  });
+  app.get(
+    '/',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Equipe'],
+        summary: 'Retorna a equipe do treinador autenticado',
+        description:
+          'Lista os atletas do time do usuario (campanha atual) com vitorias, derrotas e estatisticas agregadas. Retorna `null` quando ainda nao existe time.',
+        security: [{ BearerAuth: [] }],
+        response: {
+          200: { $ref: '#/components/schemas/TeamResponse' },
+          401: errorRef,
+          404: errorRef
+        }
+      }
+    },
+    async (request, reply) => {
+      const team = await getMyTeam(request.user!.id);
+      return reply.code(200).send(team);
+    }
+  );
 
   app.post<{ Body: BuyAthleteBody }>(
     '/comprar-atleta',
-    { preHandler: [authenticate] },
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Equipe'],
+        summary: 'Compra um atleta do mercado e adiciona ao time (RF013)',
+        description:
+          'Debita o custo do atleta dos coins do usuario, anexa o atleta ao time e remove-o da janela de mercado, tudo em uma unica transacao.',
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: 'object',
+          required: ['atleta_id'],
+          additionalProperties: true,
+          properties: {
+            atleta_id: { type: 'integer', example: 21 },
+            user_id: {
+              type: 'integer',
+              description:
+                'Opcional. Quando informado deve coincidir com o usuario autenticado.'
+            }
+          }
+        },
+        response: {
+          201: compraVendaResponseSchema,
+          400: errorRef,
+          401: errorRef,
+          403: errorRef,
+          404: errorRef
+        }
+      }
+    },
     async (request, reply) => {
       const body = request.body;
       const athleteId = Number(body?.atleta_id);
@@ -113,7 +180,35 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
 
   app.post<{ Body: SellAthleteBody }>(
     '/vender-atleta',
-    { preHandler: [authenticate] },
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Equipe'],
+        summary: 'Vende um atleta do time e devolve coins ao treinador',
+        description:
+          'Remove o atleta do time e credita o valor de reembolso (ATHLETE_SELL_REFUND) ao saldo do usuario em uma unica transacao.',
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: 'object',
+          required: ['atleta_id'],
+          additionalProperties: true,
+          properties: {
+            atleta_id: { type: 'integer', example: 21 },
+            user_id: {
+              type: 'integer',
+              description:
+                'Opcional. Quando informado deve coincidir com o usuario autenticado.'
+            }
+          }
+        },
+        response: {
+          200: compraVendaResponseSchema,
+          400: errorRef,
+          401: errorRef,
+          404: errorRef
+        }
+      }
+    },
     async (request, reply) => {
       const body = request.body;
       const athleteId = Number(body?.atleta_id);
@@ -173,9 +268,9 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
         },
         response: {
           200: salvarEstadoResponseSchema,
-          400: errorSchema,
-          403: errorSchema,
-          404: errorSchema
+          400: errorRef,
+          403: errorRef,
+          404: errorRef
         }
       }
     },

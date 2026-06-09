@@ -10,6 +10,7 @@
 const ErrorResponse = {
   type: 'object',
   required: ['message'],
+  additionalProperties: true,
   properties: {
     code: { type: 'string', example: 'NOT_FOUND' },
     message: { type: 'string', example: 'Recurso nao encontrado.' },
@@ -24,6 +25,7 @@ const ErrorResponse = {
 
 const UserResponse = {
   type: 'object',
+  additionalProperties: true,
   properties: {
     id: { type: 'integer', example: 1 },
     name: { type: 'string', example: 'Lucas Stopinski' },
@@ -41,6 +43,7 @@ const UserResponse = {
 const AuthResponse = {
   type: 'object',
   required: ['token', 'user'],
+  additionalProperties: true,
   properties: {
     token: { type: 'string', description: 'Token JWT (Bearer).' },
     user: { $ref: '#/components/schemas/UserResponse' }
@@ -49,6 +52,7 @@ const AuthResponse = {
 
 const Ability = {
   type: 'object',
+  additionalProperties: true,
   properties: {
     id: { type: 'integer', example: 1 },
     name: { type: 'string', example: 'Disparo certeiro' },
@@ -61,17 +65,18 @@ const Ability = {
 
 const Athlete = {
   type: 'object',
+  additionalProperties: true,
   properties: {
     id: { type: 'integer', example: 21 },
     name: { type: 'string', example: 'Lucas Forward' },
     position: {
       type: 'string',
       enum: ['defender', 'midfielder', 'attacker'],
-      description: 'Posicao tatica do atleta (compativel com o campo "type" do modelo).'
+      description: 'Posicao tatica do atleta (campo "type" do modelo). Em respostas legadas pode aparecer apenas como "type".'
     },
     attack: { type: 'integer', example: 60 },
     defense: { type: 'integer', example: 40 },
-    speed: { type: 'integer', example: 55 },
+    speed: { type: 'integer', example: 55, description: 'Velocidade do atleta (alias de "velocity" no modelo).' },
     cost: { type: 'integer', example: 4 },
     ability_id: {
       type: ['integer', 'null'],
@@ -83,6 +88,7 @@ const Athlete = {
 
 const Item = {
   type: 'object',
+  additionalProperties: true,
   properties: {
     id: { type: 'integer', example: 1 },
     name: { type: 'string', example: 'Chuteira veloz' },
@@ -102,6 +108,7 @@ const Item = {
 
 const MarketResponse = {
   type: 'object',
+  additionalProperties: true,
   properties: {
     athletes: {
       type: 'array',
@@ -116,6 +123,9 @@ const MarketResponse = {
 
 const TeamResponse = {
   type: 'object',
+  additionalProperties: true,
+  description:
+    'Resumo da equipe do treinador. Pode incluir campos extras (round, max_athletes, athletes_count etc.) preservados em runtime.',
   properties: {
     id: { type: 'integer', example: 1 },
     name: { type: 'string', example: 'Equipe Lucas' },
@@ -141,6 +151,7 @@ const SnapshotPosition = {
 
 const RodadaResult = {
   type: 'object',
+  additionalProperties: true,
   description:
     'Resultado da rodada simulada (motor de 12 turnos), com placar, status, trofeus e moedas.',
   properties: {
@@ -166,6 +177,7 @@ const RodadaResult = {
 
 const RankingEntry = {
   type: 'object',
+  additionalProperties: true,
   required: ['position', 'nickname', 'trophies', 'victory', 'defeat'],
   properties: {
     position: { type: 'integer', example: 1 },

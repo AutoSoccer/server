@@ -40,7 +40,20 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
       schema: {
         tags: ['Itens'],
         summary: 'Lista o catalogo de itens ativos da loja (Task 4.1)',
-        security: [{ BearerAuth: [] }]
+        security: [{ BearerAuth: [] }],
+        response: {
+          200: {
+            type: 'object',
+            additionalProperties: true,
+            properties: {
+              items: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/Item' }
+              }
+            }
+          },
+          401: { $ref: '#/components/schemas/ErrorResponse' }
+        }
       }
     },
     async (_request, reply) => {
