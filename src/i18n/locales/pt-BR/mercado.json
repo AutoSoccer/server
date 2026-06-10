@@ -1,0 +1,13 @@
+{
+  "refresh": {
+    "userNotFound": "Usuario nao encontrado.",
+    "insufficientBalance": "Saldo insuficiente para atualizar o mercado."
+  },
+  "get": {
+    "userNotFound": "Usuario nao encontrado."
+  },
+  "errors": {
+    "USER_NOT_FOUND": "Usuario nao encontrado.",
+    "INSUFFICIENT_COINS": "Saldo insuficiente."
+  }
+}

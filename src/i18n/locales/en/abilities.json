@@ -1,0 +1,22 @@
+{
+  "chute-potente": {
+    "name": "Power Shot",
+    "description": "Increases finishing strength on long-range plays."
+  },
+  "drible-rapido": {
+    "name": "Quick Dribble",
+    "description": "Helps win space in one-on-one duels."
+  },
+  "defesa-solida": {
+    "name": "Solid Defense",
+    "description": "Reduces damage taken in defensive disputes."
+  },
+  "visao-de-jogo": {
+    "name": "Game Vision",
+    "description": "Improves pass reading and ball control."
+  },
+  "velocidade-extrema": {
+    "name": "Extreme Speed",
+    "description": "Increases speed on short sprints."
+  }
+}

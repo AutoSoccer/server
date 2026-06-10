@@ -1,0 +1,10 @@
+{
+  "noReceiverAvailable": "Nao ha atletas disponiveis para receber a bola.",
+  "invalidTotalTurns": "totalTurns deve ser inteiro positivo.",
+  "ballHolderNotFound": "Portador da bola {{athleteId}} nao encontrado.",
+  "errors": {
+    "NO_RECEIVER_AVAILABLE": "Nao ha atletas disponiveis para receber a bola.",
+    "INVALID_TOTAL_TURNS": "totalTurns deve ser inteiro positivo.",
+    "BALL_HOLDER_NOT_FOUND": "Portador da bola nao encontrado."
+  }
+}

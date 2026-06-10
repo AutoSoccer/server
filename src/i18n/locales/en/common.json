@@ -1,0 +1,10 @@
+{
+  "internalError": "Internal server error.",
+  "validationError": "Request payload validation failed.",
+  "notFound": "Resource not found.",
+  "errors": {
+    "config": {
+      "corsWildcardInProduction": "CORS_ORIGIN cannot be a wildcard (\"*\" or empty) when NODE_ENV=production. Provide explicit origins separated by commas."
+    }
+  }
+}

@@ -1,18 +1,13 @@
 import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
+import { tSwagger } from '../../i18n/swagger';
 import { authenticate } from '../auth/auth.middleware';
-import {
-  buyAthlete,
-  EquipeServiceError,
-  getMyTeam,
-  sellAthlete
-} from './equipe.service';
+import { buyAthlete, getMyTeam, sellAthlete } from './equipe.service';
 import {
   MAX_POSITIONED_ATHLETES,
   MIN_POSITIONED_ATHLETES,
   salvarEstadoEquipe,
-  TeamSnapshotError,
   type SalvarEstadoInput
 } from './team-snapshot.service';
 
@@ -32,21 +27,41 @@ type SalvarEstadoBody = {
   items?: number[];
 };
 
-const errorSchema = {
-  type: 'object',
-  properties: {
-    message: { type: 'string' },
-    code: { type: 'string' }
-  }
-} as const;
+const errorRef = { $ref: 'ErrorResponse#' } as const;
+const positionSchema = { $ref: 'SnapshotPosition#' } as const;
 
-const positionSchema = {
+const compraVendaResponseSchema = {
   type: 'object',
-  required: ['athleteId', 'posX', 'posY'],
+  additionalProperties: true,
   properties: {
-    athleteId: { type: 'integer', example: 21 },
-    posX: { type: 'integer', minimum: 0, maximum: 2, example: 0 },
-    posY: { type: 'integer', minimum: 0, maximum: 2, example: 0 }
+    user: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        id: { type: 'integer' },
+        coins: { type: 'integer' }
+      }
+    },
+    team: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        id: { type: 'integer' },
+        athletes_count: { type: 'integer' }
+      }
+    },
+    athlete: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        id: { type: 'integer' },
+        name: { type: 'string' },
+        cost: { type: 'integer' },
+        refund: { type: 'integer' },
+        tier: { type: 'string' },
+        type: { type: 'string', enum: ['defender', 'midfielder', 'attacker'] }
+      }
+    }
   }
 } as const;
 
@@ -85,14 +100,59 @@ const salvarEstadoResponseSchema = {
 } as const;
 
 export const equipeRoutes: FastifyPluginAsync = async (app) => {
-  app.get('/', { preHandler: [authenticate] }, async (request, reply) => {
-    const team = await getMyTeam(request.user!.id);
-    return reply.code(200).send(team);
-  });
+  app.get(
+    '/',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Team'],
+        summary: tSwagger('team.get.summary'),
+        description: tSwagger('team.get.description'),
+        security: [{ BearerAuth: [] }],
+        response: {
+          200: { $ref: 'TeamResponse#' },
+          401: errorRef,
+          404: errorRef
+        }
+      }
+    },
+    async (request, reply) => {
+      const team = await getMyTeam(request.user!.id);
+      return reply.code(200).send(team);
+    }
+  );
 
   app.post<{ Body: BuyAthleteBody }>(
-    '/comprar-atleta',
-    { preHandler: [authenticate] },
+    '/buy-athlete',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Team'],
+        summary: tSwagger('team.buyAthlete.summary'),
+        description: tSwagger('team.buyAthlete.description'),
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: 'object',
+          required: ['atleta_id'],
+          additionalProperties: true,
+          properties: {
+            atleta_id: { type: 'integer', example: 21 },
+            user_id: {
+              type: 'integer',
+              description:
+                'Opcional. Quando informado deve coincidir com o usuario autenticado.'
+            }
+          }
+        },
+        response: {
+          201: compraVendaResponseSchema,
+          400: errorRef,
+          401: errorRef,
+          403: errorRef,
+          404: errorRef
+        }
+      }
+    },
     async (request, reply) => {
       const body = request.body;
       const athleteId = Number(body?.atleta_id);
@@ -112,30 +172,41 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
           .send({ message: 'user_id nao corresponde ao usuario autenticado.' });
       }
 
-      try {
-        const result = await buyAthlete(authenticatedUserId, athleteId);
-        return reply.code(201).send(result);
-      } catch (error: unknown) {
-        if (error instanceof EquipeServiceError) {
-          if (error.code === 'USER_NOT_FOUND') {
-            return reply.code(404).send({ message: error.message, code: error.code });
-          }
-
-          if (error.code === 'ATHLETE_NOT_AVAILABLE') {
-            return reply.code(404).send({ message: error.message, code: error.code });
-          }
-
-          return reply.code(400).send({ message: error.message, code: error.code });
-        }
-
-        throw error;
-      }
+      const result = await buyAthlete(authenticatedUserId, athleteId);
+      return reply.code(201).send(result);
     }
   );
 
   app.post<{ Body: SellAthleteBody }>(
-    '/vender-atleta',
-    { preHandler: [authenticate] },
+    '/sell-athlete',
+    {
+      preHandler: [authenticate],
+      schema: {
+        tags: ['Team'],
+        summary: tSwagger('team.sellAthlete.summary'),
+        description: tSwagger('team.sellAthlete.description'),
+        security: [{ BearerAuth: [] }],
+        body: {
+          type: 'object',
+          required: ['atleta_id'],
+          additionalProperties: true,
+          properties: {
+            atleta_id: { type: 'integer', example: 21 },
+            user_id: {
+              type: 'integer',
+              description:
+                'Opcional. Quando informado deve coincidir com o usuario autenticado.'
+            }
+          }
+        },
+        response: {
+          200: compraVendaResponseSchema,
+          400: errorRef,
+          401: errorRef,
+          404: errorRef
+        }
+      }
+    },
     async (request, reply) => {
       const body = request.body;
       const athleteId = Number(body?.atleta_id);
@@ -155,37 +226,19 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
           .send({ message: 'user_id nao corresponde ao usuario autenticado.' });
       }
 
-      try {
-        const result = await sellAthlete(authenticatedUserId, athleteId);
-        return reply.code(200).send(result);
-      } catch (error: unknown) {
-        if (error instanceof EquipeServiceError) {
-          if (
-            error.code === 'USER_NOT_FOUND' ||
-            error.code === 'TEAM_NOT_FOUND' ||
-            error.code === 'ATHLETE_NOT_AVAILABLE' ||
-            error.code === 'ATHLETE_NOT_OWNED'
-          ) {
-            return reply.code(404).send({ message: error.message, code: error.code });
-          }
-
-          return reply.code(400).send({ message: error.message, code: error.code });
-        }
-
-        throw error;
-      }
+      const result = await sellAthlete(authenticatedUserId, athleteId);
+      return reply.code(200).send(result);
     }
   );
 
   app.post<{ Body: SalvarEstadoBody }>(
-    '/salvar-estado',
+    '/save-state',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Equipe'],
-        summary: 'Salva o snapshot da equipe para a rodada atual (Task 3.2)',
-        description:
-          'Persiste imutavelmente a formacao da equipe (1 a 6 atletas em um grid 3x3) em team_snapshots. Bloqueia atletas que nao pertencem ao inventario do usuario e impede salvamento vazio. Itens estao reservados para a Sprint 5.',
+        tags: ['Team'],
+        summary: tSwagger('team.saveState.summary'),
+        description: tSwagger('team.saveState.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -212,9 +265,9 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
         },
         response: {
           200: salvarEstadoResponseSchema,
-          400: errorSchema,
-          403: errorSchema,
-          404: errorSchema
+          400: errorRef,
+          403: errorRef,
+          404: errorRef
         }
       }
     },
@@ -231,22 +284,12 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
           .send({ message: 'user_id nao corresponde ao usuario autenticado.', code: 'USER_MISMATCH' });
       }
 
-      try {
-        const result = await salvarEstadoEquipe({
-          userId: authenticatedUserId,
-          positions: body.positions ?? [],
-          items: body.items
-        });
-        return reply.code(200).send(result);
-      } catch (error: unknown) {
-        if (error instanceof TeamSnapshotError) {
-          const status = error.code === 'TEAM_NOT_FOUND' ? 404 : 400;
-          return reply
-            .code(status)
-            .send({ message: error.message, code: error.code });
-        }
-        throw error;
-      }
+      const result = await salvarEstadoEquipe({
+        userId: authenticatedUserId,
+        positions: body.positions ?? [],
+        items: body.items
+      });
+      return reply.code(200).send(result);
     }
   );
 };

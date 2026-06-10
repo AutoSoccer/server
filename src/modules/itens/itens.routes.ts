@@ -1,14 +1,9 @@
 import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
+import { tSwagger } from '../../i18n/swagger';
 import { authenticate } from '../auth/auth.middleware';
-import {
-  aplicarItem,
-  comprarItem,
-  ItemServiceError,
-  type ItemServiceErrorCode,
-  listarItens
-} from './itens.service';
+import { aplicarItem, comprarItem, listarItens } from './itens.service';
 
 type ComprarBody = {
   item_id: number;
@@ -21,13 +16,7 @@ type AplicarBody = {
   user_id?: number;
 };
 
-const errorSchema = {
-  type: 'object',
-  properties: {
-    message: { type: 'string' },
-    code: { type: 'string' }
-  }
-} as const;
+const errorRef = { $ref: 'ErrorResponse#' } as const;
 
 const modifiersSchema = {
   type: 'object',
@@ -38,20 +27,29 @@ const modifiersSchema = {
   }
 } as const;
 
-const NOT_FOUND_CODES: ItemServiceErrorCode[] = ['USER_NOT_FOUND', 'ITEM_NOT_FOUND'];
-
-const statusForError = (code: ItemServiceErrorCode): number =>
-  NOT_FOUND_CODES.includes(code) ? 404 : 400;
-
 export const itensRoutes: FastifyPluginAsync = async (app) => {
   app.get(
     '/',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Itens'],
-        summary: 'Lista o catalogo de itens ativos da loja (Task 4.1)',
-        security: [{ BearerAuth: [] }]
+        tags: ['Items'],
+        summary: tSwagger('items.list.summary'),
+        description: tSwagger('items.list.description'),
+        security: [{ BearerAuth: [] }],
+        response: {
+          200: {
+            type: 'object',
+            additionalProperties: true,
+            properties: {
+              items: {
+                type: 'array',
+                items: { $ref: 'Item#' }
+              }
+            }
+          },
+          401: { $ref: 'ErrorResponse#' }
+        }
       }
     },
     async (_request, reply) => {
@@ -61,14 +59,13 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
   );
 
   app.post<{ Body: ComprarBody }>(
-    '/comprar',
+    '/buy',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Itens'],
-        summary: 'Compra um item na loja (RF014, Task 4.1)',
-        description:
-          'Debita os coins do usuario e adiciona uma instancia do item ao inventario (consumed=false), tudo em uma transacao.',
+        tags: ['Items'],
+        summary: tSwagger('items.buy.summary'),
+        description: tSwagger('items.buy.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -104,9 +101,9 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
               inventoryItemId: { type: 'integer' }
             }
           },
-          400: errorSchema,
-          403: errorSchema,
-          404: errorSchema
+          400: errorRef,
+          403: errorRef,
+          404: errorRef
         }
       }
     },
@@ -125,29 +122,19 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
         return reply.code(400).send({ message: 'Campo item_id invalido.', code: 'INVALID_BODY' });
       }
 
-      try {
-        const result = await comprarItem(authenticatedUserId, itemId);
-        return reply.code(201).send(result);
-      } catch (error: unknown) {
-        if (error instanceof ItemServiceError) {
-          return reply
-            .code(statusForError(error.code))
-            .send({ message: error.message, code: error.code });
-        }
-        throw error;
-      }
+      const result = await comprarItem(authenticatedUserId, itemId);
+      return reply.code(201).send(result);
     }
   );
 
   app.post<{ Body: AplicarBody }>(
-    '/aplicar',
+    '/apply',
     {
       preHandler: [authenticate],
       schema: {
-        tags: ['Itens'],
-        summary: 'Aplica o bonus de um item a um atleta do snapshot da rodada (RF014, Task 4.1)',
-        description:
-          'Valida posse/uso e empilhamento (stacking), atrela o buff ao atleta no Snapshot atual e consome o item — tudo numa unica transacao.',
+        tags: ['Items'],
+        summary: tSwagger('items.apply.summary'),
+        description: tSwagger('items.apply.description'),
         security: [{ BearerAuth: [] }],
         body: {
           type: 'object',
@@ -187,9 +174,9 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
               consumedInventoryItemId: { type: 'integer' }
             }
           },
-          400: errorSchema,
-          403: errorSchema,
-          404: errorSchema
+          400: errorRef,
+          403: errorRef,
+          404: errorRef
         }
       }
     },
@@ -211,17 +198,8 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
           .send({ message: 'Campos item_id e atleta_id precisam ser inteiros validos.', code: 'INVALID_BODY' });
       }
 
-      try {
-        const result = await aplicarItem(authenticatedUserId, itemId, athleteId);
-        return reply.code(200).send(result);
-      } catch (error: unknown) {
-        if (error instanceof ItemServiceError) {
-          return reply
-            .code(statusForError(error.code))
-            .send({ message: error.message, code: error.code });
-        }
-        throw error;
-      }
+      const result = await aplicarItem(authenticatedUserId, itemId, athleteId);
+      return reply.code(200).send(result);
     }
   );
 };

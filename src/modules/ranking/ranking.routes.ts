@@ -1,6 +1,7 @@
 import '@fastify/swagger';
 import { type FastifyPluginAsync } from 'fastify';
 
+import { tSwagger } from '../../i18n/swagger';
 import { authenticate } from '../auth/auth.middleware';
 import {
   getRanking,
@@ -68,13 +69,7 @@ const currentUserSchema = {
   }
 } as const;
 
-const errorSchema = {
-  type: 'object',
-  properties: {
-    message: { type: 'string' },
-    code: { type: 'string' }
-  }
-} as const;
+const errorRef = { $ref: 'ErrorResponse#' } as const;
 
 export const rankingRoutes: FastifyPluginAsync = async (app) => {
   app.get<{ Querystring: RankingQuery }>(
@@ -83,9 +78,8 @@ export const rankingRoutes: FastifyPluginAsync = async (app) => {
       preHandler: [authenticate],
       schema: {
         tags: ['Ranking'],
-        summary: 'Ranking geral de usuarios por trofeus',
-        description:
-          'Lista contas reais com campanhas concluidas. Ordena por trofeus, vitorias, menos derrotas e cadastro mais antigo. Convidados podem consultar, mas nao aparecem.',
+        summary: tSwagger('ranking.list.summary'),
+        description: tSwagger('ranking.list.description'),
         security: [{ BearerAuth: [] }],
         querystring: {
           type: 'object',
@@ -107,7 +101,7 @@ export const rankingRoutes: FastifyPluginAsync = async (app) => {
               currentUser: currentUserSchema
             }
           },
-          404: errorSchema
+          404: errorRef
         }
       }
     },

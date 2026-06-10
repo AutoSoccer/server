@@ -1,0 +1,123 @@
+{
+  "info": {
+    "title": "AutoSoccer API",
+    "description": "API do AutoSoccer: autenticacao, mercado de atletas e simulacao de partidas (motor de 12 turnos)."
+  },
+  "servers": {
+    "local": "Servidor local de desenvolvimento"
+  },
+  "security": {
+    "bearerDescription": "Token JWT obtido em POST /auth/login."
+  },
+  "tags": {
+    "auth": "Registro, login e perfil do usuario",
+    "market": "Janela de mercado de atletas",
+    "team": "Gerenciamento da equipe e snapshots de formacao",
+    "items": "Catalogo da loja e aplicacao de itens em atletas",
+    "match": "Simulacao de partidas (motor de 12 turnos)",
+    "ranking": "Ranking geral de jogadores por trofeus",
+    "system": "Endpoints utilitarios e health checks"
+  },
+  "errorResponses": {
+    "badRequest": "Requisicao invalida.",
+    "unauthorized": "Token ausente ou invalido.",
+    "forbidden": "Acao nao permitida para o usuario autenticado.",
+    "notFound": "Recurso nao encontrado.",
+    "conflict": "Conflito ao processar a requisicao.",
+    "internalError": "Erro interno do servidor."
+  },
+  "auth": {
+    "register": {
+      "summary": "Cadastra um novo usuario",
+      "description": "Cria uma conta nova e retorna um token JWT junto com o perfil recem-criado."
+    },
+    "me": {
+      "summary": "Retorna o usuario autenticado",
+      "description": "Resolve o perfil do usuario a partir do token enviado no header Authorization."
+    },
+    "guest": {
+      "summary": "Cria uma conta de convidado e retorna um token JWT (RF005)",
+      "description": "Cria um usuario efemero com is_guest=true para jogar sem cadastro. Convidados nao acumulam trofeus nem entram no ranking geral."
+    },
+    "login": {
+      "summary": "Autentica um usuario e retorna um token JWT",
+      "description": "Aceita e-mail ou apelido como identifier; retorna 401 quando as credenciais nao batem."
+    }
+  },
+  "market": {
+    "list": {
+      "summary": "Retorna a janela de mercado do usuario",
+      "description": "Lista os atletas disponiveis no mercado atual do usuario com o custo de refresh e seu saldo de moedas."
+    },
+    "refresh": {
+      "summary": "Sorteia uma nova janela de atletas no mercado",
+      "description": "Desconta 1 moeda e sorteia ate 3 novos atletas."
+    }
+  },
+  "team": {
+    "get": {
+      "summary": "Retorna a equipe atual do usuario autenticado",
+      "description": "Inclui atletas comprados, posicoes do snapshot atual e progresso da campanha."
+    },
+    "buyAthlete": {
+      "summary": "Compra um atleta do mercado",
+      "description": "Desconta o custo do atleta no saldo do usuario e o adiciona a equipe."
+    },
+    "sellAthlete": {
+      "summary": "Vende um atleta da equipe",
+      "description": "Remove o atleta da equipe e devolve o valor parcial em moedas."
+    },
+    "saveState": {
+      "summary": "Salva o snapshot da equipe para a rodada atual (Task 3.2)",
+      "description": "Persiste imutavelmente a formacao da equipe (1 a 6 atletas em um grid 3x3) em team_snapshots. Bloqueia atletas que nao pertencem ao inventario do usuario e impede salvamento vazio. Itens estao reservados para a Sprint 5."
+    }
+  },
+  "items": {
+    "list": {
+      "summary": "Lista o catalogo de itens ativos da loja (Task 4.1)",
+      "description": "Retorna todos os itens com modificadores e flag de empilhamento."
+    },
+    "buy": {
+      "summary": "Compra um item na loja (RF014, Task 4.1)",
+      "description": "Debita os coins do usuario e adiciona uma instancia do item ao inventario (consumed=false), tudo em uma transacao."
+    },
+    "apply": {
+      "summary": "Aplica o bonus de um item a um atleta do snapshot da rodada (RF014, Task 4.1)",
+      "description": "Valida posse/uso e empilhamento (stacking), atrela o buff ao atleta no Snapshot atual e consome o item — tudo numa unica transacao."
+    }
+  },
+  "match": {
+    "start": {
+      "summary": "Inicia uma nova campanha com o nome escolhido",
+      "description": "Sempre inicia uma campanha limpa: define o nome da equipe, restaura 10 moedas, zera o progresso e remove os atletas atuais. Nao altera trofeus nem o historico."
+    },
+    "abandon": {
+      "summary": "Abandona a campanha atual",
+      "description": "Zera rodada, vitorias, derrotas e empates, remove os atletas da equipe e restaura 10 moedas. Nao registra derrota, nao altera trofeus e preserva snapshots e logs historicos."
+    },
+    "play": {
+      "summary": "Salva a formacao atual e joga uma rodada",
+      "description": "Fluxo principal do botao Jogar: cria um snapshot imutavel da formacao enviada (1 a 6 atletas), busca um adversario por matchmaking e executa a simulacao."
+    },
+    "playRound": {
+      "summary": "Joga uma rodada com matchmaking baseado em vitorias (Task 4.3)",
+      "description": "Cria um snapshot da equipe do jogador (ou usa o snapshot_id informado), busca um adversario fantasma com victory_ratio proximo (RN006), calcula iniciativa pela velocidade do atacante mais a frente (RN009) e executa o motor de 12 turnos. Persiste victory/lose/round no time do jogador."
+    }
+  },
+  "ranking": {
+    "list": {
+      "summary": "Ranking geral de usuarios por trofeus",
+      "description": "Lista contas reais com campanhas concluidas. Ordena por trofeus, vitorias, menos derrotas e cadastro mais antigo. Convidados podem consultar, mas nao aparecem."
+    }
+  },
+  "system": {
+    "health": {
+      "summary": "Health check",
+      "description": "Retorna o status atual do servidor e o timestamp da consulta."
+    },
+    "healthz": {
+      "summary": "Health check (alias para infra de deploy)",
+      "description": "Endpoint equivalente a /health usado por orquestradores de deploy."
+    }
+  }
+}

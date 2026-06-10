@@ -1,0 +1,10 @@
+{
+  "noReceiverAvailable": "No athletes available to receive the ball.",
+  "invalidTotalTurns": "totalTurns must be a positive integer.",
+  "ballHolderNotFound": "Ball holder {{athleteId}} not found.",
+  "errors": {
+    "NO_RECEIVER_AVAILABLE": "No athletes available to receive the ball.",
+    "INVALID_TOTAL_TURNS": "totalTurns must be a positive integer.",
+    "BALL_HOLDER_NOT_FOUND": "Ball holder not found."
+  }
+}

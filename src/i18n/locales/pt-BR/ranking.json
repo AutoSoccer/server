@@ -1,0 +1,6 @@
+{
+  "userNotFound": "Usuario autenticado nao encontrado.",
+  "errors": {
+    "USER_NOT_FOUND": "Usuario autenticado nao encontrado."
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "chute-potente": {
+    "name": "Chute Potente",
+    "description": "Aumenta a forca de finalizacao em jogadas longas."
+  },
+  "drible-rapido": {
+    "name": "Drible Rapido",
+    "description": "Permite ganhar espaco em duelos um contra um."
+  },
+  "defesa-solida": {
+    "name": "Defesa Solida",
+    "description": "Reduz danos sofridos em disputas defensivas."
+  },
+  "visao-de-jogo": {
+    "name": "Visao de Jogo",
+    "description": "Melhora a leitura de passes e o dominio de bola."
+  },
+  "velocidade-extrema": {
+    "name": "Velocidade Extrema",
+    "description": "Aumenta a velocidade em arrancadas curtas."
+  }
+}

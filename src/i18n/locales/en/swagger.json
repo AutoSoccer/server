@@ -1,0 +1,123 @@
+{
+  "info": {
+    "title": "AutoSoccer API",
+    "description": "AutoSoccer API: authentication, athletes market and match simulation (12-turn engine)."
+  },
+  "servers": {
+    "local": "Local development server"
+  },
+  "security": {
+    "bearerDescription": "JWT token obtained from POST /auth/login."
+  },
+  "tags": {
+    "auth": "User registration, login and profile",
+    "market": "Athletes market window",
+    "team": "Team management and formation snapshots",
+    "items": "Shop catalog and item application on athletes",
+    "match": "Match simulation (12-turn engine)",
+    "ranking": "General player ranking by trophies",
+    "system": "Utility endpoints and health checks"
+  },
+  "errorResponses": {
+    "badRequest": "Invalid request.",
+    "unauthorized": "Missing or invalid token.",
+    "forbidden": "Action not allowed for the authenticated user.",
+    "notFound": "Resource not found.",
+    "conflict": "Conflict while processing the request.",
+    "internalError": "Internal server error."
+  },
+  "auth": {
+    "register": {
+      "summary": "Registers a new user",
+      "description": "Creates a new account and returns a JWT token along with the newly created profile."
+    },
+    "me": {
+      "summary": "Returns the authenticated user",
+      "description": "Resolves the user profile from the token sent in the Authorization header."
+    },
+    "guest": {
+      "summary": "Creates a guest account and returns a JWT token (RF005)",
+      "description": "Creates an ephemeral user with is_guest=true so the player can play without registration. Guests do not accumulate trophies and do not appear in the general ranking."
+    },
+    "login": {
+      "summary": "Authenticates a user and returns a JWT token",
+      "description": "Accepts email or nickname as identifier; returns 401 when credentials do not match."
+    }
+  },
+  "market": {
+    "list": {
+      "summary": "Returns the user's market window",
+      "description": "Lists athletes currently available in the user's market with refresh cost and current coin balance."
+    },
+    "refresh": {
+      "summary": "Draws a new athletes window in the market",
+      "description": "Deducts 1 coin and draws up to 3 new athletes."
+    }
+  },
+  "team": {
+    "get": {
+      "summary": "Returns the authenticated user's team",
+      "description": "Includes purchased athletes, current snapshot positions and campaign progress."
+    },
+    "buyAthlete": {
+      "summary": "Buys an athlete from the market",
+      "description": "Deducts the athlete cost from the user balance and adds the athlete to the team."
+    },
+    "sellAthlete": {
+      "summary": "Sells an athlete from the team",
+      "description": "Removes the athlete from the team and refunds a partial coin amount."
+    },
+    "saveState": {
+      "summary": "Saves the team snapshot for the current round (Task 3.2)",
+      "description": "Immutably persists the team formation (1 to 6 athletes in a 3x3 grid) in team_snapshots. Blocks athletes that do not belong to the user's inventory and prevents empty saves. Items are reserved for Sprint 5."
+    }
+  },
+  "items": {
+    "list": {
+      "summary": "Lists the active shop items catalog (Task 4.1)",
+      "description": "Returns all items with modifiers and the stackable flag."
+    },
+    "buy": {
+      "summary": "Buys an item from the shop (RF014, Task 4.1)",
+      "description": "Debits the user's coins and adds one item instance to the inventory (consumed=false), all within a single transaction."
+    },
+    "apply": {
+      "summary": "Applies an item bonus to an athlete in the round snapshot (RF014, Task 4.1)",
+      "description": "Validates ownership/use and stacking, attaches the buff to the athlete in the current Snapshot and consumes the item — all in a single transaction."
+    }
+  },
+  "match": {
+    "start": {
+      "summary": "Starts a new campaign with the chosen name",
+      "description": "Always starts a clean campaign: sets the team name, restores 10 coins, resets progress and removes current athletes. Does not change trophies nor the history."
+    },
+    "abandon": {
+      "summary": "Abandons the current campaign",
+      "description": "Resets round, wins, losses and draws, removes the team's athletes and restores 10 coins. Does not register a defeat, does not change trophies and preserves historic snapshots and logs."
+    },
+    "play": {
+      "summary": "Saves the current formation and plays a round",
+      "description": "Main Play button flow: creates an immutable snapshot of the submitted formation (1 to 6 athletes), looks for an opponent via matchmaking and runs the simulation."
+    },
+    "playRound": {
+      "summary": "Plays a round with wins-based matchmaking (Task 4.3)",
+      "description": "Creates a snapshot of the player's team (or uses the informed snapshot_id), looks for a ghost opponent with close victory_ratio (RN006), computes initiative from the front-most attacker velocity (RN009) and runs the 12-turn engine. Persists victory/lose/round on the player's team."
+    }
+  },
+  "ranking": {
+    "list": {
+      "summary": "General ranking of users by trophies",
+      "description": "Lists real accounts with completed campaigns. Orders by trophies, wins, fewer losses and earliest sign-up. Guests can query but do not appear."
+    }
+  },
+  "system": {
+    "health": {
+      "summary": "Health check",
+      "description": "Returns the current server status and the query timestamp."
+    },
+    "healthz": {
+      "summary": "Health check (alias for deploy infrastructure)",
+      "description": "Endpoint equivalent to /health used by deploy orchestrators."
+    }
+  }
+}

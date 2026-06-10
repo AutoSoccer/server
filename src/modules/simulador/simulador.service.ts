@@ -3,6 +3,7 @@ import {
   effectiveAttribute,
   type SimAttribute
 } from './formula';
+import { SimuladorServiceError } from './simulador.errors';
 import {
   Athlete,
   type BallRow,
@@ -145,7 +146,9 @@ const strongestByVelocity = (athletes: FieldAthlete[]): FieldAthlete => {
 
   const selected = ordered[0];
   if (!selected) {
-    throw new Error('Nao ha atletas disponiveis para receber a bola.');
+    throw new SimuladorServiceError('NO_RECEIVER_AVAILABLE', {
+      i18nKey: 'simulador.noReceiverAvailable'
+    });
   }
   return selected;
 };
@@ -718,7 +721,9 @@ export const processarRodada = (
   const totalTurns = options.totalTurns ?? TOTAL_TURNS;
 
   if (!Number.isInteger(totalTurns) || totalTurns <= 0) {
-    throw new Error('totalTurns deve ser inteiro positivo.');
+    throw new SimuladorServiceError('INVALID_TOTAL_TURNS', {
+      i18nKey: 'simulador.invalidTotalTurns'
+    });
   }
 
   const player = cloneTeam(equipePlayer);
@@ -754,7 +759,10 @@ export const processarRodada = (
       ball.athleteId
     );
     if (!carrier) {
-      throw new Error(`Portador da bola ${ball.athleteId} nao encontrado.`);
+      throw new SimuladorServiceError('BALL_HOLDER_NOT_FOUND', {
+        i18nKey: 'simulador.ballHolderNotFound',
+        params: { athleteId: ball.athleteId }
+      });
     }
 
     let event: TurnEvent;
