@@ -205,7 +205,7 @@ RA2 (implementar sistema real) com defesa de autoria individual.
   - UptimeRobot configurado para fazer ping em `https://autosoccer-api-production.up.railway.app/health` a cada 5 min
   - Screenshot dos dashboards Sonar + UptimeRobot no `server/docs/monitoring.md`
   - **Atencao:** deploy ativo no Railway (autosoccer-api-production.up.railway.app)
-  - **Limpeza:** remover `server/render.yaml` (morto-codigo da migracao Render -> Cloudways -> Railway) e remover qualquer mencao do arquivo no README
+  - **Limpeza:** `server/render.yaml`, `server/.env.production.example` e `server/scripts/check-swagger.ts` removidos em chore/cleanup-orphan-files (11/06/2026)
 - **Criterio de aceite:**
   - Badge do Sonar no README (lines coverage, quality gate)
   - URL publica do UptimeRobot ou screenshot anexado
