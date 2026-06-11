@@ -67,10 +67,14 @@ jobs:
       # pipeline (testes + lint + typecheck) se o Sonar estiver com config
       # divergente do projectKey, ou se uma tag duplicada surgir em um
       # re-run. Os erros viram aviso no summary do run em vez de failure.
+      #
+      # A action SonarSource/sonarcloud-github-action foi deprecada em 2025
+      # — agora a recomendada e sonarqube-scan-action@v5, que funciona
+      # tanto para SonarQube Server quanto SonarCloud.
       - name: SonarCloud Scan
         if: success()
         continue-on-error: true
-        uses: SonarSource/sonarcloud-github-action@v2
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
