@@ -1,0 +1,85 @@
+name: CI - main (staging)
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: lint, typecheck, test:coverage, sonar, tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Sonar precisa do histórico completo para blame
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+          cache-dependency-path: yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Typecheck
+        run: yarn typecheck
+
+      - name: i18n parity check
+        run: yarn i18n:check
+
+      - name: Test with coverage
+        run: yarn test:coverage --coverage.reporter=text --coverage.reporter=html --coverage.reporter=lcov --coverage.reporter=json-summary
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: server-coverage-main-${{ github.sha }}
+          path: coverage/
+          retention-days: 30
+
+      - name: SonarCloud Scan
+        if: success()
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Tag staging release
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const shortSha = context.sha.slice(0, 7);
+            const tag = `staging-${date}-${shortSha}`;
+            try {
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/tags/${tag}`,
+                sha: context.sha,
+              });
+              core.info(`Tag criada: ${tag}`);
+            } catch (err) {
+              if (err.status === 422) {
+                core.warning(`Tag ${tag} já existe — pulando.`);
+              } else {
+                throw err;
+              }
+            }
