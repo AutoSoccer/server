@@ -221,4 +221,70 @@ describe('integration: /match', () => {
 
     await app.close();
   });
+
+  it('POST /match/play retorna matchId e wsUrl alem do resultado', async () => {
+    const app = await buildApp();
+    mocks.jogarRodadaComFormacao.mockResolvedValue({
+      player: {},
+      opponent: {},
+      score: { player: 1, opponent: 0 },
+      winner: 'player',
+      totalTurns: 3,
+      initialBall: { team: 'player', athleteId: 1, athleteName: 'A', position: { x: 0, y: 0 } },
+      events: [],
+      lineups: {
+        player: { snapshotId: 1, teamId: 1, name: 'A', positions: [] },
+        opponent: { snapshotId: 2, teamId: 2, name: 'B', positions: [] }
+      },
+      matchmaking: { snapshotId: 1, opponentSnapshotId: 2, opponentUserId: 2, victoryRatio: 0, delta: 0, windowUsed: 0 },
+      initiative: { playerLeadVelocity: 0, opponentLeadVelocity: 0, startsWith: 'player', carrier: { team: 'player', athleteId: 1, athleteName: 'A', position: { x: 0, y: 0 } } },
+      persisted: { teamId: 1, victory: 1, lose: 0, round: 2 },
+      resolution: { matchStatus: 'in_progress', matchEnded: false, trophiesDelta: 0, trophies: 0, coinsEarned: 10, coins: 10, userVictory: 0, userDefeat: 0, isGuest: false, roundLogId: 1 }
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/match/play',
+      headers: bearer(token),
+      payload: {
+        positions: [
+          { athleteId: 1, posX: 0, posY: 0 },
+          { athleteId: 2, posX: 1, posY: 1 },
+          { athleteId: 3, posX: 2, posY: 2 }
+        ]
+      }
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(typeof body.matchId).toBe('string');
+    expect(body.matchId.length).toBeGreaterThan(0);
+    expect(body.wsUrl).toBe(`/ws/battle/${body.matchId}`);
+    expect(body.winner).toBe('player');
+
+    await app.close();
+  });
+
+  it('POST /match/play retorna 403 quando user_id nao bate', async () => {
+    const app = await buildApp();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/match/play',
+      headers: bearer(token),
+      payload: {
+        user_id: 999,
+        positions: [
+          { athleteId: 1, posX: 0, posY: 0 },
+          { athleteId: 2, posX: 1, posY: 1 },
+          { athleteId: 3, posX: 2, posY: 2 }
+        ]
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(mocks.jogarRodadaComFormacao).not.toHaveBeenCalled();
+
+    await app.close();
+  });
 });

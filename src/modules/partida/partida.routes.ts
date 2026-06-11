@@ -10,6 +10,7 @@ import {
 } from '../equipe/team-snapshot.service';
 import { jogarRodada, jogarRodadaComFormacao } from './rodada.service';
 import { abandonCampaign, startCampaign } from './campaign.service';
+import { createMatchEntry } from './match-stream.store';
 
 type JogarRodadaBody = {
   user_id?: number;
@@ -310,6 +311,22 @@ const abandonCampaignResponseSchema = {
   }
 } as const;
 
+const playResultSchema = {
+  type: 'object',
+  properties: {
+    matchId: {
+      type: 'string',
+      format: 'uuid',
+      description: 'ID para conectar via WebSocket em /ws/battle/:matchId'
+    },
+    wsUrl: {
+      type: 'string',
+      description: 'Path do endpoint WebSocket para transmissao ao vivo'
+    },
+    ...rodadaResultSchema.properties
+  }
+} as const;
+
 export const partidaRoutes: FastifyPluginAsync = async (app) => {
   app.post<{ Body: StartCampaignBody }>(
     '/start',
@@ -402,7 +419,7 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
           }
         },
         response: {
-          200: rodadaResultSchema,
+          200: playResultSchema,
           400: errorRef,
           403: errorRef,
           404: errorRef
@@ -428,7 +445,14 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
         positions: body.positions,
         items: body.items
       });
-      return reply.code(200).send(result);
+
+      const matchId = createMatchEntry(result);
+
+      return reply.code(200).send({
+        matchId,
+        wsUrl: `/ws/battle/${matchId}`,
+        ...result
+      });
     }
   );
 
