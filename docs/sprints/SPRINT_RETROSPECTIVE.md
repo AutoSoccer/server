@@ -71,7 +71,7 @@ Retrospectivas das 4 sprints do AutoSoccer no formato Start/Stop/Continue. Cada 
 
 - Abrir documento de apresentação no início da sprint, não no último commit (`84dee00`, `03cb73b` em 10/06).
 - Ensaiar a defesa com tempo cronometrado pelo menos 3 vezes antes de 23/06.
-- Documentar deploy Cloudways em parágrafo dedicado no README (não só o Render).
+- Documentar deploy Railway em parágrafo dedicado no README, com os passos exatos do painel + URL pública.
 
 ### Stop
 

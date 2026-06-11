@@ -413,7 +413,7 @@ Citar que a integracao roda `app.inject()` com o Fastify inteiro registrado, evi
 - Git workflow com Conventional Commits e branches por workstream
 - UML, BDD e User Stories versionados no proprio repo
 - CI/CD GitHub Actions com 5 etapas
-- Deploy automatizado: Cloudways (back + MySQL nativo) e Vercel (front)
+- Deploy automatizado: Railway (back + MySQL plugin nativo) e Vercel (front)
 - Monitoramento ativo: SonarCloud + UptimeRobot
 - Scrum adaptado com 4 sprints documentadas
 
@@ -531,22 +531,23 @@ Reforcar que SonarCloud e free para repo publico e UptimeRobot e free para ate 5
 
 ---
 
-## Slide 26 — Deploy Cloudways + Vercel
+## Slide 26 — Deploy Railway + Vercel
 
-**Subtitulo:** Back em Cloudways com MySQL nativo, front na Vercel
+**Subtitulo:** Back em Railway com MySQL plugin nativo, front na Vercel
 
 **Bullets**
-- Cloudways: servidor Node 20 + MySQL embutido no mesmo host
-- Deploy via Git Pull configurado no painel + PM2 como process manager
+- Railway: build via Nixpacks (Node 20) + MySQL plugin gerenciado
+- Auto-deploy a cada `git push origin main` via webhook do GitHub
+- `railway up` CLI permite deploy direto sem commit
 - Vercel: deploy automatico via GitHub App, preview por PR
 - Variaveis de ambiente separadas por ambiente (preview vs production)
 - Sequelize com `sync: false` — banco so muda via migration
-- `.env.production.example` versionado documentando as variaveis
+- URL publica: `https://autosoccer-api-production.up.railway.app/docs`
 
 **Notas do apresentador**
-Explicar a migracao Render -> Cloudways: motivo foi ter MySQL embutido no proprio servidor e controle via SSH. Mencionar que o front continuou na Vercel sem mudanca.
+Explicar a jornada Render -> Cloudways -> Railway: Render falhou no yarn no build, Cloudways tinha $HOME root-owned no stack PHP, Railway foi o que finalmente atendeu (MySQL plugin nativo, sem ops de Nginx/PM2/SSL). Mencionar que o front continuou na Vercel sem mudanca.
 
-**Visual sugerido:** diagrama com Cloudways (back + MySQL) -> Vercel (front) -> usuario, setas mostrando o fluxo e domínios provisorios.
+**Visual sugerido:** diagrama com Railway (back + MySQL plugin) -> Vercel (front) -> usuario, setas mostrando o fluxo e dominio publico provisorio.
 
 **Quem apresenta:** Lucas Bruno
 
@@ -560,7 +561,7 @@ Explicar a migracao Render -> Cloudways: motivo foi ter MySQL embutido no propri
 - Fluxo 1 (Lucas S) — login + dark mode + dashboard (~1 min)
 - Fluxo 2 (Lucas S) — mercado + drag-and-drop + aplicacao de item (~1 min)
 - Fluxo 3 (Pedro) — Swagger autenticado + relatorio via stored procedure (~1 min)
-- Fluxo 4 (Lucas B) — GitHub Actions + Cloudways + UptimeRobot (~1 min)
+- Fluxo 4 (Lucas B) — GitHub Actions + Railway + UptimeRobot (~1 min)
 - Driver: Lucas S no laptop principal projetando
 - Plano B com backup local + video gravado caso a rede falhe
 

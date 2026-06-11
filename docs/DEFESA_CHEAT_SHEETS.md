@@ -57,7 +57,7 @@ Os schemas do Fastify validam body, params e querystring na entrada — retornam
 Payload do token tem `userId`, `email` e `role` (enum user/admin). Plugin `@fastify/jwt` decora `request.user` apos validar assinatura. Criei `auth.middleware.ts` com `requireAuth` (qualquer logado) e `requireRole('admin')` (so admin). Rota admin que recebe token user retorna 403 com mensagem traduzida.
 
 ### 5. Como rodam as migrations Sequelize?
-Sequelize CLI com pasta `server/migrations/`. Cada migration tem `up` e `down`. No CI rodamos `yarn db:migrate` antes dos testes de integration. Em prod, o deploy do Cloudways chama `yarn db:migrate` no hook pos-pull. `sync: false` esta hardcoded — nunca confiamos em auto-sync.
+Sequelize CLI com pasta `server/migrations/`. Cada migration tem `up` e `down`. No CI rodamos `yarn db:migrate` antes dos testes de integration. Em prod, o Start Command do Railway (`npm run db:migrate && node dist/index.js`) garante que migrations rodam antes do server subir. `sync: false` esta hardcoded — nunca confiamos em auto-sync.
 
 ### 6. Como funciona o seed (runDatabaseSeeds)?
 Funcao `runDatabaseSeeds` em `server/src/database/seed/` que e idempotente — verifica se ja existe antes de inserir. Cria: 1 admin padrao, 10 atletas base, 5 itens, 1 usuario convidado. Roda no boot do server em dev, e via comando manual em prod. Cada seed usa transaction para rollback automatico se falhar.
@@ -84,11 +84,11 @@ Workflow `.github/workflows/ci.yml` roda em PR e push na main. Jobs: `lint` (ESL
 ### 2. Como o front e deployado (Vercel)?
 Vercel conectado ao repo via GitHub App. Cada PR gera um preview deployment com URL unica — usamos pra QA visual. Merge na main dispara deploy de producao. Env vars `NEXT_PUBLIC_API_URL` e `NEXT_PUBLIC_SENTRY_DSN` configuradas no painel da Vercel, separadas por ambiente (preview vs production).
 
-### 3. Como o back e deployado (Cloudways via Git Pull + PM2)?
-Cloudways tem um servidor DigitalOcean com Node 22. Configurei deploy via Git Pull: webhook no GitHub aciona pull na main, instala deps, roda migrations e reinicia PM2 com `pm2 reload ecosystem.config.js`. PM2 mantem 1 instancia cluster com restart automatico. Logs persistidos via `pm2 logrotate`.
+### 3. Como o back e deployado (Railway + auto-deploy)?
+Railway provisiona via Nixpacks (Node 20) com plugin MySQL gerenciado nativo. Cada `git push origin main` aciona webhook do GitHub que reconstroi a imagem, roda `db:migrate` no Start Command e sobe o container. Para deploy rapido sem commit uso `railway up` da CLI. Healthcheck em `/health` valida cada deploy automaticamente — falha o healthcheck, falha o deploy. URL publica em `autosoccer-api-production.up.railway.app`.
 
 ### 4. Como voce monitora producao (UptimeRobot)?
-Tres monitors no UptimeRobot free: `https://api.autosoccer.app/health` (HTTP 200, ping 5min), `https://autosoccer.vercel.app` (HTTP 200, ping 5min) e cert SSL com alert 7 dias antes de expirar. Alertas vao para o canal Discord da equipe. Status publico em `https://stats.uptimerobot.com/autosoccer`.
+Tres monitors no UptimeRobot free: `https://autosoccer-api-production.up.railway.app/health` (HTTP 200, ping 5min), `https://autosoccer.vercel.app` (HTTP 200, ping 5min) e cert SSL com alert 7 dias antes de expirar. Alertas vao para o canal Discord da equipe. Status publico em `https://stats.uptimerobot.com/autosoccer`.
 
 ### 5. Como funciona o SonarCloud (cobertura, qualidade)?
 SonarCloud conectado aos dois repos. CI envia `coverage/lcov.info` apos os testes. Quality gate exige: cobertura nova >= 80%, zero bugs criticos, zero vulnerabilidades, debt ratio < 5%. Badge no README do server e do front mostra status atual. Pull request com gate falhando nao pode mergeada (branch protection).
@@ -106,7 +106,7 @@ Tres `.feature` files em `server/docs/features/`: autenticacao, mercado e batalh
 Cada user story tem um ID (US-01, US-02, US-03). Branch e commit referenciam o ID na descricao: `feat(ws-04): US-02 listar atletas no mercado`. Teste correspondente tem `describe('US-02 - mercado', ...)`. PR no merge linka issue do GitHub Project, fechando o ciclo. README explica o fluxo na secao "Como contribuir".
 
 ### 10. O que voce mudaria se comecasse de novo?
-Teria configurado o GitHub Project e os Conventional Commits desde a sprint 1 — fizemos retroativo e algumas issues nao casaram 100% com os commits antigos. Tambem teria escolhido Railway ou Fly.io em vez de Cloudways: deploy declarativo via arquivo no repo evita configuracao manual no painel.
+Teria configurado o GitHub Project e os Conventional Commits desde a sprint 1 — fizemos retroativo e algumas issues nao casaram 100% com os commits antigos. Tambem teria comecado pelo Railway desde o inicio: perdemos tempo com Render (yarn no build) e Cloudways (root-owned $HOME no stack PHP) antes de migrar para o Railway, que entregou tudo em <30 min.
 
 ---
 
