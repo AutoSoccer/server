@@ -42,9 +42,8 @@ node_modules/
 jspm_packages/
 
 # Lockfiles
-yarn.lock
-package-lock.json
-
+# yarn.lock e package-lock.json sao versionados — necessarios para builds
+# reprodutiveis no CI (actions/setup-node usa o lockfile para cache).
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
