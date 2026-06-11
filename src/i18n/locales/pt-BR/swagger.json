@@ -14,7 +14,8 @@
     "market": "Janela de mercado de atletas",
     "team": "Gerenciamento da equipe e snapshots de formacao",
     "items": "Catalogo da loja e aplicacao de itens em atletas",
-    "match": "Simulacao de partidas (motor de 12 turnos)",
+    "match": "Simulacao de partidas (motor de 12 turnos). POST /match/play retorna matchId para streaming ao vivo via WebSocket em ws(s)://host/ws/battle/:matchId?token=<jwt>.",
+    "websocket": "Streaming ao vivo da batalha via WebSocket (nao aparece no Swagger UI). Conecte em ws(s)://host/ws/battle/:matchId?token=<jwt> apos chamar POST /match/play."
     "ranking": "Ranking geral de jogadores por trofeus",
     "reports": "Relatorios analiticos servidos por stored procedures",
     "admin": "Rotas administrativas (restritas a tokens com role admin)",
@@ -99,7 +100,7 @@
     },
     "play": {
       "summary": "Salva a formacao atual e joga uma rodada",
-      "description": "Fluxo principal do botao Jogar: cria um snapshot imutavel da formacao enviada (1 a 6 atletas), busca um adversario por matchmaking e executa a simulacao."
+      "description": "Fluxo principal do botao Jogar: cria um snapshot imutavel da formacao enviada (1 a 6 atletas), busca um adversario por matchmaking e executa a simulacao. Retorna matchId e wsUrl para acompanhar os eventos turno a turno via WebSocket (ws(s)://host/ws/battle/:matchId?token=<jwt>); eventos: {type:'turn',data:MatchEvent} x 12 e {type:'result',data:MatchResponse}."
     },
     "playRound": {
       "summary": "Joga uma rodada com matchmaking baseado em vitorias (Task 4.3)",

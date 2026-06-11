@@ -43,7 +43,8 @@ export const registerSwagger = async (app: FastifyInstance): Promise<void> => {
         { name: 'Match', description: tSwagger('tags.match') },
         { name: 'Ranking', description: tSwagger('tags.ranking') },
         { name: 'Admin', description: tSwagger('tags.admin') },
-        { name: 'System', description: tSwagger('tags.system') }
+        { name: 'System', description: tSwagger('tags.system') },
+        { name: 'WebSocket', description: tSwagger('tags.websocket') }
       ],
       components: {
         securitySchemes: {
