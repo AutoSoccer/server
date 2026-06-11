@@ -1,0 +1,2 @@
+@AGENTS.md
+@docs/ARQUITETURA_SERVER.md
