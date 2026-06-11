@@ -1,4 +1,5 @@
 import cors from '@fastify/cors';
+import websocket from '@fastify/websocket';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { env } from './config/env';
 import { tSwagger } from './i18n/swagger';
@@ -8,6 +9,7 @@ import { equipeRoutes } from './modules/equipe/equipe.routes';
 import { itensRoutes } from './modules/itens/itens.routes';
 import { mercadoRoutes } from './modules/mercado/mercado.routes';
 import { partidaRoutes } from './modules/partida/partida.routes';
+import { wsBattleRoutes } from './modules/partida/ws-battle.handler';
 import { rankingRoutes } from './modules/ranking/ranking.routes';
 import { reportsRoutes } from './modules/reports/reports.routes';
 import { registerErrorHandler } from './plugins/errorHandler';
@@ -46,6 +48,8 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   await app.register(cors, {
     origin: parseCorsOrigin(env.corsOrigin)
   });
+
+  await app.register(websocket);
 
   // i18n precisa estar inicializado antes de qualquer registro que use
   // `i18next.t(...)` (Swagger e error handler dependem disso).
@@ -135,6 +139,8 @@ export const buildApp = async (): Promise<FastifyInstance> => {
   await app.register(adminRoutes, {
     prefix: '/admin'
   });
+
+  await app.register(wsBattleRoutes);
 
   return app;
 };
