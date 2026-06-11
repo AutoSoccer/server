@@ -69,12 +69,13 @@ jobs:
       # re-run. Os erros viram aviso no summary do run em vez de failure.
       #
       # A action SonarSource/sonarcloud-github-action foi deprecada em 2025
-      # — agora a recomendada e sonarqube-scan-action@v5, que funciona
-      # tanto para SonarQube Server quanto SonarCloud.
+      # — agora a recomendada e sonarqube-scan-action@v6, que funciona
+      # tanto para SonarQube Server quanto SonarCloud (v5 foi deprecada com
+      # security vulnerability — ver community.sonarsource.com/gha-v6-update).
       - name: SonarCloud Scan
         if: success()
         continue-on-error: true
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
