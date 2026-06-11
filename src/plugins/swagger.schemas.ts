@@ -38,7 +38,8 @@ const UserResponse = {
     defeat: { type: 'integer', example: 0 },
     trophies: { type: 'integer', example: 0 },
     coins: { type: 'integer', example: 1000 },
-    is_guest: { type: 'boolean', example: false }
+    is_guest: { type: 'boolean', example: false },
+    role: { type: 'string', enum: ['user', 'admin'], example: 'user' }
   }
 } as const;
 

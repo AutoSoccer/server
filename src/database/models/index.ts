@@ -6,7 +6,7 @@ import { RoundLog } from './round-log.model';
 import { TeamAthlete } from './team-athlete.model';
 import { TeamSnapshot } from './team-snapshot.model';
 import { Team } from './team.model';
-import { User } from './user.model';
+import { User, USER_ROLES, type UserRole } from './user.model';
 import { UserItem } from './user-item.model';
 
 Ability.hasMany(Athlete, {
@@ -135,5 +135,8 @@ export {
   TeamAthlete,
   TeamSnapshot,
   User,
+  USER_ROLES,
   UserItem
 };
+
+export type { UserRole };

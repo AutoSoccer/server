@@ -2,10 +2,16 @@ import { type FastifyReply, type FastifyRequest } from 'fastify';
 import jwt from 'jsonwebtoken';
 
 import { env } from '../../config/env';
+import { type UserRole } from './user.model';
 
 declare module 'fastify' {
   interface FastifyRequest {
-    user?: { id: number; nickname: string };
+    /**
+     * Payload decodificado do JWT. `role` e opcional para manter
+     * compatibilidade com tokens emitidos antes do T5 (sem a claim);
+     * nesses casos o usuario e tratado como 'user'.
+     */
+    user?: { id: number; nickname: string; role?: UserRole };
   }
 }
 
@@ -48,6 +54,7 @@ export const authenticate = async (
     const decoded = jwt.verify(token, env.jwtSecret) as {
       id: number;
       nickname: string;
+      role?: UserRole;
     };
 
     request.user = decoded;
