@@ -202,9 +202,10 @@ RA2 (implementar sistema real) com defesa de autoria individual.
   - Habilitar SonarCloud (free) para ambos os repos
   - Adicionar `sonar-project.properties` em cada repo
   - Step no CI rodando `sonar-scanner` apos os testes
-  - UptimeRobot configurado para fazer ping em `https://autosoccer.onrender.com/health` a cada 5 min
+  - UptimeRobot configurado para fazer ping em `https://<app>.cloudwaysapps.com/health` a cada 5 min
   - Screenshot dos dashboards Sonar + UptimeRobot no `server/docs/monitoring.md`
-  - **Atencao:** depende de deploy ativo no Render (item urgente)
+  - **Atencao:** depende de deploy ativo na Cloudways (item urgente)
+  - **Limpeza:** remover `server/render.yaml` (morto-codigo da migracao Render -> Cloudways) e remover qualquer mencao do arquivo no README
 - **Criterio de aceite:**
   - Badge do Sonar no README (lines coverage, quality gate)
   - URL publica do UptimeRobot ou screenshot anexado
@@ -220,8 +221,8 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 - **Entregavel:**
   - Atualizar `.github/workflows/ci.yml` com 3 jobs: `lint-test`, `deploy-staging` (PR), `deploy-production` (main)
   - Variavel `NODE_ENV` (dev/test/prod) afetando comportamento
-  - Render Blueprint com 2 services: `autosoccer-staging` e `autosoccer-production`
-  - Banco MySQL separado por ambiente
+  - Cloudways: 2 applications no mesmo servidor (`autosoccer-staging` e `autosoccer-production`) ou 2 servers separados
+  - Banco MySQL nativo da Cloudways separado por ambiente (database distinto por app)
 - **Criterio de aceite:**
   - PR triggers staging deploy
   - Merge main triggers prod deploy
@@ -298,7 +299,7 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 - **Entregavel:**
   - README de ambos repos com:
     - Badge Sonar
-    - URL Render publica (production e staging)
+    - URL Cloudways publica do back (production e staging) + URL Vercel do front
     - URL Swagger publica
     - Link do video demo backup
     - Link da apresentacao .pptx
@@ -357,7 +358,7 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 | 23 | **NOVO** Features BDD + User Stories | Lucas B | 0:40 | ID1.1 |
 | 24 | CI/CD GitHub Actions (lint + typecheck + i18n + test + build) | Lucas B | 0:30 | ID1.4 |
 | 25 | **NOVO** Sonar + UptimeRobot monitoring + healthcheck | Lucas B | 0:30 | ID1.4 |
-| 26 | Deploy Render + .env por ambiente + secrets sync:false | Lucas B | 0:40 | ID2.4 |
+| 26 | Deploy Cloudways (back) + Vercel (front) + .env por ambiente | Lucas B | 0:40 | ID2.4 |
 | 27 | **DEMO AO VIVO** (4 min cronometrados) | Lucas S dirige | 4:00 | tudo |
 | 28 | Metricas finais + licoes aprendidas + Q&A | grupo | 1:00 | — |
 
@@ -394,7 +395,7 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 
 | Risco | Probabilidade | Impacto | Mitigacao |
 |---|---|---|---|
-| Render down no dia da apresentacao | media | alto | Demo local no laptop + screenshots backup + video gravado |
+| Cloudways/Vercel down no dia da apresentacao | media | alto | Demo local no laptop + screenshots backup + video gravado |
 | Algum integrante doente / ausente | baixa | alto | Cada slide tem **2 donos** que podem apresentar (registrar no .pptx) |
 | MySQL local nao roda no notebook do apresentador | media | alto | Docker compose + dados de seed + testar 48h antes |
 | Bug critico em prod descoberto na vespera | media | medio | Rollback rapido para `integration/grupo-1` (snapshot conhecido bom) |
@@ -407,29 +408,68 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 
 ## 8. Itens Urgentes (proximas 24h)
 
+> **Mudanca de plano (10/06/2026):** o deploy do back migrou de **Render** para **Cloudways** (PaaS estilo Linode/DigitalOcean managed). Motivos: MySQL embutido no proprio servidor (sem precisar de Railway/PlanetScale externo), menor custo total, e mais controle via SSH/PM2/Nginx. O front continua na **Vercel** (sem mudanca). O arquivo `server/render.yaml` virou morto-codigo e sera removido na T8.
+
 - [x] **Aprovar este plano** — confirmado por Lucas Stopinski em 10/06 com aval pra commitar com info da equipe
 - [x] **Decisao sobre criterio 28** — descartado, vamos focar em pontuar os outros criterios
-- [ ] **Deploy Render** — NAO ESTA ATIVO. Bloqueia T8 (Sonar + UptimeRobot). Acao: Lucas Bruno cria conta + provisiona MySQL externo (Railway) + conecta repos via Blueprint
+- [ ] **Deploy Cloudways (back)** — NAO ESTA ATIVO. Bloqueia T8 (Sonar + UptimeRobot). Acao: Lucas Bruno cria conta Cloudways + provisiona Application Node.js + configura MySQL nativo + conecta repo via "Deployment via GIT"
+- [ ] **Deploy Vercel (front)** — confirmar que o projeto front esta linkado e com `NEXT_PUBLIC_API_URL` apontando para a URL Cloudways do back
 - [ ] **Cada integrante criar branch local a partir do main** (`git checkout -b <branch>`)
 - [ ] **Agendar 2 reunioes de sincronizacao:** quarta 17/06 (status checkpoint) + domingo 22/06 (dry run final)
 
-### Guia rapido para subir o deploy no Render
+### Guia rapido para subir o deploy na Cloudways (back) + Vercel (front)
 
-1. Lucas Bruno: criar conta em https://render.com (login com GitHub recomendado)
-2. Provisionar MySQL externo gratuito em Railway (https://railway.app) — Render free tier nao oferece MySQL
-3. No Render, escolher "New > Blueprint" e apontar para o repo `server` (ja tem `render.yaml` configurado)
-4. Definir secrets manualmente no painel do Render:
-   - `DATABASE_URL` = string de conexao do Railway
-   - `JWT_SECRET` = qualquer string aleatoria longa
-   - `CORS_ORIGIN` = URL do front (sera definida no proximo passo)
-5. Aguardar build do server, copiar a URL publica (algo como `https://autosoccer-api.onrender.com`)
-6. Criar novo Static Site ou Web Service para o `front` no Render
-   - Build command: `npm install && npm run build`
-   - Start command: `npm start`
-   - Env var: `NEXT_PUBLIC_API_URL` = URL do server do passo anterior
-7. Voltar no server e atualizar `CORS_ORIGIN` com a URL do front
-8. Smoke test: abrir `https://<server>/health` e `https://<server>/docs`, testar login no front
-9. Configurar UptimeRobot fazendo ping em `/health` a cada 5 min
+**Back-end na Cloudways:**
+
+1. Lucas Bruno: criar conta em https://www.cloudways.com (login com GitHub/Google ou email)
+2. Provisionar servidor: escolher provider (Linode/DigitalOcean/Vultr — sugerido o menor plano), regiao proxima (ex: NYC ou SFO), e ao criar o servidor adicionar uma **Application Node.js** (escolher a versao do Node compativel com o projeto, ex: Node 20)
+3. Configurar o **MySQL nativo da Cloudways** (ja vem embutido no servidor — nao precisa Railway nem PlanetScale):
+   - No painel da Application, abrir "Application Settings > MySQL Access" (ou "Database Manager")
+   - Anotar `db-name`, `db-user`, `db-pass` (gerados automaticamente pela Cloudways)
+4. Gerar SSH key do servidor Cloudways e adicionar no GitHub:
+   - No painel: "Server Management > Master Credentials > SSH Public Keys" — copiar a public key
+   - No GitHub repo `server`: Settings > Deploy keys > Add deploy key (cole a public key, marque "Allow read access")
+5. No painel da Application > "Deployment via GIT":
+   - Git Remote Address: `git@github.com:<org>/<repo>.git`
+   - Branch: `main`
+   - Deployment Path: `public_html/`
+   - Clicar em "Start Deployment" (pull inicial)
+6. Conectar via SSH e instalar deps + buildar + rodar migrations:
+   ```bash
+   ssh master@<server-ip>
+   cd applications/<app-folder>/public_html
+   yarn install --frozen-lockfile
+   yarn build
+   yarn db:migrate
+   ```
+7. Configurar `.env` no painel Cloudways (Application Settings > Environment Variables) ou criar `.env` direto via SSH no `public_html/`:
+   - `DATABASE_URL=mysql://<db-user>:<db-pass>@localhost:3306/<db-name>` (conexao local — MySQL roda no mesmo servidor)
+   - `JWT_SECRET=<string aleatoria longa>`
+   - `NODE_ENV=production`
+   - `PORT=3000`
+   - `CORS_ORIGIN=<URL do front na Vercel>`
+8. Iniciar o Fastify com PM2 (mantem o processo vivo e reinicia em crash):
+   ```bash
+   pm2 start dist/index.js --name autosoccer-api
+   pm2 save
+   pm2 startup
+   ```
+9. Configurar reverse-proxy Nginx (porta :80/:443 -> :3000):
+   - Cloudways geralmente requer abertura de ticket no Support pedindo "reverse proxy from app domain to localhost:3000" OU
+   - Editar via "Application Settings > Nginx" se a Cloudways expor essa opcao no plano contratado
+10. Configurar dominio:
+    - **Gratuito:** usar o subdominio default `https://<app-name>.cloudwaysapps.com`
+    - **Custom:** apontar dominio proprio em "Domain Management" + ativar SSL Let's Encrypt no painel
+11. Smoke test: abrir `https://<app>.cloudwaysapps.com/health` e `/docs`, validar resposta JSON
+
+**Front-end na Vercel (sem mudanca):**
+
+12. Confirmar projeto front no painel Vercel apontando para o repo `front`, branch `main`
+13. Env var `NEXT_PUBLIC_API_URL` = URL publica Cloudways do back (passo 11)
+14. Redeploy o front para pegar a env var atualizada
+15. Voltar no back e atualizar `CORS_ORIGIN` com a URL Vercel do front, reiniciar PM2 (`pm2 restart autosoccer-api`)
+16. Smoke test final: abrir o front na Vercel, fazer login convidado, verificar comunicacao com o back
+17. Configurar UptimeRobot fazendo ping em `https://<app>.cloudwaysapps.com/health` a cada 5 min
 
 ---
 
@@ -449,10 +489,10 @@ Para considerar uma tarefa **completa**:
 
 | Ferramenta | Conta | Quem cria | Custo |
 |---|---|---|---|
-| Render | grupo | Lucas B | free tier |
+| Cloudways (back + MySQL nativo) | grupo | Lucas B | plano pago (menor servidor, ~$11-14/mes) — MySQL embutido sem custo extra |
+| Vercel (front) | grupo | Lucas B | free tier (hobby) |
 | SonarCloud | grupo | Lucas B | free para repos publicos |
 | UptimeRobot | grupo | Lucas B | free tier (50 monitors, 5min check) |
-| Railway/PlanetScale (MySQL) | grupo | Lucas B | free tier |
 | GitHub Projects | ja existe | Lucas B | free |
 
 ---
