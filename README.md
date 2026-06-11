@@ -11,6 +11,8 @@ Porta local padrao da API: `3333`.
   services reais.
 - [User Stories](docs/user-stories.md) — 3 user stories detalhadas
   (login convidado, ranking, itens) com criterios de aceite e DoD.
+- [Diagramas UML](docs/diagrams/) — classes, sequencias (login e jogar
+  rodada) e atividade da campanha em Mermaid, renderizados direto no GitHub.
 - [Plano de acao consolidado](docs/PLANO_DE_ACAO.md) — RF001-014,
   RN001-013 e sprint planning do server.
 - [Plano de apresentacao final](docs/PLANO_APRESENTACAO_FINAL.md) —

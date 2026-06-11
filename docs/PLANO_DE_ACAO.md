@@ -425,6 +425,7 @@ Antd usa portais — usar `screen.getByRole` + `userEvent.click`.
 - [ ] Criar `.github/workflows/ci.yml` em cada repo (lint + typecheck + test + i18n:check).
 - [ ] Badge de cobertura nos READMEs.
 - [ ] Documentar mapping i18n ↔ error codes em `docs/i18n-errors.md`.
+- [x] Adicionar diagramas UML em Mermaid (classes, sequência de login, sequência de jogar rodada e atividade da campanha) em [`server/docs/diagrams/`](diagrams/) (criterio 27 da rubrica).
 
 #### Critérios de aceite
 - CI roda em PR sem erros.
