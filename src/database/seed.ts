@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 
+import { env } from '../config/env';
 import { SeedError } from '../modules/shared/seedError';
 import {
   Ability,
@@ -262,6 +263,49 @@ const DEFAULT_USERS = [
     phone_number: '11900000003'
   }
 ] as const;
+
+/**
+ * Usuario administrador padrao (T5 — JWT com 2 permissoes).
+ *
+ * A senha vem da env `ADMIN_PASSWORD`; quando ausente, cai no
+ * DEFAULT_PASSWORD ('123456') — fallback APENAS para desenvolvimento local.
+ * Em producao defina ADMIN_PASSWORD com um valor forte (Render Dashboard).
+ *
+ * Idempotente: cria a conta apenas se o email nao existir; quando a conta ja
+ * existe, garante que a role continue 'admin' (a senha NAO e sobrescrita em
+ * execucoes subsequentes para nao invalidar trocas manuais).
+ */
+const DEFAULT_ADMIN = {
+  email: 'admin@autosoccer.dev',
+  name: 'Admin AutoSoccer',
+  nickname: 'admin'
+} as const;
+
+export const seedAdminUser = async (): Promise<void> => {
+  const password = env.adminPassword || DEFAULT_PASSWORD;
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  const [admin, created] = await User.findOrCreate({
+    where: { email: DEFAULT_ADMIN.email },
+    defaults: {
+      name: DEFAULT_ADMIN.name,
+      nickname: DEFAULT_ADMIN.nickname,
+      email: DEFAULT_ADMIN.email,
+      phone_number: null,
+      hashed_password: hashedPassword,
+      victory: 0,
+      defeat: 0,
+      trophies: 0,
+      coins: DEFAULT_COINS,
+      is_guest: false,
+      role: 'admin'
+    }
+  });
+
+  if (!created && admin.role !== 'admin') {
+    await admin.update({ role: 'admin' });
+  }
+};
 
 export const seedDefaultUsers = async (): Promise<void> => {
   const hashedPassword = await bcrypt.hash(DEFAULT_PASSWORD, 12);
@@ -786,6 +830,7 @@ export const seedReadyTeams = async (): Promise<void> => {
 };
 
 export const runDatabaseSeeds = async (): Promise<void> => {
+  await seedAdminUser();
   await seedDefaultUsers();
   await seedDefaultAthletes();
   await seedDefaultItems();

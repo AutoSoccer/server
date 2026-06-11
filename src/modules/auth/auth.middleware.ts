@@ -2,10 +2,17 @@ import { type FastifyReply, type FastifyRequest } from 'fastify';
 import jwt from 'jsonwebtoken';
 
 import { env } from '../../config/env';
+import { ServiceError } from './auth.service';
+import { type UserRole } from './user.model';
 
 declare module 'fastify' {
   interface FastifyRequest {
-    user?: { id: number; nickname: string };
+    /**
+     * Payload decodificado do JWT. `role` e opcional para manter
+     * compatibilidade com tokens emitidos antes do T5 (sem a claim);
+     * nesses casos o usuario e tratado como 'user'.
+     */
+    user?: { id: number; nickname: string; role?: UserRole };
   }
 }
 
@@ -48,6 +55,7 @@ export const authenticate = async (
     const decoded = jwt.verify(token, env.jwtSecret) as {
       id: number;
       nickname: string;
+      role?: UserRole;
     };
 
     request.user = decoded;
@@ -56,4 +64,36 @@ export const authenticate = async (
       message: translate(request, 'auth.tokenInvalid', 'Token invalido ou expirado.')
     });
   }
+};
+
+/**
+ * Guard de permissao (T5): exige que o JWT decodificado pelo `authenticate`
+ * carregue a claim `role` esperada. Deve ser usado SEMPRE depois do
+ * `authenticate` no mesmo preHandler:
+ *
+ *   preHandler: [authenticate, requireRole('admin')]
+ *
+ * Tokens antigos (sem a claim) sao tratados como 'user'. Quando a role nao
+ * confere, lanca `ServiceError('FORBIDDEN')` — o errorHandler global traduz
+ * para HTTP 403 com payload `{ code: 'FORBIDDEN', message }`.
+ */
+export const requireRole = (role: UserRole) => {
+  return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    // Defesa em profundidade: se a rota esquecer o `authenticate`, nao ha
+    // payload decodificado — respondemos 401 igual ao middleware base.
+    if (!request.user) {
+      return reply.code(401).send({
+        message: translate(request, 'auth.tokenMissing', 'Token nao fornecido.')
+      });
+    }
+
+    const userRole: UserRole = request.user.role ?? 'user';
+
+    if (userRole !== role) {
+      throw new ServiceError('FORBIDDEN', {
+        i18nKey: 'auth.forbidden',
+        params: { role }
+      });
+    }
+  };
 };

@@ -8,6 +8,13 @@ import {
 
 import { sequelize } from '../../config/database';
 
+/**
+ * Permissoes suportadas pelo JWT (T5). Usuarios comuns e convidados sao
+ * 'user'; contas administrativas (rotas /admin) sao 'admin'.
+ */
+export const USER_ROLES = ['user', 'admin'] as const;
+export type UserRole = (typeof USER_ROLES)[number];
+
 export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare id: CreationOptional<number>;
   declare name: string;
@@ -20,6 +27,8 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare trophies: CreationOptional<number>;
   declare coins: CreationOptional<number>;
   declare is_guest: CreationOptional<boolean>;
+  declare role: CreationOptional<UserRole>;
+  declare created_at: CreationOptional<Date>;
 }
 
 User.init(
@@ -76,6 +85,16 @@ User.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
+    },
+    role: {
+      type: DataTypes.ENUM(...USER_ROLES),
+      allowNull: false,
+      defaultValue: 'user'
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
     }
   },
   {

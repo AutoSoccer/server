@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Op, UniqueConstraintError } from 'sequelize';
 
 import { env } from '../../config/env';
-import { User } from './user.model';
+import { User, type UserRole } from './user.model';
 
 export type RegisterInput = {
   name: string;
@@ -31,10 +31,11 @@ type AuthResponse = {
     trophies: number;
     coins: number;
     is_guest: boolean;
+    role: UserRole;
   };
 };
 
-type ServiceErrorCode = 'CONFLICT' | 'INVALID_CREDENTIALS' | 'NOT_FOUND';
+type ServiceErrorCode = 'CONFLICT' | 'INVALID_CREDENTIALS' | 'NOT_FOUND' | 'FORBIDDEN';
 
 export type ServiceErrorOptions = {
   /**
@@ -82,14 +83,21 @@ const sanitizeUser = (user: User): AuthResponse['user'] => ({
   defeat: user.defeat,
   trophies: user.trophies,
   coins: user.coins,
-  is_guest: user.is_guest
+  is_guest: user.is_guest,
+  role: user.role ?? 'user'
 });
 
+/**
+ * Assina o JWT com as claims de identidade + permissao (T5). Todo token
+ * emitido (register, login e guest) carrega `role`; convidados e usuarios
+ * comuns recebem 'user', contas administrativas recebem 'admin'.
+ */
 const signToken = (user: User): string => {
   return jwt.sign(
     {
       id: user.id,
-      nickname: user.nickname
+      nickname: user.nickname,
+      role: user.role ?? 'user'
     },
     env.jwtSecret,
     {

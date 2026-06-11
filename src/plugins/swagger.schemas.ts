@@ -38,7 +38,8 @@ const UserResponse = {
     defeat: { type: 'integer', example: 0 },
     trophies: { type: 'integer', example: 0 },
     coins: { type: 'integer', example: 1000 },
-    is_guest: { type: 'boolean', example: false }
+    is_guest: { type: 'boolean', example: false },
+    role: { type: 'string', enum: ['user', 'admin'], example: 'user' }
   }
 } as const;
 
@@ -190,10 +191,51 @@ const RankingEntry = {
   }
 } as const;
 
+const AdminUserSummary = {
+  type: 'object',
+  required: ['id', 'nickname', 'email', 'role', 'coins', 'is_guest'],
+  properties: {
+    id: { type: 'integer', example: 1 },
+    nickname: { type: 'string', example: 'lucas' },
+    email: { type: 'string', example: 'lucas@gmail.com' },
+    role: { type: 'string', enum: ['user', 'admin'], example: 'user' },
+    coins: { type: 'integer', example: 10 },
+    is_guest: { type: 'boolean', example: false },
+    created_at: {
+      type: ['string', 'null'],
+      example: '2026-06-10T12:00:00.000Z',
+      description: 'Data de criacao da conta (ISO 8601).'
+    }
+  }
+} as const;
+
+const AdminUsersResponse = {
+  type: 'object',
+  required: ['users', 'pagination'],
+  properties: {
+    users: {
+      type: 'array',
+      items: { $ref: 'AdminUserSummary#' }
+    },
+    pagination: {
+      type: 'object',
+      required: ['page', 'limit', 'total', 'totalPages'],
+      properties: {
+        page: { type: 'integer', example: 1 },
+        limit: { type: 'integer', example: 20 },
+        total: { type: 'integer', example: 42 },
+        totalPages: { type: 'integer', example: 3 }
+      }
+    }
+  }
+} as const;
+
 export const swaggerSchemas = {
   ErrorResponse,
   AuthResponse,
   UserResponse,
+  AdminUserSummary,
+  AdminUsersResponse,
   Athlete,
   MarketResponse,
   TeamResponse,

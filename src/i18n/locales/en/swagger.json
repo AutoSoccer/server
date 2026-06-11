@@ -17,6 +17,7 @@
     "match": "Match simulation (12-turn engine)",
     "ranking": "General player ranking by trophies",
     "reports": "Analytical reports backed by stored procedures",
+    "admin": "Administrative routes (restricted to tokens with the admin role)",
     "system": "Utility endpoints and health checks"
   },
   "errorResponses": {
@@ -127,6 +128,12 @@
     "errors": {
       "INVALID_ROLE": "Invalid tactical role. Use defender, midfielder or attacker.",
       "INVALID_LIMIT": "Invalid limit parameter. Provide a positive integer."
+    }
+  },
+  "admin": {
+    "listUsers": {
+      "summary": "Lists registered users (admin only)",
+      "description": "Paginated user listing (id, nickname, email, role, coins, is_guest, created_at). Requires a JWT with the 'admin' role; regular users receive 403 FORBIDDEN."
     }
   },
   "system": {
