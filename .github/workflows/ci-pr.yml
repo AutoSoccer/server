@@ -17,6 +17,15 @@ jobs:
       contents: read
       pull-requests: write
 
+    # env.ts faz fail-fast no boot se DATABASE_URL/JWT_SECRET nao estiverem
+    # definidos. Esses valores sao dummies — nao tocam em banco real, so
+    # satisfazem o config loader durante os testes.
+    env:
+      NODE_ENV: test
+      DATABASE_URL: mysql://ci:ci@localhost:3306/ci
+      JWT_SECRET: ci-only-test-secret-not-for-production
+      CORS_ORIGIN: "*"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
