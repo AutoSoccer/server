@@ -7,7 +7,11 @@ export default defineConfig({
     environment: 'node',
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html', 'lcov'],
+      // O lcov.info precisa de paths RELATIVOS ao repo root para o SonarCloud
+      // conseguir casar contra `sonar.sources=src`. Sem `projectRoot: './'` o
+      // provider v8 grava caminhos absolutos do runner CI (/home/runner/...)
+      // e a cobertura no Sonar cai em 0%.
+      reporter: ['text', 'html', 'json-summary', ['lcov', { projectRoot: './' }]],
       include: [
         'src/modules/auth/**/*.ts',
         'src/modules/mercado/**/*.ts',
