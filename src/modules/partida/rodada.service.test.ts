@@ -91,8 +91,9 @@ const buildSnapshot = (overrides: Record<string, unknown> = {}) => ({
 });
 
 const stubTransaction = () => {
-  mocks.transaction.mockImplementation(async (callback: any) =>
-    callback({ LOCK: { UPDATE: 'UPDATE' } })
+  mocks.transaction.mockImplementation(
+    async (callback: (t: { LOCK: { UPDATE: string } }) => Promise<unknown>) =>
+      callback({ LOCK: { UPDATE: 'UPDATE' } })
   );
 };
 

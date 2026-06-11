@@ -70,7 +70,7 @@ const injectAndCollect = async (
     resolveAll = r;
   });
 
-  const ws = await (app as any).injectWS(
+  const ws = await (app as FastifyInstance & { injectWS: (path: string, opts?: Record<string, unknown>, wsOpts?: Record<string, unknown>) => Promise<WebSocket> }).injectWS(
     path,
     {},
     {
