@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci && npm run build && npm run db:migrate
+    buildCommand: yarn install --frozen-lockfile && yarn build && yarn db:migrate
     startCommand: node dist/index.js
     healthCheckPath: /health
     autoDeploy: true
