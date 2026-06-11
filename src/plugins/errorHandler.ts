@@ -60,6 +60,7 @@ const STATUS_BY_KEY: Record<string, number> = {
   'AuthServiceError:CONFLICT': 409,
   'AuthServiceError:INVALID_CREDENTIALS': 401,
   'AuthServiceError:NOT_FOUND': 404,
+  'AuthServiceError:FORBIDDEN': 403,
 
   // Mercado
   'MercadoServiceError:USER_NOT_FOUND': 404,

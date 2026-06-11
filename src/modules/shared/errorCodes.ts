@@ -16,6 +16,7 @@ export const ErrorCode = {
   Conflict: 'CONFLICT',
   InvalidCredentials: 'INVALID_CREDENTIALS',
   NotFound: 'NOT_FOUND',
+  Forbidden: 'FORBIDDEN',
 
   // Equipe (EquipeServiceError)
   EquipeInsufficientCoins: 'INSUFFICIENT_COINS',

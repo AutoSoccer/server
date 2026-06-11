@@ -30,10 +30,12 @@ final da resposta.
 | `Conflict` | `CONFLICT` | `AuthServiceError` | 409 | `auth.errors.CONFLICT` |
 | `InvalidCredentials` | `INVALID_CREDENTIALS` | `AuthServiceError` | 401 | `auth.errors.INVALID_CREDENTIALS` |
 | `NotFound` | `NOT_FOUND` | `AuthServiceError` | 404 | `auth.errors.NOT_FOUND` |
+| `Forbidden` | `FORBIDDEN` | `AuthServiceError` | 403 | `auth.errors.FORBIDDEN` |
 
 Chaves especificas usadas pelos fluxos:
 
 - `auth.tokenMissing`, `auth.tokenInvalid`
+- `auth.forbidden` (usada pelo `requireRole` com param `{{role}}`)
 - `auth.register.nameRequired`, `auth.register.fieldInUse`, `auth.register.uniqueConstraint`
 - `auth.guest.createFailed`
 - `auth.me.userNotFound`

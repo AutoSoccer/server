@@ -17,6 +17,7 @@
     "match": "Simulacao de partidas (motor de 12 turnos)",
     "ranking": "Ranking geral de jogadores por trofeus",
     "reports": "Relatorios analiticos servidos por stored procedures",
+    "admin": "Rotas administrativas (restritas a tokens com role admin)",
     "system": "Endpoints utilitarios e health checks"
   },
   "errorResponses": {
@@ -127,6 +128,12 @@
     "errors": {
       "INVALID_ROLE": "Posicao tatica invalida. Use defender, midfielder ou attacker.",
       "INVALID_LIMIT": "Parametro limit invalido. Informe um inteiro positivo."
+    }
+  },
+  "admin": {
+    "listUsers": {
+      "summary": "Lista usuarios cadastrados (somente admin)",
+      "description": "Listagem paginada de usuarios (id, nickname, email, role, coins, is_guest, created_at). Exige token JWT com role 'admin'; usuarios comuns recebem 403 FORBIDDEN."
     }
   },
   "system": {

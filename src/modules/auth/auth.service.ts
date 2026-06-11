@@ -35,7 +35,7 @@ type AuthResponse = {
   };
 };
 
-type ServiceErrorCode = 'CONFLICT' | 'INVALID_CREDENTIALS' | 'NOT_FOUND';
+type ServiceErrorCode = 'CONFLICT' | 'INVALID_CREDENTIALS' | 'NOT_FOUND' | 'FORBIDDEN';
 
 export type ServiceErrorOptions = {
   /**

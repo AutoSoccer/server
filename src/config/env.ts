@@ -66,7 +66,13 @@ export const env = {
   dbPassword: process.env.DB_PASSWORD ?? '',
   dbSsl: (process.env.DB_SSL ?? 'false').toLowerCase() === 'true',
   jwtSecret: requiredEnv('JWT_SECRET'),
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '5d'
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '5d',
+  /**
+   * Senha do usuario administrador criado pelo seed (T5). Opcional em
+   * desenvolvimento (o seed usa um fallback dev-only); em producao defina
+   * ADMIN_PASSWORD com um valor forte via dashboard de deploy.
+   */
+  adminPassword: process.env.ADMIN_PASSWORD ?? ''
 };
 
 // Guard de seguranca: em producao nao toleramos CORS wildcard (`*` ou string

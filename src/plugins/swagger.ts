@@ -42,6 +42,7 @@ export const registerSwagger = async (app: FastifyInstance): Promise<void> => {
         { name: 'Items', description: tSwagger('tags.items') },
         { name: 'Match', description: tSwagger('tags.match') },
         { name: 'Ranking', description: tSwagger('tags.ranking') },
+        { name: 'Admin', description: tSwagger('tags.admin') },
         { name: 'System', description: tSwagger('tags.system') }
       ],
       components: {

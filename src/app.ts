@@ -2,6 +2,7 @@ import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { env } from './config/env';
 import { tSwagger } from './i18n/swagger';
+import { adminRoutes } from './modules/admin/admin.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { equipeRoutes } from './modules/equipe/equipe.routes';
 import { itensRoutes } from './modules/itens/itens.routes';
@@ -129,6 +130,10 @@ export const buildApp = async (): Promise<FastifyInstance> => {
 
   await app.register(reportsRoutes, {
     prefix: '/reports'
+  });
+
+  await app.register(adminRoutes, {
+    prefix: '/admin'
   });
 
   return app;
