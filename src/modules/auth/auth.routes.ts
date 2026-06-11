@@ -42,7 +42,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
               format: 'email',
               example: 'lucas@gmail.com'
             },
-            phone_number: { type: 'string', example: '11900000001' }
+            phone_number: { type: 'string', maxLength: 20, example: '(41) 98715-2034' }
           }
         },
         response: {
