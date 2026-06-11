@@ -212,88 +212,93 @@ Para adicionar um novo erro:
    service.
 4. Atualize [`docs/i18n-errors.md`](docs/i18n-errors.md).
 
-## Deploy (Render + MySQL externo)
+## Deploy (Railway + MySQL plugin)
 
-A API foi preparada para rodar no [Render](https://render.com) free tier com banco
-MySQL gerenciado externamente (Railway, Aiven ou Clever Cloud).
+A API roda no [Railway](https://railway.com) usando Nixpacks como builder e o
+plugin MySQL gerenciado nativo do proprio Railway.
 
-URL publica esperada apos o deploy:
+URL publica:
 
-- API: `https://autosoccer-api.onrender.com`
-- Swagger UI: `https://autosoccer-api.onrender.com/docs`
-- Health check: `https://autosoccer-api.onrender.com/health`
+- API: `https://autosoccer-api-production.up.railway.app`
+- Swagger UI: `https://autosoccer-api-production.up.railway.app/docs`
+- Health check: `https://autosoccer-api-production.up.railway.app/health`
 
 ### Arquivos relevantes
 
-- [`render.yaml`](render.yaml): blueprint do servico (build, start, healthcheck, env vars).
-- [`.env.production.example`](.env.production.example): template das variaveis de ambiente
-  para o painel do Render.
+- [`.env.production.example`](.env.production.example): template das variaveis de
+  ambiente para o painel do Railway.
+- [`src/database/config.cjs`](src/database/config.cjs): a Sequelize CLI aceita tanto
+  `DATABASE_URL` (PaaS) quanto vars individuais (`DB_HOST`/`DB_USER`/etc).
 
 ### Variaveis de ambiente em producao
 
-| Variavel        | Onde definir          | Valor                                          |
-| --------------- | --------------------- | ---------------------------------------------- |
-| `NODE_ENV`      | `render.yaml`         | `production`                                   |
-| `APP_HOST`      | `render.yaml`         | `0.0.0.0`                                      |
-| `PORT`          | injetada pelo Render  | porta atribuida automaticamente                |
-| `CORS_ORIGIN`   | `render.yaml`         | URL do frontend (ex.: `https://autosoccer.vercel.app`) |
-| `DATABASE_URL`  | Render Dashboard (secret) | connection string MySQL (`mysql://user:pass@host:port/db`) |
-| `DB_SSL`        | `render.yaml`         | `true` (Railway/Aiven exigem SSL)              |
-| `JWT_SECRET`    | Render Dashboard (secret) | gerar com `openssl rand -hex 32`           |
-| `JWT_EXPIRES_IN`| `render.yaml`         | `5d`                                           |
+| Variavel        | Onde definir              | Valor                                                       |
+| --------------- | ------------------------- | ----------------------------------------------------------- |
+| `NODE_ENV`      | Railway Variables         | `production`                                                |
+| `APP_HOST`      | Railway Variables         | `0.0.0.0`                                                   |
+| `PORT`          | Railway Variables         | `3000` (Railway expoe a porta interna automaticamente)      |
+| `CORS_ORIGIN`   | Railway Variables         | URL do frontend (ex.: `https://autosoccer.vercel.app`) — `*` ou vazio quebra o boot em producao |
+| `DATABASE_URL`  | Railway Variables         | `${{MySQL.MYSQL_URL}}` (referencia ao plugin MySQL)         |
+| `DB_SSL`        | Railway Variables         | `false` (MySQL plugin nao exige SSL na rede interna)        |
+| `JWT_SECRET`    | Railway Variables (secret)| gerar com `openssl rand -base64 48`                         |
+| `JWT_EXPIRES_IN`| Railway Variables         | `7d`                                                        |
 
-Para gerar um `JWT_SECRET` forte:
+### Passos para subir no Railway
 
-```bash
-openssl rand -hex 32
-```
-
-### Passos para subir no Render
-
-1. Provisionar MySQL externo (escolher uma das opcoes):
-   - **Railway** (recomendado): plugin MySQL com ~$5 de credito gratuito por mes.
-   - **Aiven**: free trial de 1 mes.
-   - **Clever Cloud**: MySQL gratuito pequeno.
-   Anote a connection string no formato `mysql://USER:PASS@HOST:PORT/DB`.
-2. No Render Dashboard, criar um novo servico via **New > Blueprint** apontando para
-   este repositorio e selecionar o `server/render.yaml`.
-3. No painel do Render, preencher as secrets marcadas como `sync: false`:
-   `DATABASE_URL` (passo 1) e `JWT_SECRET` (gerar com `openssl rand -hex 32`).
-4. O build executa `npm ci && npm run build && npm run db:migrate`, garantindo que as
-   migrations rodam antes do primeiro start. Depois disso, `node dist/index.js` sobe a
-   API.
-5. Validar o deploy:
+1. Criar um **New Project > Empty Project** em https://railway.com.
+2. Adicionar o plugin **+ New > Database > MySQL** (o plugin expoe `MYSQL_URL`).
+3. Adicionar o servico **+ New > GitHub Repo > AutoSoccer/server** (Railway detecta
+   Node.js via Nixpacks).
+4. Em **Settings > Build**:
+   - Build Command: `npm install && npm run build`
+   - Start Command: `npm run db:migrate && node dist/index.js`
+5. Em **Variables**, configurar todas as vars da tabela acima — em especial
+   `DATABASE_URL=${{MySQL.MYSQL_URL}}` e `CORS_ORIGIN` com a URL real do front.
+6. Em **Settings > Networking**, clicar em **Generate Domain**.
+7. Validar:
    - `GET /health` retorna `200` com `{ status: 'ok' }`.
    - `GET /docs` exibe o Swagger UI.
 
-### Mantendo o servico acordado (free tier)
+### Deploy continuo (auto-deploy)
 
-O Render free tier hiberna apos 15min sem trafego. Para evitar cold start nas demos,
-configure um monitor gratuito no [UptimeRobot](https://uptimerobot.com):
+A cada `git push origin main`, o Railway reconstroi e publica via webhook do
+GitHub. Para deploy rapido sem commit, use a Railway CLI:
+
+```bash
+npm install -g @railway/cli
+railway login
+railway link        # dentro de server/, selecionar o service autosoccer-api
+railway up          # upload direto + build + deploy
+```
+
+### Monitoramento (UptimeRobot)
+
+Para checar uptime gratuitamente, configurar um monitor em
+[UptimeRobot](https://uptimerobot.com):
 
 1. Criar conta e novo monitor do tipo **HTTP(s)**.
-2. URL: `https://autosoccer-api.onrender.com/health`.
-3. Intervalo: 10 minutos (limite do plano free).
+2. URL: `https://autosoccer-api-production.up.railway.app/health`.
+3. Intervalo: 5 minutos.
 
 ### Smoke test pos-deploy
 
 ```bash
 # Registrar usuario
-curl -X POST https://autosoccer-api.onrender.com/auth/register \
+curl -X POST https://autosoccer-api-production.up.railway.app/auth/register \
   -H 'Content-Type: application/json' \
   -d '{"email":"demo@example.com","password":"Demo@1234","name":"Demo"}'
 
 # Login
-curl -X POST https://autosoccer-api.onrender.com/auth/login \
+curl -X POST https://autosoccer-api-production.up.railway.app/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"demo@example.com","password":"Demo@1234"}'
 
 # Listar mercado (use o token do login)
-curl https://autosoccer-api.onrender.com/market \
+curl https://autosoccer-api-production.up.railway.app/market \
   -H 'Authorization: Bearer <token>'
 
 # Jogar uma rodada
-curl -X POST https://autosoccer-api.onrender.com/match/play-round \
+curl -X POST https://autosoccer-api-production.up.railway.app/match/play-round \
   -H 'Authorization: Bearer <token>'
 ```
 
@@ -304,12 +309,9 @@ yarn install
 yarn build
 NODE_ENV=production \
   DATABASE_URL="mysql://user:password@host:3306/auto_soccer" \
-  JWT_SECRET="$(openssl rand -hex 32)" \
-  CORS_ORIGIN="*" \
+  JWT_SECRET="$(openssl rand -base64 48)" \
+  CORS_ORIGIN="http://localhost:3000" \
   APP_HOST=0.0.0.0 \
   PORT=3333 \
   node dist/index.js
 ```
-
-> Apos a primeira publicacao, atualizar este README substituindo a URL provisoria
-> `https://autosoccer-api.onrender.com` pela URL real do servico no Render.

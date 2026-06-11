@@ -476,13 +476,13 @@ CI sem MySQL — manter unit + integration mockados.
 - [ ] Configurar Render Dashboard com variáveis sensíveis (`DATABASE_URL`, `JWT_SECRET`).
 - [ ] Adicionar `preDeployCommand` rodando migrations (`npm run db:migrate`).
 - [ ] Configurar **UptimeRobot** (free) pingando `/health` a cada 10min para evitar hibernação free tier.
-- [ ] Atualizar `server/README.md` com URL pública (`https://autosoccer-api.onrender.com/docs`).
+- [ ] Atualizar `server/README.md` com URL pública (`https://autosoccer-api-production.up.railway.app/docs`).
 - [ ] Smoke test pós-deploy: registrar usuário, fazer login, listar mercado, rodar uma rodada.
 - [ ] Adicionar badge "API · live" no README apontando para `/docs`.
 
 #### Critérios de aceite
-- `https://autosoccer-api.onrender.com/docs` acessível publicamente.
-- `https://autosoccer-api.onrender.com/health` retorna 200.
+- `https://autosoccer-api-production.up.railway.app/docs` acessível publicamente.
+- `https://autosoccer-api-production.up.railway.app/health` retorna 200.
 - Migrations executadas com sucesso no deploy.
 - CORS aceita requisições do front em produção.
 - README documenta URL e fluxo de redeploy.

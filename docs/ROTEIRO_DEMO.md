@@ -48,7 +48,7 @@ Cronograma alvo: 15 min de apresentacao + 5 min de Q&A. Cada slide tem dono prim
 | 12:10–12:50 | 23. BDD + User Stories | Lucas B | 3 .feature em Gherkin + 3 US com criterios. |
 | 12:50–13:20 | 24. CI/CD GitHub Actions | Lucas B | lint + typecheck + i18n:check + test + build. |
 | 13:20–13:50 | 25. Sonar + UptimeRobot | Lucas B | Quality gate + ping /health a cada 5 min. |
-| 13:50–14:30 | 26. Deploy + .env | Lucas B | Cloudways (back) + Vercel (front) + secrets sync:false. |
+| 13:50–14:30 | 26. Deploy + .env | Lucas B | Railway (back + MySQL) + Vercel (front) + secrets sync:false. |
 | 14:30–18:30 | 27. DEMO AO VIVO | Lucas S dirige | 4 fluxos cronometrados (ver secao 2). |
 | 18:30–19:30 | 28. Metricas + licoes + Q&A | Grupo | Cobertura, criterios atendidos, retro curta. |
 | 19:30–20:00 | Q&A | Grupo | Perguntas dos professores. |
@@ -64,7 +64,7 @@ Demo ocorre entre 14:30 e 18:30 (4 minutos), driver Lucas S no laptop principal 
 ### Setup pre-apresentacao (checklist 30 min antes)
 
 - [ ] Laptop ligado, carregador conectado, projetor reconhecido em modo espelhado
-- [ ] Backend em producao (Cloudways) respondendo em `https://api.autosoccer.app/health`
+- [ ] Backend em producao (Railway) respondendo em `https://autosoccer-api-production.up.railway.app/health`
 - [ ] Frontend em producao (Vercel) abrindo em `https://autosoccer.vercel.app`
 - [ ] Backup local: `yarn dev` rodando no front (porta 3000) e `yarn dev` no back (porta 8080) com MySQL via Docker
 - [ ] Conta seed `admin@autosoccer.app` / `Admin123!` testada login OK
@@ -72,7 +72,7 @@ Demo ocorre entre 14:30 e 18:30 (4 minutos), driver Lucas S no laptop principal 
 - [ ] Browser limpo, sem extensoes visiveis, modo apresentacao do Chrome (F11)
 - [ ] DevTools fechado, zoom 110% para legibilidade no projetor
 - [ ] Idioma do navegador em pt-BR inicialmente, tema light
-- [ ] Aba 1: front em prod; Aba 2: Swagger; Aba 3: GitHub Actions; Aba 4: Cloudways console; Aba 5: UptimeRobot dashboard
+- [ ] Aba 1: front em prod; Aba 2: Swagger; Aba 3: GitHub Actions; Aba 4: Railway dashboard; Aba 5: UptimeRobot dashboard
 - [ ] Video de backup (`apresentacao/backup-demo.mp4`) acessivel em pasta local
 - [ ] Slides .pptx abertos em modo apresentacao em segunda tela
 
@@ -107,7 +107,7 @@ Demo ocorre entre 14:30 e 18:30 (4 minutos), driver Lucas S no laptop principal 
 **Objetivo:** mostrar API documentada, autenticacao admin e relatorios com stored procedure.
 
 1. (00:00) Lucas S passa a vez para Pedro
-2. (00:05) Abrir aba 2: `https://api.autosoccer.app/docs` (Swagger UI)
+2. (00:05) Abrir aba 2: `https://autosoccer-api-production.up.railway.app/docs` (Swagger UI)
 3. (00:15) Mostrar agrupamento de rotas: Auth, Athletes, Team, Market, Match, Ranking, Admin
 4. (00:30) Clicar em `POST /auth/login`, autenticar como `admin@autosoccer.app`, copiar JWT
 5. (00:45) Colar JWT no botao "Authorize" do Swagger
@@ -118,14 +118,14 @@ Demo ocorre entre 14:30 e 18:30 (4 minutos), driver Lucas S no laptop principal 
 
 ### Fluxo 4 — Pipeline CI/CD + producao (Lucas B) — 17:30–18:30 (~1 min)
 
-**Objetivo:** mostrar GitHub Actions verde, Cloudways rodando, UptimeRobot historico.
+**Objetivo:** mostrar GitHub Actions verde, Railway rodando, UptimeRobot historico.
 
 1. (00:00) Pedro passa a vez para Lucas B
 2. (00:05) Abrir aba 3: GitHub Actions do repo `server` — mostrar ultimo workflow verde
 3. (00:15) Abrir um job recente: mostrar steps `lint`, `typecheck`, `i18n:check`, `test` (84% cobertura), `build`
-4. (00:30) Abrir aba 4: Cloudways console mostrando app rodando + PM2 status online
+4. (00:30) Abrir aba 4: Railway dashboard mostrando app rodando + PM2 status online
 5. (00:45) Abrir aba 5: UptimeRobot dashboard com uptime 99.9% nos ultimos 7 dias
-6. (00:55) Fechar com: "pipeline em PR e main, deploy automatico via Git Pull no Cloudways, monitoramento ativo desde 16/06"
+6. (00:55) Fechar com: "pipeline em PR e main, deploy automatico via webhook do GitHub no Railway, monitoramento ativo desde 16/06"
 
 **Narracao chave:** "do commit ate o usuario final, tudo automatizado e observavel."
 
@@ -142,7 +142,7 @@ Cenarios de falha durante a apresentacao com acao imediata. Driver decide em <10
 - MySQL via Docker compose (`docker compose up -d mysql`) ja rodando antes da apresentacao
 - Avisar audiencia: "estamos rodando localmente porque o auditorio nao tem rede, mas o codigo e o mesmo de producao"
 
-### B2. Backend em producao caiu (Cloudways down)
+### B2. Backend em producao caiu (Railway down)
 
 - Pular para backend local (passo B1 parcial)
 - Se nao houver tempo: usar video gravado `apresentacao/backup-demo.mp4` (60s editado com narracao)
@@ -185,7 +185,7 @@ Cenarios de falha durante a apresentacao com acao imediata. Driver decide em <10
 ### Materiais de backup em pasta `apresentacao/backup/`
 
 - `backup-demo.mp4` — video de 60s com os 4 fluxos ja gravados
-- `screenshots/` — 12 PNGs das telas chave (landing, login, dashboard, market, team, battle, ranking, swagger, gh-actions, cloudways, uptimerobot, sonar)
+- `screenshots/` — 12 PNGs das telas chave (landing, login, dashboard, market, team, battle, ranking, swagger, gh-actions, railway, uptimerobot, sonar)
 - `slides-export.pdf` — PDF dos slides caso o PowerPoint trave
 - `seed-data.sql` — dump do MySQL com dados de demo prontos
 
@@ -271,7 +271,7 @@ Frase de abertura sugerida (1-2 linhas) para cada slide. Driver pode adaptar com
 **Lucas B:** "SonarCloud com quality gate aprovado e badge no README. UptimeRobot fazendo ping no /health a cada 5 minutos — 99.9% nos ultimos 7 dias."
 
 ### Slide 26 — Deploy + .env
-**Lucas B:** "Backend no Cloudways via Git Pull + PM2, frontend na Vercel. Secrets no painel, nunca no repo. Sequelize com sync:false — apenas migrations."
+**Lucas B:** "Backend no Railway via auto-deploy + MySQL plugin nativo, frontend na Vercel. Secrets no painel, nunca no repo. Sequelize com sync:false — apenas migrations."
 
 ### Slide 27 — DEMO AO VIVO
 **Lucas S:** "Agora deixa eu mostrar o produto rodando. Vou passar por 4 fluxos: login com dark mode, mercado com drag-and-drop, relatorios no Swagger e a pipeline de deploy."

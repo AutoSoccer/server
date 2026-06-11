@@ -208,7 +208,7 @@ Fechar gaps de avaliação da disciplina (BDD, UML, papéis de usuário, dark mo
 - US-054 Coluna `role` na tabela `users` e propagação no payload JWT.
 - US-055 Middleware `requireRole` e rota `GET /admin/users`.
 - US-056 Stored procedure `sp_get_top_athletes_by_role` para relatórios.
-- US-057 Deploy no Cloudways (homologação da entrega final).
+- US-057 Deploy no Railway (homologação da entrega final).
 - US-058 Plano de ação para apresentação final 23/06.
 
 ### Atribuição
@@ -226,7 +226,7 @@ Fechar gaps de avaliação da disciplina (BDD, UML, papéis de usuário, dark mo
 
 ### Definition of Done específica
 
-- Deploy Cloudways respondendo na URL pública.
+- Deploy Railway respondendo na URL pública.
 - BDD, UML e user stories versionados em `server/docs/`.
 - Dark mode acessível via toggle e respeitando `prefers-color-scheme`.
 - Apresentação final ensaiada pelo menos uma vez com tempo cronometrado.
