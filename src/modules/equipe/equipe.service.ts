@@ -164,10 +164,7 @@ const ensureTeam = async (userId: number, transaction: Transaction): Promise<Tea
   );
 };
 
-export const buyAthlete = async (
-  userId: number,
-  athleteId: number
-): Promise<BuyAthleteResult> => {
+export const buyAthlete = async (userId: number, athleteId: number): Promise<BuyAthleteResult> => {
   return sequelize.transaction(async (transaction) => {
     const user = await User.findByPk(userId, {
       transaction,

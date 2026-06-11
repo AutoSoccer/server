@@ -31,11 +31,7 @@ vi.mock('../../database/models', () => ({
   }
 }));
 
-import {
-  abandonCampaign,
-  CampaignServiceError,
-  startCampaign
-} from './campaign.service';
+import { abandonCampaign, CampaignServiceError, startCampaign } from './campaign.service';
 
 describe('abandonCampaign', () => {
   beforeEach(() => {
@@ -110,9 +106,7 @@ describe('abandonCampaign', () => {
   it('recusa usuario inexistente', async () => {
     mocks.findUser.mockResolvedValue(null);
 
-    await expect(abandonCampaign(999)).rejects.toBeInstanceOf(
-      CampaignServiceError
-    );
+    await expect(abandonCampaign(999)).rejects.toBeInstanceOf(CampaignServiceError);
   });
 });
 

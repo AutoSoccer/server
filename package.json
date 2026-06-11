@@ -19,6 +19,7 @@
     "test:integration": "vitest run src/__tests__/integration",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "i18n:check": "node scripts/check-i18n.mjs"
   },
   "repository": {
@@ -57,7 +58,7 @@
     "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.4",
     "sequelize-cli": "^6.6.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",

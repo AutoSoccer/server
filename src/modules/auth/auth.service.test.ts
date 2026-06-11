@@ -81,9 +81,7 @@ describe('registerUser', () => {
   });
 
   it('recusa quando o nickname ja existe', async () => {
-    mocks.findOne.mockResolvedValue(
-      buildUser({ nickname: 'lucas', email: 'outro@example.com' })
-    );
+    mocks.findOne.mockResolvedValue(buildUser({ nickname: 'lucas', email: 'outro@example.com' }));
 
     await expect(
       registerUser({
@@ -101,9 +99,7 @@ describe('registerUser', () => {
   });
 
   it('recusa quando o email ja existe', async () => {
-    mocks.findOne.mockResolvedValue(
-      buildUser({ nickname: 'outro', email: 'lucas@example.com' })
-    );
+    mocks.findOne.mockResolvedValue(buildUser({ nickname: 'outro', email: 'lucas@example.com' }));
 
     await expect(
       registerUser({
@@ -174,9 +170,9 @@ describe('loginUser', () => {
   it('rejeita usuario inexistente com INVALID_CREDENTIALS', async () => {
     mocks.findOne.mockResolvedValue(null);
 
-    await expect(
-      loginUser({ identifier: 'fantasma', password: '123' })
-    ).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS' });
+    await expect(loginUser({ identifier: 'fantasma', password: '123' })).rejects.toMatchObject({
+      code: 'INVALID_CREDENTIALS'
+    });
     expect(mocks.compare).not.toHaveBeenCalled();
   });
 
@@ -184,9 +180,9 @@ describe('loginUser', () => {
     mocks.findOne.mockResolvedValue(buildUser());
     mocks.compare.mockResolvedValue(false);
 
-    await expect(
-      loginUser({ identifier: 'lucas', password: 'errada' })
-    ).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS' });
+    await expect(loginUser({ identifier: 'lucas', password: 'errada' })).rejects.toMatchObject({
+      code: 'INVALID_CREDENTIALS'
+    });
   });
 });
 

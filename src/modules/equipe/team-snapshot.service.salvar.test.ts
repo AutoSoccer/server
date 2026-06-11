@@ -67,9 +67,9 @@ beforeEach(() => {
 
 describe('salvarEstadoEquipe — validacao previa', () => {
   it('lanca antes de abrir transacao quando positions sao invalidas', async () => {
-    await expect(
-      salvarEstadoEquipe({ userId: 1, positions: [] })
-    ).rejects.toThrow(TeamSnapshotError);
+    await expect(salvarEstadoEquipe({ userId: 1, positions: [] })).rejects.toThrow(
+      TeamSnapshotError
+    );
 
     expect(mocks.transaction).not.toHaveBeenCalled();
     expect(mocks.findTeam).not.toHaveBeenCalled();
@@ -126,9 +126,7 @@ describe('salvarEstadoEquipe — busca da equipe', () => {
     } catch (error: unknown) {
       expect(error).toBeInstanceOf(TeamSnapshotError);
       expect((error as TeamSnapshotError).code).toBe('TEAM_NOT_FOUND');
-      expect((error as TeamSnapshotError).i18nKey).toBe(
-        'equipe.snapshot.teamNotFound'
-      );
+      expect((error as TeamSnapshotError).i18nKey).toBe('equipe.snapshot.teamNotFound');
     }
   });
 
@@ -216,9 +214,7 @@ describe('salvarEstadoEquipe — propriedade dos atletas', () => {
     } catch (error: unknown) {
       expect(error).toBeInstanceOf(TeamSnapshotError);
       expect((error as TeamSnapshotError).code).toBe('ATHLETE_NOT_IN_TEAM');
-      expect((error as TeamSnapshotError).i18nKey).toBe(
-        'equipe.snapshot.athleteNoLongerInTeam'
-      );
+      expect((error as TeamSnapshotError).i18nKey).toBe('equipe.snapshot.athleteNoLongerInTeam');
     }
   });
 });
@@ -288,9 +284,7 @@ describe('salvarEstadoEquipe — happy path e grid', () => {
   it('chama computeVictoryRatio com victory/lose/draw do time', async () => {
     const athlete = buildAthlete({ id: 100 });
     mocks.findTeam.mockResolvedValue(teamWithAthletes([athlete]));
-    mocks.findAllTeamAthletes.mockResolvedValue([
-      { team_id: 10, athlete_id: 100 }
-    ]);
+    mocks.findAllTeamAthletes.mockResolvedValue([{ team_id: 10, athlete_id: 100 }]);
     mocks.createSnapshot.mockResolvedValue({
       id: 200,
       round: 1,
@@ -316,14 +310,10 @@ describe('salvarEstadoEquipe — happy path e grid', () => {
       lose: undefined,
       draw: undefined,
       round: undefined,
-      get: vi.fn((key: string) =>
-        key === 'athletes' ? [athlete] : undefined
-      )
+      get: vi.fn((key: string) => (key === 'athletes' ? [athlete] : undefined))
     };
     mocks.findTeam.mockResolvedValue(teamNoStats);
-    mocks.findAllTeamAthletes.mockResolvedValue([
-      { team_id: 10, athlete_id: 100 }
-    ]);
+    mocks.findAllTeamAthletes.mockResolvedValue([{ team_id: 10, athlete_id: 100 }]);
     mocks.createSnapshot.mockResolvedValue({
       id: 200,
       round: 1,
@@ -349,9 +339,7 @@ describe('salvarEstadoEquipe — happy path e grid', () => {
   it('passa transaction para findTeam, findAllTeamAthletes e createSnapshot', async () => {
     const athlete = buildAthlete({ id: 100 });
     mocks.findTeam.mockResolvedValue(teamWithAthletes([athlete]));
-    mocks.findAllTeamAthletes.mockResolvedValue([
-      { team_id: 10, athlete_id: 100 }
-    ]);
+    mocks.findAllTeamAthletes.mockResolvedValue([{ team_id: 10, athlete_id: 100 }]);
     mocks.createSnapshot.mockResolvedValue({
       id: 200,
       round: 1,
@@ -369,9 +357,7 @@ describe('salvarEstadoEquipe — happy path e grid', () => {
       positions: [{ athleteId: 100, posX: 0, posY: 0 }]
     });
 
-    expect(mocks.findTeam).toHaveBeenCalledWith(
-      expect.objectContaining({ transaction: fakeTx })
-    );
+    expect(mocks.findTeam).toHaveBeenCalledWith(expect.objectContaining({ transaction: fakeTx }));
     expect(mocks.findAllTeamAthletes).toHaveBeenCalledWith(
       expect.objectContaining({ transaction: fakeTx })
     );
@@ -407,9 +393,7 @@ describe('salvarEstadoEquipe — happy path e grid', () => {
       )
     };
     mocks.findTeam.mockResolvedValue(teamWithNulls);
-    mocks.findAllTeamAthletes.mockResolvedValue([
-      { team_id: 10, athlete_id: 100 }
-    ]);
+    mocks.findAllTeamAthletes.mockResolvedValue([{ team_id: 10, athlete_id: 100 }]);
     mocks.createSnapshot.mockResolvedValue({
       id: 200,
       round: 1,

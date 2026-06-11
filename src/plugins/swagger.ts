@@ -60,9 +60,7 @@ export const registerSwagger = async (app: FastifyInstance): Promise<void> => {
     refResolver: {
       buildLocalReference: (json, _baseUri, _fragment, index) => {
         const candidate = (json as { $id?: unknown }).$id;
-        return typeof candidate === 'string' && candidate.length > 0
-          ? candidate
-          : `def-${index}`;
+        return typeof candidate === 'string' && candidate.length > 0 ? candidate : `def-${index}`;
       }
     }
   });

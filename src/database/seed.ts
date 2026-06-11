@@ -14,10 +14,7 @@ import {
   User,
   UserItem
 } from './models';
-import type {
-  SnapshotAthlete,
-  SnapshotPositions
-} from './models/team-snapshot.model';
+import type { SnapshotAthlete, SnapshotPositions } from './models/team-snapshot.model';
 
 /** Saldo inicial padrao de coins para usuarios (RF010). */
 const DEFAULT_COINS = 10;
@@ -374,8 +371,7 @@ export const seedDefaultAthletes = async (): Promise<void> => {
   const abilityByName = createAbilityMap(abilities);
 
   for (const player of CURATED_PLAYER_POOL) {
-    const ability =
-      abilityByName.get(ABILITY_BY_TYPE[player.type]) ?? abilities[0];
+    const ability = abilityByName.get(ABILITY_BY_TYPE[player.type]) ?? abilities[0];
     const stats = statsForPlayer(player);
     const existing = await Athlete.findOne({ where: { name: player.name } });
 
@@ -526,19 +522,13 @@ const createAthleteBuckets = (athletes: Athlete[]): AthleteBuckets => ({
   attacker: athletes.filter((athlete) => athlete.type === 'attacker')
 });
 
-const CURATED_PLAYER_NAMES = new Set(
-  CURATED_PLAYER_POOL.map((player) => player.name)
-);
+const CURATED_PLAYER_NAMES = new Set(CURATED_PLAYER_POOL.map((player) => player.name));
 
 const createCuratedAthleteBuckets = (athletes: Athlete[]): AthleteBuckets =>
-  createAthleteBuckets(
-    athletes.filter((athlete) => CURATED_PLAYER_NAMES.has(athlete.name))
-  );
+  createAthleteBuckets(athletes.filter((athlete) => CURATED_PLAYER_NAMES.has(athlete.name)));
 
 const emptySnapshotPositions = (): SnapshotPositions =>
-  Array.from({ length: 3 }, () =>
-    Array.from({ length: 3 }, () => null as SnapshotAthlete | null)
-  );
+  Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => null as SnapshotAthlete | null));
 
 const toSnapshotAthlete = (athlete: Athlete): SnapshotAthlete => ({
   id: athlete.id,
@@ -561,21 +551,15 @@ const FORMATION_ROWS: Array<{ type: AthleteType; row: number }> = [
   { type: 'attacker', row: 2 }
 ];
 
-export const botAthleteCountForRound = (round: number): 3 | 6 =>
-  round <= 1 ? 3 : 6;
+export const botAthleteCountForRound = (round: number): 3 | 6 => (round <= 1 ? 3 : 6);
 
-export const buildBotFormation = (
-  seed: number,
-  athleteCount: 3 | 6 = 6
-): BotFormationSlot[] => {
+export const buildBotFormation = (seed: number, athleteCount: 3 | 6 = 6): BotFormationSlot[] => {
   const normalizedSeed = Math.abs(Math.trunc(seed));
 
   return FORMATION_ROWS.flatMap(({ type, row }, rowIndex) => {
     const selectedColumn = Math.floor(normalizedSeed / 3 ** rowIndex) % 3;
     const columns =
-      athleteCount === 3
-        ? [selectedColumn]
-        : [0, 1, 2].filter((col) => col !== selectedColumn);
+      athleteCount === 3 ? [selectedColumn] : [0, 1, 2].filter((col) => col !== selectedColumn);
 
     return columns.map((col) => ({ type, row, col }));
   });
@@ -704,12 +688,10 @@ export const seedBotOpponents = async (): Promise<void> => {
     existingByTeam.set(
       bot.team.id,
       new Map(
-        existingSnapshots.map(
-          (snapshot) => [
-            `${snapshot.victory}:${snapshot.lose}:${snapshot.draw}`,
-            snapshot
-          ]
-        )
+        existingSnapshots.map((snapshot) => [
+          `${snapshot.victory}:${snapshot.lose}:${snapshot.draw}`,
+          snapshot
+        ])
       )
     );
   }
@@ -725,16 +707,8 @@ export const seedBotOpponents = async (): Promise<void> => {
       victory: state.victory,
       lose: state.lose,
       draw: state.draw,
-      victory_ratio: computeSnapshotVictoryRatio(
-        state.victory,
-        state.lose,
-        state.draw
-      ),
-      positions: buildBotPositions(
-        byType,
-        index,
-        botAthleteCountForRound(round)
-      )
+      victory_ratio: computeSnapshotVictoryRatio(state.victory, state.lose, state.draw),
+      positions: buildBotPositions(byType, index, botAthleteCountForRound(round))
     };
     const existingSnapshot = existing.get(key);
 
@@ -773,8 +747,7 @@ export const seedReadyTeams = async (): Promise<void> => {
     midfielder: 0,
     attacker: 0
   };
-  const take = (type: AthleteType): Athlete | undefined =>
-    byType[type][cursor[type]++];
+  const take = (type: AthleteType): Athlete | undefined => byType[type][cursor[type]++];
 
   // Composicao 2 DEF + 2 MID + 2 ATK = 6 atletas (TEAM_MAX).
   const composition: AthleteType[] = [

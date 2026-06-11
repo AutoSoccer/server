@@ -19,8 +19,7 @@ const ErrorResponse = {
     details: {
       type: 'object',
       additionalProperties: true,
-      description:
-        'Campo opcional com metadados estruturados sobre o erro (ex.: campos invalidos).'
+      description: 'Campo opcional com metadados estruturados sobre o erro (ex.: campos invalidos).'
     }
   }
 } as const;
@@ -75,11 +74,16 @@ const Athlete = {
     position: {
       type: 'string',
       enum: ['defender', 'midfielder', 'attacker'],
-      description: 'Posicao tatica do atleta (campo "type" do modelo). Em respostas legadas pode aparecer apenas como "type".'
+      description:
+        'Posicao tatica do atleta (campo "type" do modelo). Em respostas legadas pode aparecer apenas como "type".'
     },
     attack: { type: 'integer', example: 60 },
     defense: { type: 'integer', example: 40 },
-    speed: { type: 'integer', example: 55, description: 'Velocidade do atleta (alias de "velocity" no modelo).' },
+    speed: {
+      type: 'integer',
+      example: 55,
+      description: 'Velocidade do atleta (alias de "velocity" no modelo).'
+    },
     cost: { type: 'integer', example: 4 },
     ability_id: {
       type: ['integer', 'null'],

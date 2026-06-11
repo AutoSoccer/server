@@ -109,11 +109,7 @@ const normalizeRole = (raw: unknown): ReportRole | null => {
   return normalized as ReportRole;
 };
 
-const normalizeLimit = (
-  raw: unknown,
-  fallback: number,
-  max: number
-): number => {
+const normalizeLimit = (raw: unknown, fallback: number, max: number): number => {
   if (raw === undefined || raw === null) {
     return fallback;
   }
@@ -168,13 +164,10 @@ export const getTopAthletesByRole = async (
   const role = normalizeRole(roleInput);
   const limit = normalizeLimit(limitInput, DEFAULT_TOP_LIMIT, MAX_TOP_LIMIT);
 
-  const rows = (await sequelize.query(
-    'CALL sp_get_top_athletes_by_role(:role, :limit)',
-    {
-      type: QueryTypes.RAW,
-      replacements: { role, limit }
-    }
-  )) as unknown;
+  const rows = (await sequelize.query('CALL sp_get_top_athletes_by_role(:role, :limit)', {
+    type: QueryTypes.RAW,
+    replacements: { role, limit }
+  })) as unknown;
 
   const dataset = extractDataset<RawTopAthleteRow>(rows);
 

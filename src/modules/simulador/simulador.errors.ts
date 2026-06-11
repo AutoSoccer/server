@@ -20,10 +20,7 @@ export class SimuladorServiceError extends Error {
   public readonly i18nKey: string;
   public readonly params?: Record<string, unknown>;
 
-  constructor(
-    code: SimuladorServiceErrorCode,
-    options: SimuladorServiceErrorOptions = {}
-  ) {
+  constructor(code: SimuladorServiceErrorCode, options: SimuladorServiceErrorOptions = {}) {
     const i18nKey = options.i18nKey ?? `simulador.errors.${code}`;
     super(i18nKey);
     this.name = 'SimuladorServiceError';

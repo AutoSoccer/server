@@ -38,12 +38,7 @@ vi.mock('../../database/models', () => ({
   }
 }));
 
-import {
-  getMarket,
-  MercadoServiceError,
-  REFRESH_COST,
-  refreshMarket
-} from './mercado.service';
+import { getMarket, MercadoServiceError, REFRESH_COST, refreshMarket } from './mercado.service';
 
 const setupTransaction = () => {
   mocks.transaction.mockImplementation(async (callback) =>

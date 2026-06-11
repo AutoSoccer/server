@@ -14,10 +14,7 @@ const position = (athleteId: number, posX: number, posY: number) => ({
   posY
 });
 
-const expectValidationCode = (
-  callback: () => unknown,
-  code: TeamSnapshotError['code']
-) => {
+const expectValidationCode = (callback: () => unknown, code: TeamSnapshotError['code']) => {
   try {
     callback();
     throw new Error(`Era esperado o erro ${code}.`);
@@ -100,147 +97,99 @@ describe('TeamSnapshotError', () => {
 
 describe('validateAthletePositions — shape validation', () => {
   it('recusa entrada nao-array', () => {
-    expectValidationError(
-      () => validateAthletePositions(null),
-      {
-        code: 'INVALID_BODY',
-        i18nKey: 'equipe.snapshot.invalidBody.positionsArray'
-      }
-    );
+    expectValidationError(() => validateAthletePositions(null), {
+      code: 'INVALID_BODY',
+      i18nKey: 'equipe.snapshot.invalidBody.positionsArray'
+    });
 
-    expectValidationError(
-      () => validateAthletePositions(undefined),
-      {
-        code: 'INVALID_BODY',
-        i18nKey: 'equipe.snapshot.invalidBody.positionsArray'
-      }
-    );
+    expectValidationError(() => validateAthletePositions(undefined), {
+      code: 'INVALID_BODY',
+      i18nKey: 'equipe.snapshot.invalidBody.positionsArray'
+    });
 
-    expectValidationError(
-      () => validateAthletePositions('foo'),
-      { code: 'INVALID_BODY' }
-    );
+    expectValidationError(() => validateAthletePositions('foo'), { code: 'INVALID_BODY' });
 
-    expectValidationError(
-      () => validateAthletePositions({ foo: 'bar' }),
-      { code: 'INVALID_BODY' }
-    );
+    expectValidationError(() => validateAthletePositions({ foo: 'bar' }), { code: 'INVALID_BODY' });
 
-    expectValidationError(
-      () => validateAthletePositions(42),
-      { code: 'INVALID_BODY' }
-    );
+    expectValidationError(() => validateAthletePositions(42), { code: 'INVALID_BODY' });
   });
 
   it('recusa entries que nao sao objetos', () => {
-    expectValidationError(
-      () => validateAthletePositions([null]),
-      {
-        code: 'INVALID_BODY',
-        i18nKey: 'equipe.snapshot.invalidBody.positionsObject'
-      }
-    );
+    expectValidationError(() => validateAthletePositions([null]), {
+      code: 'INVALID_BODY',
+      i18nKey: 'equipe.snapshot.invalidBody.positionsObject'
+    });
 
-    expectValidationError(
-      () => validateAthletePositions([undefined]),
-      { code: 'INVALID_BODY' }
-    );
+    expectValidationError(() => validateAthletePositions([undefined]), { code: 'INVALID_BODY' });
 
-    expectValidationError(
-      () => validateAthletePositions(['string-no-objeto']),
-      { code: 'INVALID_BODY' }
-    );
+    expectValidationError(() => validateAthletePositions(['string-no-objeto']), {
+      code: 'INVALID_BODY'
+    });
 
-    expectValidationError(
-      () => validateAthletePositions([42]),
-      { code: 'INVALID_BODY' }
-    );
+    expectValidationError(() => validateAthletePositions([42]), { code: 'INVALID_BODY' });
   });
 
   it('inclui shape esperado em params do erro positionsObject', () => {
-    const error = expectValidationError(
-      () => validateAthletePositions([null]),
-      { code: 'INVALID_BODY' }
-    );
+    const error = expectValidationError(() => validateAthletePositions([null]), {
+      code: 'INVALID_BODY'
+    });
     expect(error.params).toEqual({ shape: '{ athleteId, posX, posY }' });
   });
 
   it('recusa athleteId nao-inteiro ou nao-positivo', () => {
-    expectValidationError(
-      () => validateAthletePositions([{ athleteId: 0, posX: 0, posY: 0 }]),
-      {
-        code: 'INVALID_BODY',
-        i18nKey: 'equipe.snapshot.invalidBody.positionsIntegers'
-      }
-    );
+    expectValidationError(() => validateAthletePositions([{ athleteId: 0, posX: 0, posY: 0 }]), {
+      code: 'INVALID_BODY',
+      i18nKey: 'equipe.snapshot.invalidBody.positionsIntegers'
+    });
+
+    expectValidationError(() => validateAthletePositions([{ athleteId: -1, posX: 0, posY: 0 }]), {
+      code: 'INVALID_BODY'
+    });
+
+    expectValidationError(() => validateAthletePositions([{ athleteId: 1.5, posX: 0, posY: 0 }]), {
+      code: 'INVALID_BODY'
+    });
 
     expectValidationError(
-      () => validateAthletePositions([{ athleteId: -1, posX: 0, posY: 0 }]),
+      () => validateAthletePositions([{ athleteId: 'abc', posX: 0, posY: 0 }]),
       { code: 'INVALID_BODY' }
     );
 
-    expectValidationError(
-      () => validateAthletePositions([{ athleteId: 1.5, posX: 0, posY: 0 }]),
-      { code: 'INVALID_BODY' }
-    );
-
-    expectValidationError(
-      () => validateAthletePositions([
-        { athleteId: 'abc', posX: 0, posY: 0 }
-      ]),
-      { code: 'INVALID_BODY' }
-    );
-
-    expectValidationError(
-      () => validateAthletePositions([
-        { athleteId: null, posX: 0, posY: 0 }
-      ]),
-      { code: 'INVALID_BODY' }
-    );
+    expectValidationError(() => validateAthletePositions([{ athleteId: null, posX: 0, posY: 0 }]), {
+      code: 'INVALID_BODY'
+    });
   });
 
   it('recusa posX/posY nao-inteiros', () => {
-    expectValidationError(
-      () => validateAthletePositions([{ athleteId: 1, posX: 1.5, posY: 0 }]),
-      { code: 'INVALID_BODY' }
-    );
+    expectValidationError(() => validateAthletePositions([{ athleteId: 1, posX: 1.5, posY: 0 }]), {
+      code: 'INVALID_BODY'
+    });
+
+    expectValidationError(() => validateAthletePositions([{ athleteId: 1, posX: 0, posY: 'a' }]), {
+      code: 'INVALID_BODY'
+    });
 
     expectValidationError(
-      () => validateAthletePositions([{ athleteId: 1, posX: 0, posY: 'a' }]),
-      { code: 'INVALID_BODY' }
-    );
-
-    expectValidationError(
-      () => validateAthletePositions([
-        { athleteId: 1, posX: undefined, posY: 0 }
-      ]),
+      () => validateAthletePositions([{ athleteId: 1, posX: undefined, posY: 0 }]),
       { code: 'INVALID_BODY' }
     );
   });
 
   it('aceita posX/posY = 0 (limite inferior valido)', () => {
-    const result = validateAthletePositions([
-      { athleteId: 1, posX: 0, posY: 0 }
-    ]);
+    const result = validateAthletePositions([{ athleteId: 1, posX: 0, posY: 0 }]);
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({ athleteId: 1, posX: 0, posY: 0 });
   });
 
   it('normaliza strings numericas para number (Number coerce)', () => {
-    const result = validateAthletePositions([
-      { athleteId: '5', posX: '1', posY: '2' }
-    ]);
+    const result = validateAthletePositions([{ athleteId: '5', posX: '1', posY: '2' }]);
     expect(result).toEqual([{ athleteId: 5, posX: 1, posY: 2 }]);
   });
 });
 
 describe('validateAthletePositions — quantidade de atletas', () => {
   it('aceita formacoes entre 1 e 6 atletas', () => {
-    expect(
-      validateAthletePositions([
-        position(1, 0, 0)
-      ])
-    ).toHaveLength(MIN_POSITIONED_ATHLETES);
+    expect(validateAthletePositions([position(1, 0, 0)])).toHaveLength(MIN_POSITIONED_ATHLETES);
 
     expect(
       validateAthletePositions([
@@ -255,13 +204,10 @@ describe('validateAthletePositions — quantidade de atletas', () => {
   });
 
   it('recusa formacao vazia com WRONG_ATHLETE_COUNT', () => {
-    const error = expectValidationError(
-      () => validateAthletePositions([]),
-      {
-        code: 'WRONG_ATHLETE_COUNT',
-        i18nKey: 'equipe.snapshot.wrongAthleteCount'
-      }
-    );
+    const error = expectValidationError(() => validateAthletePositions([]), {
+      code: 'WRONG_ATHLETE_COUNT',
+      i18nKey: 'equipe.snapshot.wrongAthleteCount'
+    });
     expect(error.params).toMatchObject({
       min: MIN_POSITIONED_ATHLETES,
       max: MAX_POSITIONED_ATHLETES,
@@ -271,15 +217,16 @@ describe('validateAthletePositions — quantidade de atletas', () => {
 
   it('recusa formacao com mais de 6 atletas com count nos params', () => {
     const error = expectValidationError(
-      () => validateAthletePositions([
-        position(1, 0, 0),
-        position(2, 1, 0),
-        position(3, 2, 0),
-        position(4, 0, 1),
-        position(5, 1, 1),
-        position(6, 2, 1),
-        position(7, 0, 2)
-      ]),
+      () =>
+        validateAthletePositions([
+          position(1, 0, 0),
+          position(2, 1, 0),
+          position(3, 2, 0),
+          position(4, 0, 1),
+          position(5, 1, 1),
+          position(6, 2, 1),
+          position(7, 0, 2)
+        ]),
       { code: 'WRONG_ATHLETE_COUNT' }
     );
     expect(error.params).toMatchObject({ count: 7 });
@@ -289,10 +236,7 @@ describe('validateAthletePositions — quantidade de atletas', () => {
 describe('validateAthletePositions — bounds e duplicacao', () => {
   it('recusa atleta duplicado com athleteId nos params', () => {
     const error = expectValidationError(
-      () => validateAthletePositions([
-        position(7, 0, 0),
-        position(7, 1, 0)
-      ]),
+      () => validateAthletePositions([position(7, 0, 0), position(7, 1, 0)]),
       {
         code: 'DUPLICATE_ATHLETE',
         i18nKey: 'equipe.snapshot.duplicateAthlete'
@@ -303,10 +247,7 @@ describe('validateAthletePositions — bounds e duplicacao', () => {
 
   it('recusa celula duplicada com posX/posY nos params', () => {
     const error = expectValidationError(
-      () => validateAthletePositions([
-        position(1, 1, 2),
-        position(2, 1, 2)
-      ]),
+      () => validateAthletePositions([position(1, 1, 2), position(2, 1, 2)]),
       {
         code: 'DUPLICATE_POSITION',
         i18nKey: 'equipe.snapshot.duplicatePosition'
@@ -316,41 +257,33 @@ describe('validateAthletePositions — bounds e duplicacao', () => {
   });
 
   it('recusa coordenadas posX >= GRID_SIZE', () => {
-    const error = expectValidationError(
-      () => validateAthletePositions([position(1, 3, 0)]),
-      {
-        code: 'OUT_OF_BOUNDS',
-        i18nKey: 'equipe.snapshot.outOfBounds'
-      }
-    );
+    const error = expectValidationError(() => validateAthletePositions([position(1, 3, 0)]), {
+      code: 'OUT_OF_BOUNDS',
+      i18nKey: 'equipe.snapshot.outOfBounds'
+    });
     expect(error.params).toEqual({ posX: 3, posY: 0, grid: GRID_SIZE });
   });
 
   it('recusa coordenadas posY >= GRID_SIZE', () => {
-    expectValidationError(
-      () => validateAthletePositions([position(1, 0, 3)]),
-      { code: 'OUT_OF_BOUNDS' }
-    );
+    expectValidationError(() => validateAthletePositions([position(1, 0, 3)]), {
+      code: 'OUT_OF_BOUNDS'
+    });
   });
 
   it('recusa coordenadas negativas (posX < 0)', () => {
-    expectValidationError(
-      () => validateAthletePositions([position(1, -1, 0)]),
-      { code: 'OUT_OF_BOUNDS' }
-    );
+    expectValidationError(() => validateAthletePositions([position(1, -1, 0)]), {
+      code: 'OUT_OF_BOUNDS'
+    });
   });
 
   it('recusa coordenadas negativas (posY < 0)', () => {
-    expectValidationError(
-      () => validateAthletePositions([position(1, 0, -1)]),
-      { code: 'OUT_OF_BOUNDS' }
-    );
+    expectValidationError(() => validateAthletePositions([position(1, 0, -1)]), {
+      code: 'OUT_OF_BOUNDS'
+    });
   });
 
   it('aceita posX = GRID_SIZE - 1 e posY = GRID_SIZE - 1 (limite superior)', () => {
-    const result = validateAthletePositions([
-      position(1, GRID_SIZE - 1, GRID_SIZE - 1)
-    ]);
+    const result = validateAthletePositions([position(1, GRID_SIZE - 1, GRID_SIZE - 1)]);
     expect(result).toHaveLength(1);
   });
 
@@ -369,28 +302,18 @@ describe('validateAthletePositions — bounds e duplicacao', () => {
 
 describe('validateAthletePositions — ordem das validacoes', () => {
   it('valida shape antes da quantidade (positions nao-array da INVALID_BODY)', () => {
-    expectValidationError(
-      () => validateAthletePositions(null),
-      { code: 'INVALID_BODY' }
-    );
+    expectValidationError(() => validateAthletePositions(null), { code: 'INVALID_BODY' });
   });
 
   it('valida quantidade antes de bounds (vazio da WRONG_ATHLETE_COUNT)', () => {
-    expectValidationError(
-      () => validateAthletePositions([]),
-      { code: 'WRONG_ATHLETE_COUNT' }
-    );
+    expectValidationError(() => validateAthletePositions([]), { code: 'WRONG_ATHLETE_COUNT' });
   });
 
   it('valida bounds antes de duplicacao', () => {
     // Atleta duplicado + out of bounds: deve retornar OUT_OF_BOUNDS primeiro
-    expectValidationError(
-      () => validateAthletePositions([
-        position(1, 5, 0),
-        position(1, 0, 0)
-      ]),
-      { code: 'OUT_OF_BOUNDS' }
-    );
+    expectValidationError(() => validateAthletePositions([position(1, 5, 0), position(1, 0, 0)]), {
+      code: 'OUT_OF_BOUNDS'
+    });
   });
 });
 
@@ -412,18 +335,12 @@ describe('GRID_SIZE constants', () => {
 describe('validateAthletePositions — legacy (mantido)', () => {
   it('recusa atleta duplicado e celula duplicada', () => {
     expectValidationCode(
-      () => validateAthletePositions([
-        position(1, 0, 0),
-        position(1, 1, 0)
-      ]),
+      () => validateAthletePositions([position(1, 0, 0), position(1, 1, 0)]),
       'DUPLICATE_ATHLETE'
     );
 
     expectValidationCode(
-      () => validateAthletePositions([
-        position(1, 0, 0),
-        position(2, 0, 0)
-      ]),
+      () => validateAthletePositions([position(1, 0, 0), position(2, 0, 0)]),
       'DUPLICATE_POSITION'
     );
   });

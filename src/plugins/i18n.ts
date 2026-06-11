@@ -135,36 +135,34 @@ export const registerI18n = async (app: FastifyInstance): Promise<void> => {
      * documentacao oficial (https://www.i18next.com/overview/configuration-options).
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await i18next
-      .use(FsBackend)
-      .init({
-        backend: {
-          loadPath: path.join(localesPath, '{{lng}}', '{{ns}}.json')
-        },
-        // Idioma "ativo" do i18next no boot; cada requisicao usa
-        // `getFixedT(locale)` para forcar o idioma correto sem depender deste.
-        lng: DEFAULT_LOCALE,
-        // Pre-carrega todos os locales/namespaces para evitar a primeira
-        // requisicao pagar o custo de IO e para detectar JSONs malformados no boot.
-        preload: [...SUPPORTED_LOCALES],
-        ns: [...NAMESPACES],
-        defaultNS: 'common',
-        fallbackLng: DEFAULT_LOCALE,
-        supportedLngs: [...SUPPORTED_LOCALES],
-        // Em producao o servidor reinicia em mudancas; em dev/test e mais
-        // simples logar sem warnings sobre missing keys.
-        saveMissing: false,
-        returnNull: false,
-        detection: {
-          order: ['header', 'querystring'],
-          lookupQuerystring: 'lang',
-          caches: false
-        },
-        interpolation: {
-          escapeValue: false
-        }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+    await i18next.use(FsBackend).init({
+      backend: {
+        loadPath: path.join(localesPath, '{{lng}}', '{{ns}}.json')
+      },
+      // Idioma "ativo" do i18next no boot; cada requisicao usa
+      // `getFixedT(locale)` para forcar o idioma correto sem depender deste.
+      lng: DEFAULT_LOCALE,
+      // Pre-carrega todos os locales/namespaces para evitar a primeira
+      // requisicao pagar o custo de IO e para detectar JSONs malformados no boot.
+      preload: [...SUPPORTED_LOCALES],
+      ns: [...NAMESPACES],
+      defaultNS: 'common',
+      fallbackLng: DEFAULT_LOCALE,
+      supportedLngs: [...SUPPORTED_LOCALES],
+      // Em producao o servidor reinicia em mudancas; em dev/test e mais
+      // simples logar sem warnings sobre missing keys.
+      saveMissing: false,
+      returnNull: false,
+      detection: {
+        order: ['header', 'querystring'],
+        lookupQuerystring: 'lang',
+        caches: false
+      },
+      interpolation: {
+        escapeValue: false
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
     // Garante que todos os namespaces estejam carregados antes de aceitar
     // requisicoes (caso o preload assincrono nao esteja completo).
     await i18next.loadNamespaces([...NAMESPACES]);

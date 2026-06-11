@@ -1,4 +1,9 @@
-import { type FastifyError, type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
+import {
+  type FastifyError,
+  type FastifyInstance,
+  type FastifyReply,
+  type FastifyRequest
+} from 'fastify';
 
 import { CampaignServiceError } from '../modules/partida/campaign.service';
 import { ServiceError as AuthServiceError } from '../modules/auth/auth.service';
@@ -174,10 +179,7 @@ const isFastifyError = (error: unknown): error is FastifyError => {
  *    chave), caimos no `error.message` original — preservando assim qualquer
  *    fallback definido no servico.
  */
-const translateServiceError = (
-  request: FastifyRequest,
-  error: ServiceErrorLike
-): string => {
+const translateServiceError = (request: FastifyRequest, error: ServiceErrorLike): string => {
   const translator = request.t;
   if (typeof translator !== 'function') {
     return error.message;
@@ -244,10 +246,7 @@ export const registerErrorHandler = (app: FastifyInstance): void => {
           'Service error 5xx ao atender requisicao'
         );
       } else {
-        request.log.warn(
-          { code: error.code, statusCode: status },
-          'Service error tratado'
-        );
+        request.log.warn({ code: error.code, statusCode: status }, 'Service error tratado');
       }
 
       return reply.code(status).send(payload);
@@ -264,11 +263,7 @@ export const registerErrorHandler = (app: FastifyInstance): void => {
 
         return reply.code(status).send({
           code: 'VALIDATION_ERROR',
-          message: translateGeneric(
-            request,
-            'common.validationError',
-            error.message
-          ),
+          message: translateGeneric(request, 'common.validationError', error.message),
           details: error.validation
         });
       }
@@ -288,11 +283,7 @@ export const registerErrorHandler = (app: FastifyInstance): void => {
 
     return reply.code(500).send({
       code: 'INTERNAL_ERROR',
-      message: translateGeneric(
-        request,
-        'common.internalError',
-        'Erro interno do servidor.'
-      )
+      message: translateGeneric(request, 'common.internalError', 'Erro interno do servidor.')
     });
   });
 };

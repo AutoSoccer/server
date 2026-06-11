@@ -14,11 +14,7 @@ vi.mock('../../database/models', () => ({
   }
 }));
 
-import {
-  calculateRankingMetrics,
-  getRanking,
-  RankingServiceError
-} from './ranking.service';
+import { calculateRankingMetrics, getRanking, RankingServiceError } from './ranking.service';
 
 const user = (overrides: Record<string, unknown> = {}) => ({
   id: 1,
@@ -143,9 +139,7 @@ describe('getRanking', () => {
   });
 
   it('nao classifica conta real sem campanha concluida', async () => {
-    mocks.findByPk.mockResolvedValue(
-      user({ id: 9, trophies: 0, victory: 0, defeat: 0 })
-    );
+    mocks.findByPk.mockResolvedValue(user({ id: 9, trophies: 0, victory: 0, defeat: 0 }));
 
     const result = await getRanking(9);
 
@@ -159,16 +153,12 @@ describe('getRanking', () => {
 
     await getRanking(1, 999);
 
-    expect(mocks.findAll).toHaveBeenCalledWith(
-      expect.objectContaining({ limit: 100 })
-    );
+    expect(mocks.findAll).toHaveBeenCalledWith(expect.objectContaining({ limit: 100 }));
   });
 
   it('recusa token de usuario removido do banco', async () => {
     mocks.findByPk.mockResolvedValue(null);
 
-    await expect(getRanking(999)).rejects.toBeInstanceOf(
-      RankingServiceError
-    );
+    await expect(getRanking(999)).rejects.toBeInstanceOf(RankingServiceError);
   });
 });

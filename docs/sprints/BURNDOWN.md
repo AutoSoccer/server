@@ -4,28 +4,28 @@ Sprint final do AutoSoccer (10/05/2026 a 09/06/2026), planejada em 81 story poin
 
 ## Parametros
 
-| Item | Valor |
-| --- | --- |
-| Início | 10/05/2026 |
-| Fim | 09/06/2026 |
-| Duração total | 31 dias |
-| SP planejados | 81 |
-| Número de medições | 9 |
-| Decaimento ideal por medição | ~10 SP |
+| Item                         | Valor      |
+| ---------------------------- | ---------- |
+| Início                       | 10/05/2026 |
+| Fim                          | 09/06/2026 |
+| Duração total                | 31 dias    |
+| SP planejados                | 81         |
+| Número de medições           | 9          |
+| Decaimento ideal por medição | ~10 SP     |
 
 ## Tabela
 
-| # | Dia | SP restantes (real) | SP ideais (linha ideal) | Observação |
-| --- | --- | --- | --- | --- |
-| 1 | 10/05/2026 | 81 | 81 | Kickoff da sprint, planning encerrado. |
-| 2 | 13/05/2026 | 78 | 71 | Início da renomeação de paths para inglês (US-036). |
-| 3 | 17/05/2026 | 72 | 61 | Infra de testes do front (US-042) pronta; ritmo abaixo do ideal por curva de aprendizado em Vitest. |
-| 4 | 21/05/2026 | 60 | 50 | Migração next-intl (US-038, US-039, US-040) concluída; recuperando ritmo. |
-| 5 | 24/05/2026 | 50 | 41 | Cobertura de services, hooks e providers do front (US-044) entregue. |
-| 6 | 28/05/2026 | 38 | 30 | CI verde (US-046); CORS hardening (US-045) entregue; bom ritmo. |
-| 7 | 02/06/2026 | 26 | 21 | Dark mode (US-049), dashboard ranking final (US-050) e CONTRIBUTING/READMEs (US-047, US-048). |
-| 8 | 06/06/2026 | 14 | 10 | BDD, user stories formais e UML mergeados (US-051, US-052, US-053). |
-| 9 | 09/06/2026 | 0 | 0 | Role admin (US-054, US-055), stored procedure (US-056) e plano de apresentação (US-058) fecham a sprint. |
+| #   | Dia        | SP restantes (real) | SP ideais (linha ideal) | Observação                                                                                               |
+| --- | ---------- | ------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| 1   | 10/05/2026 | 81                  | 81                      | Kickoff da sprint, planning encerrado.                                                                   |
+| 2   | 13/05/2026 | 78                  | 71                      | Início da renomeação de paths para inglês (US-036).                                                      |
+| 3   | 17/05/2026 | 72                  | 61                      | Infra de testes do front (US-042) pronta; ritmo abaixo do ideal por curva de aprendizado em Vitest.      |
+| 4   | 21/05/2026 | 60                  | 50                      | Migração next-intl (US-038, US-039, US-040) concluída; recuperando ritmo.                                |
+| 5   | 24/05/2026 | 50                  | 41                      | Cobertura de services, hooks e providers do front (US-044) entregue.                                     |
+| 6   | 28/05/2026 | 38                  | 30                      | CI verde (US-046); CORS hardening (US-045) entregue; bom ritmo.                                          |
+| 7   | 02/06/2026 | 26                  | 21                      | Dark mode (US-049), dashboard ranking final (US-050) e CONTRIBUTING/READMEs (US-047, US-048).            |
+| 8   | 06/06/2026 | 14                  | 10                      | BDD, user stories formais e UML mergeados (US-051, US-052, US-053).                                      |
+| 9   | 09/06/2026 | 0                   | 0                       | Role admin (US-054, US-055), stored procedure (US-056) e plano de apresentação (US-058) fecham a sprint. |
 
 ## Grafico ASCII
 
@@ -55,10 +55,10 @@ Legenda:
 
 ## Analise
 
-| Janela | Análise |
-| --- | --- |
-| 10/05 → 17/05 | Atraso leve (3 a 11 SP acima do ideal). Causa: setup de testes do front (Vitest, RTL, mocks, providers) consumiu mais tempo do que o esperado. |
-| 17/05 → 28/05 | Aceleração constante. Migração next-intl entregue de forma vertical, sem retrabalho relevante. |
+| Janela        | Análise                                                                                                                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 10/05 → 17/05 | Atraso leve (3 a 11 SP acima do ideal). Causa: setup de testes do front (Vitest, RTL, mocks, providers) consumiu mais tempo do que o esperado.                                                          |
+| 17/05 → 28/05 | Aceleração constante. Migração next-intl entregue de forma vertical, sem retrabalho relevante.                                                                                                          |
 | 28/05 → 09/06 | Sprint fecha exatamente no zero. Os 14 SP finais correspondem a artefatos de avaliação (BDD, UML, stories formais, admin/role, stored procedure, plano de apresentação) mergeados nos commits de 10/06. |
 
 ## Pontos de atencao

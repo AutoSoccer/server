@@ -23,9 +23,9 @@ Requer `Authorization: Bearer <token>`. Tokens de convidados sao aceitos.
 
 ### Query
 
-| Campo | Tipo | Obrigatorio | Regra |
-| --- | --- | --- | --- |
-| `limit` | inteiro | nao | Entre 1 e 100. Padrao: 50. |
+| Campo   | Tipo    | Obrigatorio | Regra                      |
+| ------- | ------- | ----------- | -------------------------- |
+| `limit` | inteiro | nao         | Entre 1 e 100. Padrao: 50. |
 
 ### Resposta `200`
 

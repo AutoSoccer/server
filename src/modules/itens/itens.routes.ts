@@ -114,7 +114,10 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
       if (body.user_id !== undefined && Number(body.user_id) !== authenticatedUserId) {
         return reply
           .code(403)
-          .send({ message: 'user_id nao corresponde ao usuario autenticado.', code: 'USER_MISMATCH' });
+          .send({
+            message: 'user_id nao corresponde ao usuario autenticado.',
+            code: 'USER_MISMATCH'
+          });
       }
 
       const itemId = Number(body.item_id);
@@ -187,15 +190,26 @@ export const itensRoutes: FastifyPluginAsync = async (app) => {
       if (body.user_id !== undefined && Number(body.user_id) !== authenticatedUserId) {
         return reply
           .code(403)
-          .send({ message: 'user_id nao corresponde ao usuario autenticado.', code: 'USER_MISMATCH' });
+          .send({
+            message: 'user_id nao corresponde ao usuario autenticado.',
+            code: 'USER_MISMATCH'
+          });
       }
 
       const itemId = Number(body.item_id);
       const athleteId = Number(body.atleta_id);
-      if (!Number.isInteger(itemId) || itemId <= 0 || !Number.isInteger(athleteId) || athleteId <= 0) {
+      if (
+        !Number.isInteger(itemId) ||
+        itemId <= 0 ||
+        !Number.isInteger(athleteId) ||
+        athleteId <= 0
+      ) {
         return reply
           .code(400)
-          .send({ message: 'Campos item_id e atleta_id precisam ser inteiros validos.', code: 'INVALID_BODY' });
+          .send({
+            message: 'Campos item_id e atleta_id precisam ser inteiros validos.',
+            code: 'INVALID_BODY'
+          });
       }
 
       const result = await aplicarItem(authenticatedUserId, itemId, athleteId);

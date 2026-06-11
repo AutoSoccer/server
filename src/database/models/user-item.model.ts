@@ -13,10 +13,7 @@ import { sequelize } from '../../config/database';
  * Cada linha e uma unidade comprada; ao ser aplicada, vira consumed=true e
  * registra em qual atleta/snapshot o bonus foi atrelado (log da rodada).
  */
-export class UserItem extends Model<
-  InferAttributes<UserItem>,
-  InferCreationAttributes<UserItem>
-> {
+export class UserItem extends Model<InferAttributes<UserItem>, InferCreationAttributes<UserItem>> {
   declare id: CreationOptional<number>;
   declare user_id: number;
   declare item_id: number;

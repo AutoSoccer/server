@@ -1,19 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { computeSuccessChance, effectiveAttribute } from './formula';
-import {
-  computeInitiative,
-  processarRodada,
-  TOTAL_TURNS
-} from './simulador.service';
-import {
-  Athlete,
-  type AthleteRole,
-  type RandomFn,
-  TeamDTO
-} from './types';
+import { computeInitiative, processarRodada, TOTAL_TURNS } from './simulador.service';
+import { Athlete, type AthleteRole, type RandomFn, TeamDTO } from './types';
 
-const constant = (value: number): RandomFn => () => value;
+const constant =
+  (value: number): RandomFn =>
+  () =>
+    value;
 
 const sequence = (values: number[]): RandomFn => {
   let index = 0;
@@ -40,32 +34,20 @@ const athlete = (placement: Placement): Athlete =>
     defense: placement.defense ?? 50
   });
 
-const team = (
-  id: number,
-  name: string,
-  placements: Placement[]
-): TeamDTO => {
+const team = (id: number, name: string, placements: Placement[]): TeamDTO => {
   const dto = new TeamDTO();
   dto.id = id;
   dto.name = name;
 
   for (const placement of placements) {
-    dto.athletesPositions[placement.row][placement.col] =
-      athlete(placement);
+    dto.athletesPositions[placement.row][placement.col] = athlete(placement);
   }
 
-  dto.athlethes = dto.athletesPositions
-    .flat()
-    .filter((entry): entry is Athlete => entry !== null);
+  dto.athlethes = dto.athletesPositions.flat().filter((entry): entry is Athlete => entry !== null);
   return dto;
 };
 
-const singleAttackerTeam = (
-  id: number,
-  attack = 50,
-  velocity = 50,
-  column = 1
-): TeamDTO =>
+const singleAttackerTeam = (id: number, attack = 50, velocity = 50, column = 1): TeamDTO =>
   team(id, `Time ${id}`, [
     {
       id: id * 10 + 1,
@@ -162,12 +144,8 @@ describe('computeInitiative', () => {
       }
     ]);
 
-    expect(
-      computeInitiative(player, opponent, constant(0.49)).startsWith
-    ).toBe('player');
-    expect(
-      computeInitiative(player, opponent, constant(0.5)).startsWith
-    ).toBe('opponent');
+    expect(computeInitiative(player, opponent, constant(0.49)).startsWith).toBe('player');
+    expect(computeInitiative(player, opponent, constant(0.5)).startsWith).toBe('opponent');
   });
 });
 
@@ -227,15 +205,11 @@ describe('passes', () => {
 
 describe('movimento e disputa', () => {
   it('o portador avanca reto quando a casa esta livre', () => {
-    const result = processarRodada(
-      singleAttackerTeam(1),
-      singleAttackerTeam(2, 50, 50, 0),
-      {
-        totalTurns: 1,
-        initialPossession: 'player',
-        rng: constant(0)
-      }
-    );
+    const result = processarRodada(singleAttackerTeam(1), singleAttackerTeam(2, 50, 50, 0), {
+      totalTurns: 1,
+      initialPossession: 'player',
+      rng: constant(0)
+    });
 
     const event = result.events[0];
     expect(event.kind).toBe('move');
@@ -339,15 +313,11 @@ describe('movimento e disputa', () => {
 
 describe('finalizacao', () => {
   it('usa o ataque como porcentagem direta e o gol encerra a rodada', () => {
-    const result = processarRodada(
-      singleAttackerTeam(1, 75),
-      singleAttackerTeam(2, 20, 40, 0),
-      {
-        totalTurns: 12,
-        initialPossession: 'player',
-        rng: constant(0.5)
-      }
-    );
+    const result = processarRodada(singleAttackerTeam(1, 75), singleAttackerTeam(2, 20, 40, 0), {
+      totalTurns: 12,
+      initialPossession: 'player',
+      rng: constant(0.5)
+    });
 
     expect(result.score).toEqual({ player: 1, opponent: 0 });
     expect(result.winner).toBe('player');

@@ -118,9 +118,7 @@ describe('integration: /match', () => {
 
   it('POST /match/abandon responde 404 quando user nao encontrado', async () => {
     const app = await buildApp();
-    mocks.abandonCampaign.mockRejectedValue(
-      new CampaignServiceError('USER_NOT_FOUND')
-    );
+    mocks.abandonCampaign.mockRejectedValue(new CampaignServiceError('USER_NOT_FOUND'));
 
     const response = await app.inject({
       method: 'POST',
@@ -236,10 +234,33 @@ describe('integration: /match', () => {
         player: { snapshotId: 1, teamId: 1, name: 'A', positions: [] },
         opponent: { snapshotId: 2, teamId: 2, name: 'B', positions: [] }
       },
-      matchmaking: { snapshotId: 1, opponentSnapshotId: 2, opponentUserId: 2, victoryRatio: 0, delta: 0, windowUsed: 0 },
-      initiative: { playerLeadVelocity: 0, opponentLeadVelocity: 0, startsWith: 'player', carrier: { team: 'player', athleteId: 1, athleteName: 'A', position: { x: 0, y: 0 } } },
+      matchmaking: {
+        snapshotId: 1,
+        opponentSnapshotId: 2,
+        opponentUserId: 2,
+        victoryRatio: 0,
+        delta: 0,
+        windowUsed: 0
+      },
+      initiative: {
+        playerLeadVelocity: 0,
+        opponentLeadVelocity: 0,
+        startsWith: 'player',
+        carrier: { team: 'player', athleteId: 1, athleteName: 'A', position: { x: 0, y: 0 } }
+      },
       persisted: { teamId: 1, victory: 1, lose: 0, round: 2 },
-      resolution: { matchStatus: 'in_progress', matchEnded: false, trophiesDelta: 0, trophies: 0, coinsEarned: 10, coins: 10, userVictory: 0, userDefeat: 0, isGuest: false, roundLogId: 1 }
+      resolution: {
+        matchStatus: 'in_progress',
+        matchEnded: false,
+        trophiesDelta: 0,
+        trophies: 0,
+        coinsEarned: 10,
+        coins: 10,
+        userVictory: 0,
+        userDefeat: 0,
+        isGuest: false,
+        roundLogId: 1
+      }
     });
 
     const response = await app.inject({

@@ -11,10 +11,7 @@ import {
   type SnapshotAthlete,
   type SnapshotPositions
 } from '../../database/models/team-snapshot.model';
-import {
-  salvarEstadoEquipe,
-  type AthletePositionInput
-} from '../equipe/team-snapshot.service';
+import { salvarEstadoEquipe, type AthletePositionInput } from '../equipe/team-snapshot.service';
 import {
   computeVictoryRatio,
   findOpponentSnapshot,
@@ -147,14 +144,8 @@ const toSnapshotAthlete = (athlete: AthleteModel): SnapshotAthlete => ({
   type: athlete.type
 });
 
-const placeOnGrid = <T>(
-  grid: (T | null)[][],
-  preferredRow: number,
-  value: T
-): void => {
-  const order = [preferredRow, 1, 0, 2].filter(
-    (row, idx, arr) => arr.indexOf(row) === idx
-  );
+const placeOnGrid = <T>(grid: (T | null)[][], preferredRow: number, value: T): void => {
+  const order = [preferredRow, 1, 0, 2].filter((row, idx, arr) => arr.indexOf(row) === idx);
   for (const row of order) {
     for (let col = 0; col < GRID_COLS; col++) {
       if (grid[row][col] === null) {
@@ -173,10 +164,7 @@ const buildSnapshotPositions = (athletes: AthleteModel[]): SnapshotPositions => 
   return grid;
 };
 
-const snapshotToTeamDto = (
-  snapshot: TeamSnapshot,
-  fallbackName: string
-): TeamDTO => {
+const snapshotToTeamDto = (snapshot: TeamSnapshot, fallbackName: string): TeamDTO => {
   const dto = new TeamDTO();
   dto.id = snapshot.team_id;
   dto.name = fallbackName;
@@ -195,12 +183,7 @@ const snapshotToTeamDto = (
       a.attack = cell.attack;
       a.defense = cell.defense;
       a.type =
-        cell.type ??
-        (rowIndex === 0
-          ? 'defender'
-          : rowIndex === 2
-            ? 'attacker'
-            : 'midfielder');
+        cell.type ?? (rowIndex === 0 ? 'defender' : rowIndex === 2 ? 'attacker' : 'midfielder');
       // Task 4.1: leva os buffs de itens e a ancoragem (RN011) para o motor.
       if (cell.bonus) {
         a.bonus = cell.bonus;

@@ -7,18 +7,18 @@
  * para que a equipe rode `yarn i18n:check` em ambos os repositorios.
  */
 
-import { readFile, readdir } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFile, readdir } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const localesDir = resolve(__dirname, "..", "src", "i18n", "locales");
+const localesDir = resolve(__dirname, '..', 'src', 'i18n', 'locales');
 
-const baseLocale = "pt-BR";
-const compareLocale = "en";
+const baseLocale = 'pt-BR';
+const compareLocale = 'en';
 
-function flattenKeys(value, prefix = "") {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+function flattenKeys(value, prefix = '') {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     return [prefix];
   }
   const keys = [];
@@ -31,14 +31,14 @@ function flattenKeys(value, prefix = "") {
 
 async function readNamespace(locale, namespace) {
   const filePath = join(localesDir, locale, namespace);
-  const content = await readFile(filePath, "utf8");
+  const content = await readFile(filePath, 'utf8');
   return JSON.parse(content);
 }
 
 async function listNamespaces(locale) {
   const localeDir = join(localesDir, locale);
   const entries = await readdir(localeDir);
-  return entries.filter((entry) => entry.endsWith(".json")).sort();
+  return entries.filter((entry) => entry.endsWith('.json')).sort();
 }
 
 function diff(a, b) {
@@ -56,9 +56,7 @@ async function main() {
 
   for (const namespace of baseNamespaces) {
     if (!compareSet.has(namespace)) {
-      namespaceErrors.push(
-        `[${compareLocale}] falta o namespace ${namespace}`,
-      );
+      namespaceErrors.push(`[${compareLocale}] falta o namespace ${namespace}`);
     }
   }
   for (const namespace of compareNamespaces) {
@@ -82,20 +80,18 @@ async function main() {
 
     if (missingInCompare.length > 0) {
       keyErrors.push(
-        `[${compareLocale}/${namespace}] chaves faltando: ${missingInCompare.join(", ")}`,
+        `[${compareLocale}/${namespace}] chaves faltando: ${missingInCompare.join(', ')}`
       );
     }
     if (missingInBase.length > 0) {
-      keyErrors.push(
-        `[${baseLocale}/${namespace}] chaves faltando: ${missingInBase.join(", ")}`,
-      );
+      keyErrors.push(`[${baseLocale}/${namespace}] chaves faltando: ${missingInBase.join(', ')}`);
     }
   }
 
   const allErrors = [...namespaceErrors, ...keyErrors];
 
   if (allErrors.length > 0) {
-    console.error("Paridade de i18n falhou:");
+    console.error('Paridade de i18n falhou:');
     for (const error of allErrors) {
       console.error(`  - ${error}`);
     }
@@ -103,11 +99,11 @@ async function main() {
   }
 
   console.log(
-    `Paridade ok: ${sharedNamespaces.length} namespaces validados entre ${baseLocale} e ${compareLocale}.`,
+    `Paridade ok: ${sharedNamespaces.length} namespaces validados entre ${baseLocale} e ${compareLocale}.`
   );
 }
 
 main().catch((error) => {
-  console.error("Erro inesperado ao validar i18n:", error);
+  console.error('Erro inesperado ao validar i18n:', error);
   process.exit(1);
 });

@@ -23,7 +23,9 @@ const sendAndClose = (socket: WebSocket, msg: WsMessage): Promise<void> =>
     });
   });
 
-const verifyToken = (token: string | undefined): { id: number; nickname: string; role?: UserRole } | null => {
+const verifyToken = (
+  token: string | undefined
+): { id: number; nickname: string; role?: UserRole } | null => {
   if (!token) return null;
   try {
     return jwt.verify(token, env.jwtSecret) as { id: number; nickname: string; role?: UserRole };
@@ -35,34 +37,30 @@ const verifyToken = (token: string | undefined): { id: number; nickname: string;
 const TURN_DELAY_MS = 800;
 
 export const wsBattleRoutes = async (app: FastifyInstance): Promise<void> => {
-  app.get(
-    '/ws/battle/:matchId',
-    { websocket: true },
-    async (socket, request) => {
-      const token = (request.query as Record<string, string>).token;
-      const payload = verifyToken(token);
+  app.get('/ws/battle/:matchId', { websocket: true }, async (socket, request) => {
+    const token = (request.query as Record<string, string>).token;
+    const payload = verifyToken(token);
 
-      if (!payload) {
-        await sendAndClose(socket, { type: 'error', data: { code: 'UNAUTHORIZED' } });
-        return;
-      }
-
-      const { matchId } = request.params as Record<string, string>;
-      const entry = consumeMatchEntry(matchId);
-
-      if (!entry) {
-        await sendAndClose(socket, { type: 'error', data: { code: 'MATCH_NOT_FOUND' } });
-        return;
-      }
-
-      const { events, ...resultWithoutEvents } = entry;
-
-      for (const event of events) {
-        send(socket, { type: 'turn', data: event });
-        await new Promise<void>((resolve) => setTimeout(resolve, TURN_DELAY_MS));
-      }
-
-      await sendAndClose(socket, { type: 'result', data: { ...resultWithoutEvents, events } });
+    if (!payload) {
+      await sendAndClose(socket, { type: 'error', data: { code: 'UNAUTHORIZED' } });
+      return;
     }
-  );
+
+    const { matchId } = request.params as Record<string, string>;
+    const entry = consumeMatchEntry(matchId);
+
+    if (!entry) {
+      await sendAndClose(socket, { type: 'error', data: { code: 'MATCH_NOT_FOUND' } });
+      return;
+    }
+
+    const { events, ...resultWithoutEvents } = entry;
+
+    for (const event of events) {
+      send(socket, { type: 'turn', data: event });
+      await new Promise<void>((resolve) => setTimeout(resolve, TURN_DELAY_MS));
+    }
+
+    await sendAndClose(socket, { type: 'result', data: { ...resultWithoutEvents, events } });
+  });
 };

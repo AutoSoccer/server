@@ -114,9 +114,7 @@ describe('integration: /team', () => {
 
   it('POST /team/buy-athlete responde 400 quando saldo insuficiente', async () => {
     const app = await buildApp();
-    mocks.buyAthlete.mockRejectedValue(
-      new EquipeServiceError('INSUFFICIENT_COINS')
-    );
+    mocks.buyAthlete.mockRejectedValue(new EquipeServiceError('INSUFFICIENT_COINS'));
 
     const response = await app.inject({
       method: 'POST',
@@ -133,9 +131,7 @@ describe('integration: /team', () => {
 
   it('POST /team/buy-athlete responde 404 quando atleta nao esta no mercado', async () => {
     const app = await buildApp();
-    mocks.buyAthlete.mockRejectedValue(
-      new EquipeServiceError('ATHLETE_NOT_AVAILABLE')
-    );
+    mocks.buyAthlete.mockRejectedValue(new EquipeServiceError('ATHLETE_NOT_AVAILABLE'));
 
     const response = await app.inject({
       method: 'POST',
@@ -173,9 +169,7 @@ describe('integration: /team', () => {
 
   it('POST /team/sell-athlete responde 404 quando atleta nao pertence', async () => {
     const app = await buildApp();
-    mocks.sellAthlete.mockRejectedValue(
-      new EquipeServiceError('ATHLETE_NOT_OWNED')
-    );
+    mocks.sellAthlete.mockRejectedValue(new EquipeServiceError('ATHLETE_NOT_OWNED'));
 
     const response = await app.inject({
       method: 'POST',

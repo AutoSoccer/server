@@ -232,16 +232,16 @@ URL publica:
 
 ### Variaveis de ambiente em producao
 
-| Variavel        | Onde definir              | Valor                                                       |
-| --------------- | ------------------------- | ----------------------------------------------------------- |
-| `NODE_ENV`      | Railway Variables         | `production`                                                |
-| `APP_HOST`      | Railway Variables         | `0.0.0.0`                                                   |
-| `PORT`          | Railway Variables         | `3000` (Railway expoe a porta interna automaticamente)      |
-| `CORS_ORIGIN`   | Railway Variables         | URL do frontend (ex.: `https://autosoccer.vercel.app`) — `*` ou vazio quebra o boot em producao |
-| `DATABASE_URL`  | Railway Variables         | `${{MySQL.MYSQL_URL}}` (referencia ao plugin MySQL)         |
-| `DB_SSL`        | Railway Variables         | `false` (MySQL plugin nao exige SSL na rede interna)        |
-| `JWT_SECRET`    | Railway Variables (secret)| gerar com `openssl rand -base64 48`                         |
-| `JWT_EXPIRES_IN`| Railway Variables         | `7d`                                                        |
+| Variavel         | Onde definir               | Valor                                                                                           |
+| ---------------- | -------------------------- | ----------------------------------------------------------------------------------------------- |
+| `NODE_ENV`       | Railway Variables          | `production`                                                                                    |
+| `APP_HOST`       | Railway Variables          | `0.0.0.0`                                                                                       |
+| `PORT`           | Railway Variables          | `3000` (Railway expoe a porta interna automaticamente)                                          |
+| `CORS_ORIGIN`    | Railway Variables          | URL do frontend (ex.: `https://autosoccer.vercel.app`) — `*` ou vazio quebra o boot em producao |
+| `DATABASE_URL`   | Railway Variables          | `${{MySQL.MYSQL_URL}}` (referencia ao plugin MySQL)                                             |
+| `DB_SSL`         | Railway Variables          | `false` (MySQL plugin nao exige SSL na rede interna)                                            |
+| `JWT_SECRET`     | Railway Variables (secret) | gerar com `openssl rand -base64 48`                                                             |
+| `JWT_EXPIRES_IN` | Railway Variables          | `7d`                                                                                            |
 
 ### Passos para subir no Railway
 

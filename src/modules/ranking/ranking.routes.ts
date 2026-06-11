@@ -3,10 +3,7 @@ import { type FastifyPluginAsync } from 'fastify';
 
 import { tSwagger } from '../../i18n/swagger';
 import { authenticate } from '../auth/auth.middleware';
-import {
-  getRanking,
-  RankingServiceError
-} from './ranking.service';
+import { getRanking, RankingServiceError } from './ranking.service';
 
 type RankingQuery = {
   limit?: number;
@@ -107,16 +104,11 @@ export const rankingRoutes: FastifyPluginAsync = async (app) => {
     },
     async (request, reply) => {
       try {
-        const result = await getRanking(
-          request.user!.id,
-          request.query?.limit
-        );
+        const result = await getRanking(request.user!.id, request.query?.limit);
         return reply.code(200).send(result);
       } catch (error: unknown) {
         if (error instanceof RankingServiceError) {
-          return reply
-            .code(404)
-            .send({ message: error.message, code: error.code });
+          return reply.code(404).send({ message: error.message, code: error.code });
         }
 
         throw error;

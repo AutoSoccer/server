@@ -172,9 +172,7 @@ describe('buyAthlete', () => {
     const destroyMarket = vi.fn().mockResolvedValue(undefined);
     mocks.findUser.mockResolvedValue(user);
     mocks.findMarketEntry.mockResolvedValue({ destroy: destroyMarket });
-    mocks.findAthlete.mockResolvedValue(
-      buildAthlete({ id: 100, cost: 3, name: 'Atleta Bronze' })
-    );
+    mocks.findAthlete.mockResolvedValue(buildAthlete({ id: 100, cost: 3, name: 'Atleta Bronze' }));
     mocks.findTeam.mockResolvedValue(buildTeam({ id: 10 }));
     mocks.countTeamAthletes.mockResolvedValue(2);
     mocks.createTeamAthlete.mockResolvedValue({ id: 200 });

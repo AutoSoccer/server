@@ -6,9 +6,7 @@ import { Athlete, MarketWindow, TeamAthlete, User } from '../../database/models'
 export const MARKET_SIZE = 3;
 export const REFRESH_COST = 1;
 
-export type MercadoServiceErrorCode =
-  | 'INSUFFICIENT_COINS'
-  | 'USER_NOT_FOUND';
+export type MercadoServiceErrorCode = 'INSUFFICIENT_COINS' | 'USER_NOT_FOUND';
 
 export type MercadoServiceErrorOptions = {
   i18nKey?: string;
@@ -99,7 +97,10 @@ const mapWindowResponse = async (
   };
 };
 
-const loadCurrentWindow = async (userId: number, transaction?: Transaction): Promise<MarketWindow[]> => {
+const loadCurrentWindow = async (
+  userId: number,
+  transaction?: Transaction
+): Promise<MarketWindow[]> => {
   return MarketWindow.findAll({
     where: {
       user_id: userId
@@ -137,9 +138,7 @@ const drawAvailableAthletes = async (
   });
 };
 
-export const refreshMarket = async (
-  userId: number
-): Promise<MarketResponse> => {
+export const refreshMarket = async (userId: number): Promise<MarketResponse> => {
   return sequelize.transaction(async (transaction) => {
     const user = await User.findByPk(userId, {
       transaction,

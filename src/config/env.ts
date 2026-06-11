@@ -5,10 +5,7 @@ import { ConfigError } from '../modules/shared/configError';
 const requiredEnv = (key: string): string => {
   const value = process.env[key];
   if (!value) {
-    throw new ConfigError(
-      'CONFIG_MISSING_ENV',
-      `Missing required environment variable: ${key}`
-    );
+    throw new ConfigError('CONFIG_MISSING_ENV', `Missing required environment variable: ${key}`);
   }
 
   return value;

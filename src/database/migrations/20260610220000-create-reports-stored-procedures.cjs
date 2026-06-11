@@ -23,11 +23,7 @@
  *      mesma ordem em que o servico TS consome.
  */
 
-const PROCEDURES = [
-  'sp_get_top_athletes_by_role',
-  'sp_team_power_ranking',
-  'sp_market_overview'
-];
+const PROCEDURES = ['sp_get_top_athletes_by_role', 'sp_team_power_ranking', 'sp_market_overview'];
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

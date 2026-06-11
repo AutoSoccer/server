@@ -75,11 +75,7 @@ vi.mock('../equipe/team-snapshot.service', () => ({
   salvarEstadoEquipe: mocks.salvarEstadoEquipe
 }));
 
-import {
-  jogarRodada,
-  jogarRodadaComFormacao,
-  RodadaServiceError
-} from './rodada.service';
+import { jogarRodada, jogarRodadaComFormacao, RodadaServiceError } from './rodada.service';
 
 const buildSnapshot = (overrides: Record<string, unknown> = {}) => ({
   id: 11,
@@ -90,9 +86,7 @@ const buildSnapshot = (overrides: Record<string, unknown> = {}) => ({
   lose: 0,
   draw: 0,
   victory_ratio: 0,
-  positions: Array.from({ length: 3 }, () =>
-    Array.from({ length: 3 }, () => null)
-  ),
+  positions: Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => null)),
   ...overrides
 });
 
@@ -111,9 +105,7 @@ describe('jogarRodada — erros de pre-requisito', () => {
   it('lanca TEAM_NOT_FOUND quando o usuario nao tem time (snapshot criado do zero)', async () => {
     mocks.teamFindOne.mockResolvedValue(null);
 
-    await expect(jogarRodada({ userId: 1 })).rejects.toBeInstanceOf(
-      RodadaServiceError
-    );
+    await expect(jogarRodada({ userId: 1 })).rejects.toBeInstanceOf(RodadaServiceError);
     await expect(jogarRodada({ userId: 1 })).rejects.toMatchObject({
       code: 'TEAM_NOT_FOUND'
     });
@@ -140,19 +132,17 @@ describe('jogarRodada — erros de pre-requisito', () => {
   it('lanca SNAPSHOT_NOT_FOUND quando snapshot_id inexistente', async () => {
     mocks.teamSnapshotFindByPk.mockResolvedValue(null);
 
-    await expect(
-      jogarRodada({ userId: 1, snapshotId: 999 })
-    ).rejects.toMatchObject({ code: 'SNAPSHOT_NOT_FOUND' });
+    await expect(jogarRodada({ userId: 1, snapshotId: 999 })).rejects.toMatchObject({
+      code: 'SNAPSHOT_NOT_FOUND'
+    });
   });
 
   it('lanca SNAPSHOT_FORBIDDEN quando snapshot pertence a outro user (403)', async () => {
-    mocks.teamSnapshotFindByPk.mockResolvedValue(
-      buildSnapshot({ user_id: 99 })
-    );
+    mocks.teamSnapshotFindByPk.mockResolvedValue(buildSnapshot({ user_id: 99 }));
 
-    await expect(
-      jogarRodada({ userId: 1, snapshotId: 11 })
-    ).rejects.toMatchObject({ code: 'SNAPSHOT_FORBIDDEN' });
+    await expect(jogarRodada({ userId: 1, snapshotId: 11 })).rejects.toMatchObject({
+      code: 'SNAPSHOT_FORBIDDEN'
+    });
   });
 
   it('propaga NO_OPPONENT_FOUND quando matchmaking falha sem fantasmas conhecidos', async () => {
@@ -168,9 +158,7 @@ describe('jogarRodada — erros de pre-requisito', () => {
 
     // a constante real eh MatchmakingError, mas o catch do rodada eh por instanceof.
     // Como mockamos com Object.assign de Error, cai no else (rethrow).
-    await expect(
-      jogarRodada({ userId: 1, snapshotId: 11 })
-    ).rejects.toThrow();
+    await expect(jogarRodada({ userId: 1, snapshotId: 11 })).rejects.toThrow();
   });
 });
 
@@ -180,13 +168,15 @@ describe('jogarRodada — sucesso', () => {
     stubTransaction();
   });
 
-  const setupHappyPath = (overrides: {
-    winner?: 'player' | 'opponent' | 'draw';
-    teamVictory?: number;
-    teamLose?: number;
-    isGuest?: boolean;
-    matchEnded?: boolean;
-  } = {}) => {
+  const setupHappyPath = (
+    overrides: {
+      winner?: 'player' | 'opponent' | 'draw';
+      teamVictory?: number;
+      teamLose?: number;
+      isGuest?: boolean;
+      matchEnded?: boolean;
+    } = {}
+  ) => {
     const playerSnapshot = buildSnapshot({ id: 11, user_id: 1, team_id: 10 });
     const opponentSnapshot = buildSnapshot({
       id: 22,

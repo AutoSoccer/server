@@ -76,14 +76,18 @@ em Node 20. PRs com qualquer step vermelho nao podem ser merge-ados.
    chaves de i18n via `tSwagger('...')`:
 
    ```ts
-   app.post('/recurso', {
-     schema: {
-       tags: ['MinhaTag'],
-       summary: tSwagger('minhaTag.criar.summary'),
-       description: tSwagger('minhaTag.criar.description'),
-       response: { 201: meuRef, 400: { $ref: 'ErrorResponse#' } }
-     }
-   }, handler);
+   app.post(
+     '/recurso',
+     {
+       schema: {
+         tags: ['MinhaTag'],
+         summary: tSwagger('minhaTag.criar.summary'),
+         description: tSwagger('minhaTag.criar.description'),
+         response: { 201: meuRef, 400: { $ref: 'ErrorResponse#' } }
+       }
+     },
+     handler
+   );
    ```
 
 4. Adicione os textos em

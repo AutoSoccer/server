@@ -139,8 +139,7 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
             atleta_id: { type: 'integer', example: 21 },
             user_id: {
               type: 'integer',
-              description:
-                'Opcional. Quando informado deve coincidir com o usuario autenticado.'
+              description: 'Opcional. Quando informado deve coincidir com o usuario autenticado.'
             }
           }
         },
@@ -163,13 +162,8 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
 
       const authenticatedUserId = request.user!.id;
 
-      if (
-        body?.user_id !== undefined &&
-        Number(body.user_id) !== authenticatedUserId
-      ) {
-        return reply
-          .code(403)
-          .send({ message: 'user_id nao corresponde ao usuario autenticado.' });
+      if (body?.user_id !== undefined && Number(body.user_id) !== authenticatedUserId) {
+        return reply.code(403).send({ message: 'user_id nao corresponde ao usuario autenticado.' });
       }
 
       const result = await buyAthlete(authenticatedUserId, athleteId);
@@ -194,8 +188,7 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
             atleta_id: { type: 'integer', example: 21 },
             user_id: {
               type: 'integer',
-              description:
-                'Opcional. Quando informado deve coincidir com o usuario autenticado.'
+              description: 'Opcional. Quando informado deve coincidir com o usuario autenticado.'
             }
           }
         },
@@ -217,13 +210,8 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
 
       const authenticatedUserId = request.user!.id;
 
-      if (
-        body?.user_id !== undefined &&
-        Number(body.user_id) !== authenticatedUserId
-      ) {
-        return reply
-          .code(403)
-          .send({ message: 'user_id nao corresponde ao usuario autenticado.' });
+      if (body?.user_id !== undefined && Number(body.user_id) !== authenticatedUserId) {
+        return reply.code(403).send({ message: 'user_id nao corresponde ao usuario autenticado.' });
       }
 
       const result = await sellAthlete(authenticatedUserId, athleteId);
@@ -247,8 +235,7 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
           properties: {
             user_id: {
               type: 'integer',
-              description:
-                'Opcional. Quando informado deve coincidir com o usuario autenticado.'
+              description: 'Opcional. Quando informado deve coincidir com o usuario autenticado.'
             },
             positions: {
               type: 'array',
@@ -275,13 +262,13 @@ export const equipeRoutes: FastifyPluginAsync = async (app) => {
       const authenticatedUserId = request.user!.id;
       const body = request.body ?? ({} as SalvarEstadoBody);
 
-      if (
-        body.user_id !== undefined &&
-        Number(body.user_id) !== authenticatedUserId
-      ) {
+      if (body.user_id !== undefined && Number(body.user_id) !== authenticatedUserId) {
         return reply
           .code(403)
-          .send({ message: 'user_id nao corresponde ao usuario autenticado.', code: 'USER_MISMATCH' });
+          .send({
+            message: 'user_id nao corresponde ao usuario autenticado.',
+            code: 'USER_MISMATCH'
+          });
       }
 
       const result = await salvarEstadoEquipe({

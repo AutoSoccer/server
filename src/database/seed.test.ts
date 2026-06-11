@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  botAthleteCountForRound,
-  buildBotFormation
-} from './seed';
+import { botAthleteCountForRound, buildBotFormation } from './seed';
 
 describe('buildBotFormation', () => {
   it('usa tres atletas na primeira rodada e seis nas seguintes', () => {
@@ -15,9 +12,7 @@ describe('buildBotFormation', () => {
   it('gera uma formacao equilibrada de tres atletas para a primeira rodada', () => {
     for (let seed = 0; seed < 27; seed += 1) {
       const formation = buildBotFormation(seed, 3);
-      const positions = new Set(
-        formation.map((slot) => `${slot.row}:${slot.col}`)
-      );
+      const positions = new Set(formation.map((slot) => `${slot.row}:${slot.col}`));
 
       expect(formation).toHaveLength(3);
       expect(positions.size).toBe(3);
@@ -30,9 +25,7 @@ describe('buildBotFormation', () => {
   it('gera seis posicoes unicas com dois atletas por linha', () => {
     for (let seed = 0; seed < 27; seed += 1) {
       const formation = buildBotFormation(seed);
-      const positions = new Set(
-        formation.map((slot) => `${slot.row}:${slot.col}`)
-      );
+      const positions = new Set(formation.map((slot) => `${slot.row}:${slot.col}`));
 
       expect(formation).toHaveLength(6);
       expect(positions.size).toBe(6);
@@ -58,12 +51,8 @@ describe('buildBotFormation', () => {
   });
 
   it('nao deixa o centro do meio-campo vazio em todas as formacoes', () => {
-    const formationsWithCentralMidfielder = Array.from(
-      { length: 27 },
-      (_, seed) =>
-        buildBotFormation(seed).some(
-          (slot) => slot.type === 'midfielder' && slot.col === 1
-        )
+    const formationsWithCentralMidfielder = Array.from({ length: 27 }, (_, seed) =>
+      buildBotFormation(seed).some((slot) => slot.type === 'midfielder' && slot.col === 1)
     ).filter(Boolean);
 
     expect(formationsWithCentralMidfielder.length).toBeGreaterThan(0);

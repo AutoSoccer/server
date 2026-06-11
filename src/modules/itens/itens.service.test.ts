@@ -36,12 +36,7 @@ vi.mock('../../database/models', () => ({
   }
 }));
 
-import {
-  aplicarItem,
-  comprarItem,
-  ItemServiceError,
-  listarItens
-} from './itens.service';
+import { aplicarItem, comprarItem, ItemServiceError, listarItens } from './itens.service';
 
 const setupTransaction = () => {
   mocks.transaction.mockImplementation(async (callback) =>

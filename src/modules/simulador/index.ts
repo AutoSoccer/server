@@ -1,14 +1,6 @@
-export {
-  computeInitiative,
-  Simulador,
-  processarRodada,
-  TOTAL_TURNS
-} from './simulador.service';
+export { computeInitiative, Simulador, processarRodada, TOTAL_TURNS } from './simulador.service';
 
-export {
-  SimuladorServiceError,
-  type SimuladorServiceErrorCode
-} from './simulador.errors';
+export { SimuladorServiceError, type SimuladorServiceErrorCode } from './simulador.errors';
 
 export { computeSuccessChance, effectiveAttribute, FALLBACK_ATTRIBUTE } from './formula';
 

@@ -66,21 +66,29 @@ const injectAndCollect = async (
 ): Promise<{ ws: WebSocket; msgs: Promise<string[]> }> => {
   const msgs: string[] = [];
   let resolveAll: (m: string[]) => void;
-  const promise = new Promise<string[]>((r) => { resolveAll = r; });
-
-  const ws = await (app as any).injectWS(path, {}, {
-    onInit: (socket: WebSocket) => {
-      socket.on('message', (data: Buffer) => {
-        const raw = data.toString();
-        msgs.push(raw);
-        const type = (JSON.parse(raw) as { type: string }).type;
-        const done = opts?.untilType ? type === opts.untilType : type === 'result' || type === 'error';
-        if (done) resolveAll(msgs);
-      });
-      // Resolve também ao fechar (cobre casos onde o handler fecha sem resultado)
-      socket.on('close', () => resolveAll(msgs));
-    }
+  const promise = new Promise<string[]>((r) => {
+    resolveAll = r;
   });
+
+  const ws = await (app as any).injectWS(
+    path,
+    {},
+    {
+      onInit: (socket: WebSocket) => {
+        socket.on('message', (data: Buffer) => {
+          const raw = data.toString();
+          msgs.push(raw);
+          const type = (JSON.parse(raw) as { type: string }).type;
+          const done = opts?.untilType
+            ? type === opts.untilType
+            : type === 'result' || type === 'error';
+          if (done) resolveAll(msgs);
+        });
+        // Resolve também ao fechar (cobre casos onde o handler fecha sem resultado)
+        socket.on('close', () => resolveAll(msgs));
+      }
+    }
+  );
 
   return { ws, msgs: promise };
 };

@@ -1,8 +1,4 @@
-import {
-  computeSuccessChance,
-  effectiveAttribute,
-  type SimAttribute
-} from './formula';
+import { computeSuccessChance, effectiveAttribute, type SimAttribute } from './formula';
 import { SimuladorServiceError } from './simulador.errors';
 import {
   Athlete,
@@ -36,17 +32,13 @@ type FieldAthlete = {
 
 type FieldState = Record<Possession, FieldAthlete[]>;
 
-const cloneTeam = (team: TeamDTO): TeamDTO =>
-  JSON.parse(JSON.stringify(team)) as TeamDTO;
+const cloneTeam = (team: TeamDTO): TeamDTO => JSON.parse(JSON.stringify(team)) as TeamDTO;
 
-const directionFor = (team: Possession): 1 | -1 =>
-  team === 'player' ? 1 : -1;
+const directionFor = (team: Possession): 1 | -1 => (team === 'player' ? 1 : -1);
 
-const goalRowFor = (team: Possession): BallRow =>
-  team === 'player' ? 5 : 0;
+const goalRowFor = (team: Possession): BallRow => (team === 'player' ? 5 : 0);
 
-const opponentOf = (team: Possession): Possession =>
-  team === 'player' ? 'opponent' : 'player';
+const opponentOf = (team: Possession): Possession => (team === 'player' ? 'opponent' : 'player');
 
 const toPosition = (x: number, y: number): FieldPosition => ({
   x: x as FieldColumn,
@@ -59,19 +51,10 @@ const isInsideField = (x: number, y: number): boolean =>
 const samePosition = (left: FieldPosition, right: FieldPosition): boolean =>
   left.x === right.x && left.y === right.y;
 
-const distanceBetween = (
-  left: FieldPosition,
-  right: FieldPosition
-): number =>
-  Math.max(
-    Math.abs(left.x - right.x),
-    Math.abs(left.y - right.y)
-  );
+const distanceBetween = (left: FieldPosition, right: FieldPosition): number =>
+  Math.max(Math.abs(left.x - right.x), Math.abs(left.y - right.y));
 
-const buildFieldTeam = (
-  team: TeamDTO,
-  side: Possession
-): FieldAthlete[] => {
+const buildFieldTeam = (team: TeamDTO, side: Possession): FieldAthlete[] => {
   const athletes: FieldAthlete[] = [];
 
   team.athletesPositions.forEach((row, rowIndex) => {
@@ -81,20 +64,12 @@ const buildFieldTeam = (
       }
 
       athlete.type =
-        athlete.type ??
-        (rowIndex === 0
-          ? 'defender'
-          : rowIndex === 2
-            ? 'attacker'
-            : 'midfielder');
+        athlete.type ?? (rowIndex === 0 ? 'defender' : rowIndex === 2 ? 'attacker' : 'midfielder');
 
       athletes.push({
         team: side,
         athlete,
-        position: toPosition(
-          columnIndex,
-          side === 'player' ? rowIndex : FIELD_ROWS - 1 - rowIndex
-        )
+        position: toPosition(columnIndex, side === 'player' ? rowIndex : FIELD_ROWS - 1 - rowIndex)
       });
     });
   });
@@ -107,27 +82,21 @@ const buildField = (player: TeamDTO, opponent: TeamDTO): FieldState => ({
   opponent: buildFieldTeam(opponent, 'opponent')
 });
 
-const frontLineAthletes = (
-  athletes: FieldAthlete[],
-  side: Possession
-): FieldAthlete[] => {
+const frontLineAthletes = (athletes: FieldAthlete[], side: Possession): FieldAthlete[] => {
   if (athletes.length === 0) {
     return [];
   }
 
   const frontRow = athletes.reduce(
     (current, entry) =>
-      side === 'player'
-        ? Math.max(current, entry.position.y)
-        : Math.min(current, entry.position.y),
+      side === 'player' ? Math.max(current, entry.position.y) : Math.min(current, entry.position.y),
     side === 'player' ? -Infinity : Infinity
   );
 
   return athletes.filter((entry) => entry.position.y === frontRow);
 };
 
-const velocityOf = (entry: FieldAthlete): number =>
-  effectiveAttribute(entry.athlete, 'velocity');
+const velocityOf = (entry: FieldAthlete): number => effectiveAttribute(entry.athlete, 'velocity');
 
 const strongestByVelocity = (athletes: FieldAthlete[]): FieldAthlete => {
   const ordered = [...athletes].sort((left, right) => {
@@ -136,8 +105,7 @@ const strongestByVelocity = (athletes: FieldAthlete[]): FieldAthlete => {
       return velocityDelta;
     }
     const attackDelta =
-      effectiveAttribute(right.athlete, 'attack') -
-      effectiveAttribute(left.athlete, 'attack');
+      effectiveAttribute(right.athlete, 'attack') - effectiveAttribute(left.athlete, 'attack');
     if (attackDelta !== 0) {
       return attackDelta;
     }
@@ -168,14 +136,8 @@ export const computeInitiative = (
   const field = buildField(player, opponent);
   const playerFront = frontLineAthletes(field.player, 'player');
   const opponentFront = frontLineAthletes(field.opponent, 'opponent');
-  const playerVelocity = playerFront.reduce(
-    (total, entry) => total + velocityOf(entry),
-    0
-  );
-  const opponentVelocity = opponentFront.reduce(
-    (total, entry) => total + velocityOf(entry),
-    0
-  );
+  const playerVelocity = playerFront.reduce((total, entry) => total + velocityOf(entry), 0);
+  const opponentVelocity = opponentFront.reduce((total, entry) => total + velocityOf(entry), 0);
 
   let startsWith: Possession;
   if (playerVelocity > opponentVelocity) {
@@ -186,9 +148,7 @@ export const computeInitiative = (
     startsWith = rng() < 0.5 ? 'player' : 'opponent';
   }
 
-  const carrier = strongestByVelocity(
-    startsWith === 'player' ? playerFront : opponentFront
-  );
+  const carrier = strongestByVelocity(startsWith === 'player' ? playerFront : opponentFront);
 
   return {
     playerLeadVelocity: playerVelocity,
@@ -198,18 +158,14 @@ export const computeInitiative = (
   };
 };
 
-const athleteAt = (
-  athletes: FieldAthlete[],
-  position: FieldPosition
-): FieldAthlete | undefined =>
+const athleteAt = (athletes: FieldAthlete[], position: FieldPosition): FieldAthlete | undefined =>
   athletes.find((entry) => samePosition(entry.position, position));
 
 const fieldAthleteById = (
   field: FieldState,
   side: Possession,
   athleteId: number
-): FieldAthlete | undefined =>
-  field[side].find((entry) => entry.athlete.id === athleteId);
+): FieldAthlete | undefined => field[side].find((entry) => entry.athlete.id === athleteId);
 
 const resolveAttributeContest = (
   attacker: Athlete,
@@ -234,10 +190,7 @@ const resolveAttributeContest = (
   };
 };
 
-const moveAthlete = (
-  entry: FieldAthlete,
-  destination: FieldPosition
-): FieldMovement => {
+const moveAthlete = (entry: FieldAthlete, destination: FieldPosition): FieldMovement => {
   const movement: FieldMovement = {
     team: entry.team,
     athleteId: entry.athlete.id,
@@ -254,9 +207,7 @@ const opponentResistanceAt = (
   position: FieldPosition
 ): number => {
   const defender = athleteAt(field[opponentOf(side)], position);
-  return defender
-    ? effectiveAttribute(defender.athlete, 'defense')
-    : 0;
+  return defender ? effectiveAttribute(defender.athlete, 'defense') : 0;
 };
 
 const bestMovementOption = (
@@ -264,22 +215,18 @@ const bestMovementOption = (
   side: Possession,
   positions: FieldPosition[]
 ): FieldPosition | null => {
-  const available = positions.filter(
-    (position) => !athleteAt(field[side], position)
-  );
+  const available = positions.filter((position) => !athleteAt(field[side], position));
   if (available.length === 0) {
     return null;
   }
 
   return [...available].sort((left, right) => {
     const resistanceDelta =
-      opponentResistanceAt(field, side, left) -
-      opponentResistanceAt(field, side, right);
+      opponentResistanceAt(field, side, left) - opponentResistanceAt(field, side, right);
     if (resistanceDelta !== 0) {
       return resistanceDelta;
     }
-    const centerDelta =
-      Math.abs(left.x - 1) - Math.abs(right.x - 1);
+    const centerDelta = Math.abs(left.x - 1) - Math.abs(right.x - 1);
     if (centerDelta !== 0) {
       return centerDelta;
     }
@@ -287,10 +234,7 @@ const bestMovementOption = (
   })[0];
 };
 
-const chooseMovementTarget = (
-  field: FieldState,
-  carrier: FieldAthlete
-): FieldPosition | null => {
+const chooseMovementTarget = (field: FieldState, carrier: FieldAthlete): FieldPosition | null => {
   const direction = directionFor(carrier.team);
   const forwardY = carrier.position.y + direction;
   if (!isInsideField(carrier.position.x, forwardY)) {
@@ -330,8 +274,7 @@ const passPriority = (
   target: FieldAthlete
 ): { category: number; distance: number } | null => {
   const direction = directionFor(carrier.team);
-  const forwardDistance =
-    (target.position.y - carrier.position.y) * direction;
+  const forwardDistance = (target.position.y - carrier.position.y) * direction;
   const lateralDistance = Math.abs(target.position.x - carrier.position.x);
 
   if (forwardDistance > 0 && lateralDistance === 0) {
@@ -358,16 +301,9 @@ const passPriority = (
   return null;
 };
 
-const choosePassTarget = (
-  field: FieldState,
-  carrier: FieldAthlete
-): FieldAthlete | null => {
-  const teammates = field[carrier.team].filter(
-    (entry) => entry.athlete.id !== carrier.athlete.id
-  );
-  const attackers = teammates.filter(
-    (entry) => entry.athlete.type === 'attacker'
-  );
+const choosePassTarget = (field: FieldState, carrier: FieldAthlete): FieldAthlete | null => {
+  const teammates = field[carrier.team].filter((entry) => entry.athlete.id !== carrier.athlete.id);
+  const attackers = teammates.filter((entry) => entry.athlete.type === 'attacker');
   const pool = attackers.length > 0 ? attackers : teammates;
 
   const ranked = pool
@@ -384,18 +320,15 @@ const choosePassTarget = (
       } => candidate.priority !== null
     )
     .sort((left, right) => {
-      const categoryDelta =
-        left.priority.category - right.priority.category;
+      const categoryDelta = left.priority.category - right.priority.category;
       if (categoryDelta !== 0) {
         return categoryDelta;
       }
-      const distanceDelta =
-        left.priority.distance - right.priority.distance;
+      const distanceDelta = left.priority.distance - right.priority.distance;
       if (distanceDelta !== 0) {
         return distanceDelta;
       }
-      const velocityDelta =
-        velocityOf(right.entry) - velocityOf(left.entry);
+      const velocityDelta = velocityOf(right.entry) - velocityOf(left.entry);
       if (velocityDelta !== 0) {
         return velocityDelta;
       }
@@ -416,19 +349,12 @@ const nearestOpponents = (
   }
 
   const nearestDistance = Math.min(
-    ...opponents.map((entry) =>
-      distanceBetween(entry.position, position)
-    )
+    ...opponents.map((entry) => distanceBetween(entry.position, position))
   );
-  return opponents.filter(
-    (entry) =>
-      distanceBetween(entry.position, position) === nearestDistance
-  );
+  return opponents.filter((entry) => distanceBetween(entry.position, position) === nearestDistance);
 };
 
-const strongestInterceptor = (
-  candidates: FieldAthlete[]
-): FieldAthlete | undefined =>
+const strongestInterceptor = (candidates: FieldAthlete[]): FieldAthlete | undefined =>
   [...candidates].sort((left, right) => {
     const velocityDelta = velocityOf(right) - velocityOf(left);
     if (velocityDelta !== 0) {
@@ -437,32 +363,20 @@ const strongestInterceptor = (
     return left.athlete.id - right.athlete.id;
   })[0];
 
-const randomCandidate = (
-  candidates: FieldAthlete[],
-  rng: RandomFn
-): FieldAthlete | undefined => {
+const randomCandidate = (candidates: FieldAthlete[], rng: RandomFn): FieldAthlete | undefined => {
   if (candidates.length === 0) {
     return undefined;
   }
   if (candidates.length === 1) {
     return candidates[0];
   }
-  const index = Math.min(
-    candidates.length - 1,
-    Math.floor(rng() * candidates.length)
-  );
+  const index = Math.min(candidates.length - 1, Math.floor(rng() * candidates.length));
   return candidates[index];
 };
 
-const retreatAfterLoss = (
-  field: FieldState,
-  carrier: FieldAthlete
-): FieldMovement[] => {
+const retreatAfterLoss = (field: FieldState, carrier: FieldAthlete): FieldMovement[] => {
   const defenseY = carrier.team === 'player' ? 0 : 5;
-  if (
-    carrier.athlete.holdsPosition ||
-    carrier.position.y === defenseY
-  ) {
+  if (carrier.athlete.holdsPosition || carrier.position.y === defenseY) {
     return [];
   }
 
@@ -474,10 +388,7 @@ const retreatAfterLoss = (
     1,
     2
   ].filter(
-    (column, index, all) =>
-      column >= 0 &&
-      column < FIELD_COLUMNS &&
-      all.indexOf(column) === index
+    (column, index, all) => column >= 0 && column < FIELD_COLUMNS && all.indexOf(column) === index
   );
 
   for (const column of columnOrder) {
@@ -490,9 +401,7 @@ const retreatAfterLoss = (
   return [];
 };
 
-const createEvent = (
-  input: Omit<TurnEvent, 'ballRow'>
-): TurnEvent => ({
+const createEvent = (input: Omit<TurnEvent, 'ballRow'>): TurnEvent => ({
   ...input,
   ballRow: input.ball.position.y
 });
@@ -540,9 +449,7 @@ const executePass = (
     'velocity',
     rng
   );
-  const ball = outcome.success
-    ? ballFor(receiver)
-    : ballFor(interceptor);
+  const ball = outcome.success ? ballFor(receiver) : ballFor(interceptor);
   const chance = Math.round(outcome.successChance * 100);
 
   return createEvent({
@@ -614,9 +521,7 @@ const executeMovement = (
   const movements = outcome.success
     ? [moveAthlete(carrier, destination)]
     : retreatAfterLoss(field, carrier);
-  const ball = outcome.success
-    ? ballFor(carrier)
-    : ballFor(defender);
+  const ball = outcome.success ? ballFor(carrier) : ballFor(defender);
   const chance = Math.round(outcome.successChance * 100);
 
   return createEvent({
@@ -656,10 +561,7 @@ const executeShot = (
   const goal = roll < chance;
   const rebound = goal
     ? undefined
-    : randomCandidate(
-        nearestOpponents(field, carrier.team, carrier.position),
-        rng
-      );
+    : randomCandidate(nearestOpponents(field, carrier.team, carrier.position), rng);
   const ball = rebound ? ballFor(rebound) : ballFor(carrier);
 
   return createEvent({
@@ -732,13 +634,11 @@ export const processarRodada = (
   const calculatedInitiative = options.initialPossession
     ? null
     : computeInitiative(player, opponent, rng);
-  const initialSide =
-    options.initialPossession ?? calculatedInitiative!.startsWith;
+  const initialSide = options.initialPossession ?? calculatedInitiative!.startsWith;
   const initialCarrier =
     (options.initialCarrierId
       ? fieldAthleteById(field, initialSide, options.initialCarrierId)
-      : undefined) ??
-    strongestByVelocity(frontLineAthletes(field[initialSide], initialSide));
+      : undefined) ?? strongestByVelocity(frontLineAthletes(field[initialSide], initialSide));
   let ball = ballFor(initialCarrier);
 
   const initialBall = {
@@ -753,11 +653,7 @@ export const processarRodada = (
   };
 
   for (let turn = 1; turn <= totalTurns; turn += 1) {
-    const carrier = fieldAthleteById(
-      field,
-      ball.team,
-      ball.athleteId
-    );
+    const carrier = fieldAthleteById(field, ball.team, ball.athleteId);
     if (!carrier) {
       throw new SimuladorServiceError('BALL_HOLDER_NOT_FOUND', {
         i18nKey: 'simulador.ballHolderNotFound',
@@ -769,27 +665,13 @@ export const processarRodada = (
     if (carrier.athlete.type !== 'attacker') {
       const receiver = choosePassTarget(field, carrier);
       if (receiver) {
-        event = executePass(
-          turn,
-          field,
-          carrier,
-          receiver,
-          rng,
-          teamIds
-        );
+        event = executePass(turn, field, carrier, receiver, rng, teamIds);
       } else if (carrier.position.y === goalRowFor(carrier.team)) {
         event = executeShot(turn, field, carrier, rng, teamIds);
       } else {
         const destination = chooseMovementTarget(field, carrier);
         event = destination
-          ? executeMovement(
-              turn,
-              field,
-              carrier,
-              destination,
-              rng,
-              teamIds
-            )
+          ? executeMovement(turn, field, carrier, destination, rng, teamIds)
           : noSpaceEvent(turn, carrier, teamIds);
       }
     } else if (carrier.position.y === goalRowFor(carrier.team)) {
@@ -797,14 +679,7 @@ export const processarRodada = (
     } else {
       const destination = chooseMovementTarget(field, carrier);
       event = destination
-        ? executeMovement(
-            turn,
-            field,
-            carrier,
-            destination,
-            rng,
-            teamIds
-          )
+        ? executeMovement(turn, field, carrier, destination, rng, teamIds)
         : noSpaceEvent(turn, carrier, teamIds);
     }
 

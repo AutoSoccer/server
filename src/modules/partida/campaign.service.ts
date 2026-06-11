@@ -1,15 +1,8 @@
 import { sequelize } from '../../config/database';
-import {
-  MarketWindow,
-  Team,
-  TeamAthlete,
-  User
-} from '../../database/models';
+import { MarketWindow, Team, TeamAthlete, User } from '../../database/models';
 import { COINS_PER_ROUND } from './rodada.logic';
 
-export type CampaignServiceErrorCode =
-  | 'USER_NOT_FOUND'
-  | 'INVALID_TEAM_NAME';
+export type CampaignServiceErrorCode = 'USER_NOT_FOUND' | 'INVALID_TEAM_NAME';
 
 export type CampaignServiceErrorOptions = {
   i18nKey?: string;
@@ -61,9 +54,7 @@ export type StartCampaignResult = {
  * Abandona somente a campanha em andamento. Snapshots e logs permanecem como
  * historico, enquanto equipe, progresso e saldo voltam ao estado inicial.
  */
-export const abandonCampaign = async (
-  userId: number
-): Promise<AbandonCampaignResult> => {
+export const abandonCampaign = async (userId: number): Promise<AbandonCampaignResult> => {
   return sequelize.transaction(async (transaction) => {
     const user = await User.findByPk(userId, {
       transaction,

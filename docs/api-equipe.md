@@ -204,9 +204,9 @@ Este e o endpoint principal do botao **Jogar**. Ele:
 - O passe pode atravessar mais de uma casa.
 - O adversario mais proximo do receptor tenta interceptar o passe.
 - Interceptacao usa `velocidade_receptor / (velocidade_receptor +
-  velocidade_interceptor)`.
+velocidade_interceptor)`.
 - Disputa durante o avanco usa `ataque_portador / (ataque_portador +
-  defesa_adversario)`.
+defesa_adversario)`.
 - Ao perder uma disputa na zona de ataque, o portador recua para uma vaga livre
   da propria defesa.
 - Na ultima linha, a chance de gol e igual ao ataque do portador em percentual.

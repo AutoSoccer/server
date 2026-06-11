@@ -15,10 +15,7 @@ export type MatchStatus = 'in_progress' | 'won' | 'lost';
  * Log imutavel de uma rodada jogada (Task 4.6). Guarda o placar, o vencedor,
  * o status da partida apos a rodada e a variacao de trofeus aplicada.
  */
-export class RoundLog extends Model<
-  InferAttributes<RoundLog>,
-  InferCreationAttributes<RoundLog>
-> {
+export class RoundLog extends Model<InferAttributes<RoundLog>, InferCreationAttributes<RoundLog>> {
   declare id: CreationOptional<number>;
   declare user_id: number;
   declare team_id: number;

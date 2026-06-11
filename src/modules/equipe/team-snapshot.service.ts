@@ -1,16 +1,8 @@
 import { Op, type Transaction } from 'sequelize';
 
 import { sequelize } from '../../config/database';
-import {
-  Athlete as AthleteModel,
-  Team,
-  TeamAthlete,
-  TeamSnapshot
-} from '../../database/models';
-import type {
-  SnapshotAthlete,
-  SnapshotPositions
-} from '../../database/models/team-snapshot.model';
+import { Athlete as AthleteModel, Team, TeamAthlete, TeamSnapshot } from '../../database/models';
+import type { SnapshotAthlete, SnapshotPositions } from '../../database/models/team-snapshot.model';
 import { computeVictoryRatio } from '../matchmaking/matchmaking.service';
 
 export const GRID_SIZE = 3;
@@ -108,10 +100,7 @@ const ensurePositionsShape = (positions: unknown): AthletePositionInput[] => {
 
 const ensureValidPositions = (positions: AthletePositionInput[]): void => {
   // RN: o jogador pode iniciar a rodada com qualquer formacao entre 1 e 6 atletas.
-  if (
-    positions.length < MIN_POSITIONED_ATHLETES ||
-    positions.length > MAX_POSITIONED_ATHLETES
-  ) {
+  if (positions.length < MIN_POSITIONED_ATHLETES || positions.length > MAX_POSITIONED_ATHLETES) {
     throw new TeamSnapshotError('WRONG_ATHLETE_COUNT', {
       i18nKey: 'equipe.snapshot.wrongAthleteCount',
       params: {
@@ -126,12 +115,7 @@ const ensureValidPositions = (positions: AthletePositionInput[]): void => {
   const cells = new Set<string>();
 
   for (const entry of positions) {
-    if (
-      entry.posX < 0 ||
-      entry.posX >= GRID_SIZE ||
-      entry.posY < 0 ||
-      entry.posY >= GRID_SIZE
-    ) {
+    if (entry.posX < 0 || entry.posX >= GRID_SIZE || entry.posY < 0 || entry.posY >= GRID_SIZE) {
       throw new TeamSnapshotError('OUT_OF_BOUNDS', {
         i18nKey: 'equipe.snapshot.outOfBounds',
         params: { posX: entry.posX, posY: entry.posY, grid: GRID_SIZE }
@@ -157,9 +141,7 @@ const ensureValidPositions = (positions: AthletePositionInput[]): void => {
   }
 };
 
-export const validateAthletePositions = (
-  positions: unknown
-): AthletePositionInput[] => {
+export const validateAthletePositions = (positions: unknown): AthletePositionInput[] => {
   const normalized = ensurePositionsShape(positions);
   ensureValidPositions(normalized);
   return normalized;
@@ -252,9 +234,7 @@ const buildPositionsGrid = (
  *  - todos os IDs pertencem ao inventario atual do usuario (RF007/RF008)
  *  - itens (Sprint 5) reservado para integracao futura
  */
-export const salvarEstadoEquipe = async (
-  input: SalvarEstadoInput
-): Promise<SalvarEstadoResult> => {
+export const salvarEstadoEquipe = async (input: SalvarEstadoInput): Promise<SalvarEstadoResult> => {
   const positions = validateAthletePositions(input.positions);
 
   if (input.items && input.items.length > 0) {
@@ -282,11 +262,7 @@ export const salvarEstadoEquipe = async (
       });
     }
 
-    const victoryRatio = computeVictoryRatio(
-      team.victory ?? 0,
-      team.lose ?? 0,
-      team.draw ?? 0
-    );
+    const victoryRatio = computeVictoryRatio(team.victory ?? 0, team.lose ?? 0, team.draw ?? 0);
 
     const snapshot = await TeamSnapshot.create(
       {

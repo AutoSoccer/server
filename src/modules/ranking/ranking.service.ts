@@ -54,10 +54,7 @@ const DEFAULT_RANKING_LIMIT = 50;
 const MAX_RANKING_LIMIT = 100;
 
 const completedCampaignWhere = {
-  [Op.or]: [
-    { victory: { [Op.gt]: 0 } },
-    { defeat: { [Op.gt]: 0 } }
-  ]
+  [Op.or]: [{ victory: { [Op.gt]: 0 } }, { defeat: { [Op.gt]: 0 } }]
 };
 
 const eligibleRankingWhere: WhereOptions = {
@@ -65,8 +62,7 @@ const eligibleRankingWhere: WhereOptions = {
   ...completedCampaignWhere
 };
 
-const roundPercentage = (value: number): number =>
-  Math.round(value * 10) / 10;
+const roundPercentage = (value: number): number => Math.round(value * 10) / 10;
 
 export const calculateRankingMetrics = (
   trophies: number,
@@ -75,9 +71,7 @@ export const calculateRankingMetrics = (
 ): RankingMetrics => {
   const completedCampaigns = victory + defeat;
   const winRate =
-    completedCampaigns > 0
-      ? roundPercentage((victory / completedCampaigns) * 100)
-      : 0;
+    completedCampaigns > 0 ? roundPercentage((victory / completedCampaigns) * 100) : 0;
 
   return {
     trophies,
@@ -125,10 +119,7 @@ export const getRanking = async (
   currentUserId: number,
   limit = DEFAULT_RANKING_LIMIT
 ): Promise<RankingResponse> => {
-  const safeLimit = Math.min(
-    Math.max(1, Math.floor(limit)),
-    MAX_RANKING_LIMIT
-  );
+  const safeLimit = Math.min(Math.max(1, Math.floor(limit)), MAX_RANKING_LIMIT);
 
   const [users, currentUser] = await Promise.all([
     User.findAll({
@@ -155,8 +146,7 @@ export const getRanking = async (
     currentUser.victory,
     currentUser.defeat
   );
-  const isEligible =
-    !currentUser.is_guest && currentMetrics.completedCampaigns > 0;
+  const isEligible = !currentUser.is_guest && currentMetrics.completedCampaigns > 0;
   const currentPosition = isEligible
     ? (await User.count({
         where: outranksCurrentUserWhere(currentUser)
@@ -168,19 +158,14 @@ export const getRanking = async (
       position: index + 1,
       userId: user.id,
       nickname: user.nickname,
-      ...calculateRankingMetrics(
-        user.trophies,
-        user.victory,
-        user.defeat
-      )
+      ...calculateRankingMetrics(user.trophies, user.victory, user.defeat)
     })),
     currentUser: {
       userId: currentUser.id,
       nickname: currentUser.nickname,
       isGuest: currentUser.is_guest,
       position: currentPosition,
-      appearsInRanking:
-        currentPosition !== null && currentPosition <= safeLimit,
+      appearsInRanking: currentPosition !== null && currentPosition <= safeLimit,
       ...currentMetrics
     }
   };

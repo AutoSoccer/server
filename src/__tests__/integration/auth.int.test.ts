@@ -140,9 +140,7 @@ describe('integration: /auth', () => {
 
   it('POST /auth/login devolve 401 com credencial errada', async () => {
     const app = await buildApp();
-    mocks.loginUser.mockRejectedValue(
-      new ServiceError('INVALID_CREDENTIALS')
-    );
+    mocks.loginUser.mockRejectedValue(new ServiceError('INVALID_CREDENTIALS'));
 
     const response = await app.inject({
       method: 'POST',

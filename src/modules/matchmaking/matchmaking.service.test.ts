@@ -83,21 +83,15 @@ describe('limite de atletas no matchmaking', () => {
     const maxAthletes = maxOpponentAthletesForProgress(0, 0, 0);
 
     expect(maxAthletes).toBe(3);
-    expect(isEligibleOpponentSnapshot(snapshotWithAthletes(3), maxAthletes)).toBe(
-      true
-    );
-    expect(isEligibleOpponentSnapshot(snapshotWithAthletes(6), maxAthletes)).toBe(
-      false
-    );
+    expect(isEligibleOpponentSnapshot(snapshotWithAthletes(3), maxAthletes)).toBe(true);
+    expect(isEligibleOpponentSnapshot(snapshotWithAthletes(6), maxAthletes)).toBe(false);
   });
 
   it('permite ate seis atletas depois da primeira rodada', () => {
     const maxAthletes = maxOpponentAthletesForProgress(1, 0, 0);
 
     expect(maxAthletes).toBe(6);
-    expect(isEligibleOpponentSnapshot(snapshotWithAthletes(6), maxAthletes)).toBe(
-      true
-    );
+    expect(isEligibleOpponentSnapshot(snapshotWithAthletes(6), maxAthletes)).toBe(true);
   });
 
   it('conta somente celulas ocupadas da formacao', () => {
@@ -368,9 +362,7 @@ describe('findOpponentSnapshot — RN006 janelas progressivas', () => {
     // toda chamada retorna vazio — sem oponente humano elegivel
     mocks.findAll.mockResolvedValue([]);
 
-    await expect(findOpponentSnapshot(player)).rejects.toBeInstanceOf(
-      MatchmakingError
-    );
+    await expect(findOpponentSnapshot(player)).rejects.toBeInstanceOf(MatchmakingError);
     await expect(findOpponentSnapshot(player)).rejects.toMatchObject({
       code: 'NO_OPPONENT_FOUND'
     });

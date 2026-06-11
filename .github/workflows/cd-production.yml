@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: "Ambiente alvo do deploy"
+        description: 'Ambiente alvo do deploy'
         required: true
-        default: "staging"
+        default: 'staging'
         type: choice
         options:
           - staging

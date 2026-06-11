@@ -7,7 +7,7 @@ const makeResult = (): JogarRodadaResult =>
     events: [{ turn: 1, goal: false, description: 'evento', kind: 'move' }],
     score: { player: 1, opponent: 0 },
     winner: 'player',
-    totalTurns: 1,
+    totalTurns: 1
   }) as unknown as JogarRodadaResult;
 
 describe('match-stream.store', () => {

@@ -4,23 +4,23 @@ Documento formal de planejamento das 4 sprints do projeto AutoSoccer, conforme m
 
 ## Metadados do projeto
 
-| Item | Valor |
-| --- | --- |
-| Projeto | AutoSoccer (fantasy soccer auto-battler) |
-| Disciplina | Experiência Criativa BSI PUCPR 2026/1 |
-| Período | 01/03/2026 a 09/06/2026 |
-| Apresentação final | 23/06/2026 |
-| Sprint length | 2 semanas |
-| Total de sprints | 4 |
-| Grupo | 3 integrantes |
+| Item               | Valor                                    |
+| ------------------ | ---------------------------------------- |
+| Projeto            | AutoSoccer (fantasy soccer auto-battler) |
+| Disciplina         | Experiência Criativa BSI PUCPR 2026/1    |
+| Período            | 01/03/2026 a 09/06/2026                  |
+| Apresentação final | 23/06/2026                               |
+| Sprint length      | 2 semanas                                |
+| Total de sprints   | 4                                        |
+| Grupo              | 3 integrantes                            |
 
 ## Time e papéis (cross-functional)
 
-| Integrante | Papel principal | Frentes |
-| --- | --- | --- |
-| Lucas Stopinski da Silva | Front-end lead | Next.js, design tokens, dark mode, i18n front, integrações |
-| Pedro Henrique Silva Guligurski | Back-end lead | Fastify, autenticação JWT, regras de negócio, relatórios, stored procedures |
-| Lucas Bruno e Silva | Infra/QA lead | Docker, CI, BDD, UML, deploy, testes de integração |
+| Integrante                      | Papel principal | Frentes                                                                     |
+| ------------------------------- | --------------- | --------------------------------------------------------------------------- |
+| Lucas Stopinski da Silva        | Front-end lead  | Next.js, design tokens, dark mode, i18n front, integrações                  |
+| Pedro Henrique Silva Guligurski | Back-end lead   | Fastify, autenticação JWT, regras de negócio, relatórios, stored procedures |
+| Lucas Bruno e Silva             | Infra/QA lead   | Docker, CI, BDD, UML, deploy, testes de integração                          |
 
 Não há Product Owner externo; o papel é rotativo a cada sprint entre os três integrantes. O Scrum Master fixo é Lucas Bruno (responsável por agendar dailies e revisar o board).
 
@@ -73,11 +73,11 @@ Estabelecer a infraestrutura inicial dos dois projetos (server e front), impleme
 
 ### Atribuição
 
-| Integrante | Stories |
-| --- | --- |
-| Lucas Stopinski da Silva | US-001, US-003, US-004, US-005, US-007, US-008 |
-| Pedro Henrique Silva Guligurski | US-002, US-006 |
-| Lucas Bruno e Silva | Suporte ao setup de Docker, revisão de PRs |
+| Integrante                      | Stories                                        |
+| ------------------------------- | ---------------------------------------------- |
+| Lucas Stopinski da Silva        | US-001, US-003, US-004, US-005, US-007, US-008 |
+| Pedro Henrique Silva Guligurski | US-002, US-006                                 |
+| Lucas Bruno e Silva             | Suporte ao setup de Docker, revisão de PRs     |
 
 ### Definition of Ready específica
 
@@ -111,11 +111,11 @@ Entregar o ciclo principal de jogabilidade no backend: mercado de atletas, motor
 
 ### Atribuição
 
-| Integrante | Stories |
-| --- | --- |
-| Lucas Stopinski da Silva | Refino visual do mercado, drag-and-drop |
+| Integrante                      | Stories                                        |
+| ------------------------------- | ---------------------------------------------- |
+| Lucas Stopinski da Silva        | Refino visual do mercado, drag-and-drop        |
 | Pedro Henrique Silva Guligurski | US-009, US-010, US-011, US-013, US-014, US-015 |
-| Lucas Bruno e Silva | US-012, US-016, validação de RN no simulador |
+| Lucas Bruno e Silva             | US-012, US-016, validação de RN no simulador   |
 
 ### Definition of Ready específica
 
@@ -160,11 +160,11 @@ Endurecer o sistema com error handler global, cobertura de testes ampla, interna
 
 ### Atribuição
 
-| Integrante | Stories |
-| --- | --- |
-| Lucas Stopinski da Silva | US-033, US-034, US-035, ajustes de UX do mercado e profile arcade |
-| Pedro Henrique Silva Guligurski | US-017 a US-031 (backend, i18n, testes) |
-| Lucas Bruno e Silva | US-027 (integração), US-032 (deploy Render), revisão de regras |
+| Integrante                      | Stories                                                           |
+| ------------------------------- | ----------------------------------------------------------------- |
+| Lucas Stopinski da Silva        | US-033, US-034, US-035, ajustes de UX do mercado e profile arcade |
+| Pedro Henrique Silva Guligurski | US-017 a US-031 (backend, i18n, testes)                           |
+| Lucas Bruno e Silva             | US-027 (integração), US-032 (deploy Render), revisão de regras    |
 
 ### Definition of Ready específica
 
@@ -213,11 +213,11 @@ Fechar gaps de avaliação da disciplina (BDD, UML, papéis de usuário, dark mo
 
 ### Atribuição
 
-| Integrante | Stories |
-| --- | --- |
-| Lucas Stopinski da Silva | US-038 a US-044, US-049, US-050, US-058 |
-| Pedro Henrique Silva Guligurski | US-036, US-037, US-045, US-054, US-055, US-056 |
-| Lucas Bruno e Silva | US-046, US-047, US-048, US-051, US-052, US-053, US-057 |
+| Integrante                      | Stories                                                |
+| ------------------------------- | ------------------------------------------------------ |
+| Lucas Stopinski da Silva        | US-038 a US-044, US-049, US-050, US-058                |
+| Pedro Henrique Silva Guligurski | US-036, US-037, US-045, US-054, US-055, US-056         |
+| Lucas Bruno e Silva             | US-046, US-047, US-048, US-051, US-052, US-053, US-057 |
 
 ### Definition of Ready específica
 
@@ -235,10 +235,10 @@ Fechar gaps de avaliação da disciplina (BDD, UML, papéis de usuário, dark mo
 
 ## Riscos e mitigacoes mapeados em planning
 
-| Risco | Probabilidade | Impacto | Mitigacao |
-| --- | --- | --- | --- |
-| Atraso em testes de integração | Média | Alto | Pareamento Pedro + Lucas Bruno na sprint 3 |
-| Deploy quebrar em produção | Média | Alto | Staging no Render desde sprint 3 |
-| Conflitos de merge entre os 3 repos | Alta | Médio | Branch `integration/grupo-1` central |
-| i18n gerar regressão silenciosa | Média | Médio | Script `i18n:check` + smoke manual |
-| BDD/UML deixados para o final | Alta | Alto | US dedicadas no início da sprint 4 |
+| Risco                               | Probabilidade | Impacto | Mitigacao                                  |
+| ----------------------------------- | ------------- | ------- | ------------------------------------------ |
+| Atraso em testes de integração      | Média         | Alto    | Pareamento Pedro + Lucas Bruno na sprint 3 |
+| Deploy quebrar em produção          | Média         | Alto    | Staging no Render desde sprint 3           |
+| Conflitos de merge entre os 3 repos | Alta          | Médio   | Branch `integration/grupo-1` central       |
+| i18n gerar regressão silenciosa     | Média         | Médio   | Script `i18n:check` + smoke manual         |
+| BDD/UML deixados para o final       | Alta          | Alto    | US dedicadas no início da sprint 4         |

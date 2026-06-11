@@ -174,8 +174,7 @@ const rodadaResultSchema = {
   properties: {
     lineups: {
       type: 'object',
-      description:
-        'Formacoes iniciais salvas nos snapshots antes do motor movimentar atletas.',
+      description: 'Formacoes iniciais salvas nos snapshots antes do motor movimentar atletas.',
       properties: {
         player: lineupSchema,
         opponent: lineupSchema
@@ -216,8 +215,14 @@ const rodadaResultSchema = {
         opponentSnapshotId: { type: 'integer' },
         opponentUserId: { type: 'integer' },
         victoryRatio: { type: 'number' },
-        delta: { type: 'number', description: 'Diferenca |victoryRatio_player - victoryRatio_opp|' },
-        windowUsed: { type: 'number', description: 'Tamanho da janela RN006 que retornou o adversario' }
+        delta: {
+          type: 'number',
+          description: 'Diferenca |victoryRatio_player - victoryRatio_opp|'
+        },
+        windowUsed: {
+          type: 'number',
+          description: 'Tamanho da janela RN006 que retornou o adversario'
+        }
       }
     },
     initiative: {
@@ -357,10 +362,7 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
       }
     },
     async (request, reply) => {
-      const result = await startCampaign(
-        request.user!.id,
-        request.body.name
-      );
+      const result = await startCampaign(request.user!.id, request.body.name);
       return reply.code(200).send(result);
     }
   );
@@ -430,10 +432,7 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
       const authenticatedUserId = request.user!.id;
       const body = request.body;
 
-      if (
-        body.user_id !== undefined &&
-        Number(body.user_id) !== authenticatedUserId
-      ) {
+      if (body.user_id !== undefined && Number(body.user_id) !== authenticatedUserId) {
         return reply.code(403).send({
           message: 'user_id nao corresponde ao usuario autenticado.',
           code: 'USER_MISMATCH'
@@ -493,10 +492,7 @@ export const partidaRoutes: FastifyPluginAsync = async (app) => {
       const authenticatedUserId = request.user!.id;
       const body = request.body ?? {};
 
-      if (
-        body.user_id !== undefined &&
-        Number(body.user_id) !== authenticatedUserId
-      ) {
+      if (body.user_id !== undefined && Number(body.user_id) !== authenticatedUserId) {
         return reply.code(403).send({
           message: 'user_id nao corresponde ao usuario autenticado.',
           code: 'USER_MISMATCH'

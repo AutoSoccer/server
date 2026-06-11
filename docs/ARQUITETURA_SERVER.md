@@ -8,15 +8,15 @@
 
 ## Stack
 
-| Tecnologia | Versão | Por que foi escolhida |
-|---|---|---|
-| Fastify | 5 | 2× mais rápido que Express em throughput; plugin system com encapsulamento real; JSON Schema serve tanto para validação quanto para Swagger |
-| Sequelize | 6 | ORM maduro com migrations versionadas e suporte a MySQL 8 |
-| MySQL | 8 | Banco relacional com stored procedures nativas (necessário para o critério T6) |
-| JWT (`@fastify/jwt`) | — | Stateless, sem necessidade de session store; payload carrega `id`, `nickname` e `role` |
-| `@fastify/websocket` | 11 | Integração nativa de WebSocket no Fastify sem sair do modelo de plugins |
-| Zod | 3 | Validação de regras de negócio que dependem de estado do banco (diferente dos schemas JSON do Fastify) |
-| Vitest | 4 | Mesmo bundler do front — consistência no projeto; suporte a fake timers para testes do motor de batalha |
+| Tecnologia           | Versão | Por que foi escolhida                                                                                                                       |
+| -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fastify              | 5      | 2× mais rápido que Express em throughput; plugin system com encapsulamento real; JSON Schema serve tanto para validação quanto para Swagger |
+| Sequelize            | 6      | ORM maduro com migrations versionadas e suporte a MySQL 8                                                                                   |
+| MySQL                | 8      | Banco relacional com stored procedures nativas (necessário para o critério T6)                                                              |
+| JWT (`@fastify/jwt`) | —      | Stateless, sem necessidade de session store; payload carrega `id`, `nickname` e `role`                                                      |
+| `@fastify/websocket` | 11     | Integração nativa de WebSocket no Fastify sem sair do modelo de plugins                                                                     |
+| Zod                  | 3      | Validação de regras de negócio que dependem de estado do banco (diferente dos schemas JSON do Fastify)                                      |
+| Vitest               | 4      | Mesmo bundler do front — consistência no projeto; suporte a fake timers para testes do motor de batalha                                     |
 
 ---
 
@@ -44,6 +44,7 @@ src/modules/
 ### Por que existe como módulo separado?
 
 O simulador é **puro** — não acessa banco, não faz I/O, recebe dados e retorna resultado. Isso permite:
+
 - Testar o motor com `vi.fn()` como função aleatória (seed determinístico)
 - Reusar a lógica em contextos diferentes (REST e WebSocket)
 - Isolar bugs de lógica de negócio de bugs de infraestrutura
@@ -121,12 +122,13 @@ Razão: o resultado já foi persistido no MySQL antes do WebSocket abrir. A stor
 
 ```ts
 // Garante que a última mensagem é recebida antes do socket fechar
-const sendAndClose = (socket, msg) => new Promise((resolve) => {
-  socket.send(JSON.stringify(msg), () => {
-    socket.close();
-    resolve();
+const sendAndClose = (socket, msg) =>
+  new Promise((resolve) => {
+    socket.send(JSON.stringify(msg), () => {
+      socket.close();
+      resolve();
+    });
   });
-});
 ```
 
 `socket.close()` dentro do callback de `send()` garante que o envio foi confirmado antes de fechar. Sem isso, o último `result` pode ser descartado pelo kernel antes de sair.
@@ -154,10 +156,10 @@ Cliente → GET /ws/battle/:matchId?token=<jwt>  (upgrade HTTP → WS)
 
 ## Validação em dois níveis
 
-| Nível | Ferramenta | Quando usar |
-|---|---|---|
-| Forma (shape) | JSON Schema do Fastify | Body, params, querystring — retorna 400 antes de chegar no controller |
-| Semântica (regra de negócio) | Código no service | Ex: "atleta já está no time", "saldo insuficiente", "snapshot vazio" |
+| Nível                        | Ferramenta             | Quando usar                                                           |
+| ---------------------------- | ---------------------- | --------------------------------------------------------------------- |
+| Forma (shape)                | JSON Schema do Fastify | Body, params, querystring — retorna 400 antes de chegar no controller |
+| Semântica (regra de negócio) | Código no service      | Ex: "atleta já está no time", "saldo insuficiente", "snapshot vazio"  |
 
 Zod é usado pontualmente em forms do front — no back, a validação de negócio vive nos services com erros tipados (`RodadaServiceErrorCode`, etc.).
 
@@ -176,11 +178,11 @@ Zod é usado pontualmente em forms do front — no back, a validação de negóc
 
 Três stored procedures criadas via migration (arquivo `create-reports-stored-procedures.cjs`):
 
-| Procedure | O que faz |
-|---|---|
+| Procedure                     | O que faz                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------- |
 | `sp_get_top_athletes_by_role` | Top atletas por poder (attack + defense + velocity), filtrado por posição |
-| `sp_team_power_ranking` | Ranking de equipes pelo poder bruto da formação |
-| `sp_market_overview` | Visão agregada do mercado (totais, breakdown por tier e posição) |
+| `sp_team_power_ranking`       | Ranking de equipes pelo poder bruto da formação                           |
+| `sp_market_overview`          | Visão agregada do mercado (totais, breakdown por tier e posição)          |
 
 Chamadas via `sequelize.query('CALL sp_nome(?)', { replacements: [...], type: QueryTypes.SELECT })`.
 
@@ -208,12 +210,12 @@ Chamadas via `sequelize.query('CALL sp_nome(?)', { replacements: [...], type: Qu
 
 ### Variáveis de ambiente necessárias (Railway)
 
-| Variável | Valor |
-|---|---|
-| `DATABASE_URL` | URL do MySQL no Railway |
-| `JWT_SECRET` | String aleatória longa (nunca exposta em código) |
-| `CORS_ORIGIN` | `https://autosoccer.vercel.app` |
-| `NODE_ENV` | `production` |
+| Variável       | Valor                                            |
+| -------------- | ------------------------------------------------ |
+| `DATABASE_URL` | URL do MySQL no Railway                          |
+| `JWT_SECRET`   | String aleatória longa (nunca exposta em código) |
+| `CORS_ORIGIN`  | `https://autosoccer.vercel.app`                  |
+| `NODE_ENV`     | `production`                                     |
 
 > Em `NODE_ENV=production`, o servidor **recusa subir** se `CORS_ORIGIN` for wildcard (`*` ou vazio) — guard de segurança em `src/config/env.ts`.
 
@@ -222,22 +224,29 @@ Chamadas via `sequelize.query('CALL sp_nome(?)', { replacements: [...], type: Qu
 ## Perguntas prováveis da banca e respostas curtas
 
 ### "Por que Fastify e não Express?"
+
 Fastify é ~2× mais rápido em throughput por causa do roteador `find-my-way` e serialização JSON por schema. O sistema de plugins tem encapsulamento real (`register` cria escopo) — em Express, middlewares são globais por padrão. E o JSON Schema que valida o body é o mesmo que documenta o Swagger, sem duplicação.
 
 ### "Como funciona o motor de batalha (12 turnos)?"
+
 O módulo `simulador/` é puro — sem banco, sem I/O. Recebe dois `TeamDTO` com posições e atributos, calcula `computeInitiative` (quem começa pelo atacante mais avançado), e itera 12 turnos. Cada turno resolve uma disputa por atributos usando chance estatística (`attack / (attack + defense)`). O resultado é determinístico dado a mesma semente aleatória — usado nos testes.
 
 ### "Como vocês testam o motor sem banco?"
+
 O `processarRodada()` aceita um parâmetro `random: RandomFn = Math.random`. Nos testes, passamos `vi.fn().mockReturnValue(0.5)` — isso torna o resultado determinístico e testável sem depender de aleatoriedade.
 
 ### "Como funciona o matchmaking?"
+
 `findOpponentSnapshot` busca no banco um time fantasma (CPU) cujo `victory_ratio` seja próximo do jogador. Ordenação por `|ratio_adversario - ratio_jogador|` — o mais parecido vence. Se não encontrar adversário (banco vazio), retorna erro `NO_OPPONENT_FOUND`.
 
 ### "Por que stored procedures e não queries no ORM?"
+
 Performance e separação de responsabilidades. As agregações dos relatórios envolvem JOINs em múltiplas tabelas com GROUP BY — fazer isso via Sequelize geraria N queries ou SQL gerado sub-ótimo. Na stored procedure, o banco otimiza o plano de execução internamente.
 
 ### "Como o WebSocket se integra com o Fastify?"
+
 Registramos `@fastify/websocket` como plugin e declaramos a rota WS com `{ websocket: true }`. O handler recebe `socket` (instância ws) e `request` (request HTTP do handshake). A autenticação usa o token no query param porque a browser WebSocket API não suporta headers customizados.
 
 ### "O que acontece se o WebSocket falhar?"
+
 O front tem fallback automático: se `matchId` não vier na resposta, ou o token não estiver no localStorage, ou a conexão expirar (timeout de 5s), a batalha é animada localmente com `setInterval` de 850ms — sem diferença visível para o usuário.

@@ -52,11 +52,7 @@ export type FindOpponentOptions = {
  * (vitorias + derrotas + empates). Empates contam como rodada jogada, entao
  * nao inflam o ratio mas aproximam jogadores com volume de partidas parecido.
  */
-export const computeVictoryRatio = (
-  victory: number,
-  lose: number,
-  draw = 0
-): number => {
+export const computeVictoryRatio = (victory: number, lose: number, draw = 0): number => {
   const total = victory + lose + draw;
   if (total <= 0) {
     return 0;
@@ -69,18 +65,10 @@ const roundsPlayed = (snapshot: TeamSnapshot): number =>
   (snapshot.victory ?? 0) + (snapshot.lose ?? 0) + (snapshot.draw ?? 0);
 
 export const countSnapshotAthletes = (snapshot: TeamSnapshot): number =>
-  (snapshot.positions ?? [])
-    .flat()
-    .filter((athlete) => athlete !== null).length;
+  (snapshot.positions ?? []).flat().filter((athlete) => athlete !== null).length;
 
-export const maxOpponentAthletesForProgress = (
-  victory: number,
-  lose: number,
-  draw = 0
-): number =>
-  victory + lose + draw === 0
-    ? FIRST_ROUND_MAX_ATHLETES
-    : LATER_ROUND_MAX_ATHLETES;
+export const maxOpponentAthletesForProgress = (victory: number, lose: number, draw = 0): number =>
+  victory + lose + draw === 0 ? FIRST_ROUND_MAX_ATHLETES : LATER_ROUND_MAX_ATHLETES;
 
 export const isEligibleOpponentSnapshot = (
   snapshot: TeamSnapshot,
@@ -143,13 +131,16 @@ export const findOpponentSnapshot = async (
     draw: playerSnapshot.draw
   };
 
-  const exactOpponent = await findFirstEligibleSnapshot({
-    where: {
-      ...exactProgressWhere,
-      id: { [Op.notIn]: excluded }
+  const exactOpponent = await findFirstEligibleSnapshot(
+    {
+      where: {
+        ...exactProgressWhere,
+        id: { [Op.notIn]: excluded }
+      },
+      order: [['created_at', 'DESC']]
     },
-    order: [['created_at', 'DESC']]
-  }, maxOpponentAthletes);
+    maxOpponentAthletes
+  );
 
   if (exactOpponent) {
     return {
@@ -162,20 +153,21 @@ export const findOpponentSnapshot = async (
   // Uma snapshot com o mesmo progresso e ja enfrentada ainda e mais justa do
   // que trocar por um adversario de outra rodada apenas para evitar repeticao.
   if ((options.excludeSnapshotIds?.length ?? 0) > 0) {
-    const repeatedExactOpponent = await findFirstEligibleSnapshot({
-      where: {
-        ...exactProgressWhere,
-        id: { [Op.ne]: playerSnapshot.id }
+    const repeatedExactOpponent = await findFirstEligibleSnapshot(
+      {
+        where: {
+          ...exactProgressWhere,
+          id: { [Op.ne]: playerSnapshot.id }
+        },
+        order: [['created_at', 'DESC']]
       },
-      order: [['created_at', 'DESC']]
-    }, maxOpponentAthletes);
+      maxOpponentAthletes
+    );
 
     if (repeatedExactOpponent) {
       return {
         opponent: repeatedExactOpponent,
-        delta: Math.abs(
-          Number(repeatedExactOpponent.victory_ratio) - ratio
-        ),
+        delta: Math.abs(Number(repeatedExactOpponent.victory_ratio) - ratio),
         windowUsed: 0
       };
     }
@@ -186,25 +178,25 @@ export const findOpponentSnapshot = async (
   // CAST p/ SIGNED evita underflow de BIGINT UNSIGNED quando a soma < playerRounds.
   const order: Order = [
     [sequelize.literal(`ABS(victory_ratio - ${ratio})`), 'ASC'],
-    [
-      sequelize.literal(`ABS(CAST(victory + lose + draw AS SIGNED) - ${playerRounds})`),
-      'ASC'
-    ],
+    [sequelize.literal(`ABS(CAST(victory + lose + draw AS SIGNED) - ${playerRounds})`), 'ASC'],
     ['created_at', 'DESC']
   ];
 
   for (const window of VICTORY_RATIO_WINDOWS) {
-    const candidate = await findFirstEligibleSnapshot({
-      where: {
-        user_id: { [Op.ne]: playerSnapshot.user_id },
-        id: { [Op.notIn]: excluded },
-        victory_ratio: {
-          [Op.between]: [Math.max(0, ratio - window), Math.min(1, ratio + window)]
-        }
+    const candidate = await findFirstEligibleSnapshot(
+      {
+        where: {
+          user_id: { [Op.ne]: playerSnapshot.user_id },
+          id: { [Op.notIn]: excluded },
+          victory_ratio: {
+            [Op.between]: [Math.max(0, ratio - window), Math.min(1, ratio + window)]
+          }
+        },
+        order,
+        subQuery: false
       },
-      order,
-      subQuery: false
-    }, maxOpponentAthletes);
+      maxOpponentAthletes
+    );
 
     if (candidate) {
       return {

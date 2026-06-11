@@ -21,11 +21,7 @@ declare module 'fastify' {
  * texto padrao em pt-BR. Mantemos o fallback explicito para suportar contextos
  * sem o plugin de i18n carregado (ex.: testes unitarios do middleware).
  */
-const translate = (
-  request: FastifyRequest,
-  key: string,
-  fallback: string
-): string => {
+const translate = (request: FastifyRequest, key: string, fallback: string): string => {
   const translator = request.t;
   if (typeof translator !== 'function') {
     return fallback;
@@ -37,10 +33,7 @@ const translate = (
   return translated;
 };
 
-export const authenticate = async (
-  request: FastifyRequest,
-  reply: FastifyReply
-): Promise<void> => {
+export const authenticate = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
   const header = request.headers.authorization;
 
   if (!header || !header.startsWith('Bearer ')) {

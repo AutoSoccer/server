@@ -83,10 +83,7 @@ export type ComprarItemResult = {
  * RF014 — compra de item na loja. Debita coins e cria a instancia no inventario
  * (consumed=false) dentro de uma transacao para nao perder dinheiro nem item.
  */
-export const comprarItem = async (
-  userId: number,
-  itemId: number
-): Promise<ComprarItemResult> => {
+export const comprarItem = async (userId: number, itemId: number): Promise<ComprarItemResult> => {
   return sequelize.transaction(async (transaction) => {
     const user = await User.findByPk(userId, {
       transaction,

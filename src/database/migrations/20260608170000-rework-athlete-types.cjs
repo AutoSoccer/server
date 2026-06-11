@@ -6,11 +6,7 @@ const LEGACY_TYPES = ['goalkeeper', 'defender', 'attacker'];
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.bulkUpdate(
-      'athletes',
-      { type: 'defender' },
-      { type: 'goalkeeper' }
-    );
+    await queryInterface.bulkUpdate('athletes', { type: 'defender' }, { type: 'goalkeeper' });
 
     await queryInterface.changeColumn('athletes', 'type', {
       type: Sequelize.ENUM(...ACTIVE_TYPES),
