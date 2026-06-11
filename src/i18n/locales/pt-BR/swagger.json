@@ -16,6 +16,7 @@
     "items": "Catalogo da loja e aplicacao de itens em atletas",
     "match": "Simulacao de partidas (motor de 12 turnos)",
     "ranking": "Ranking geral de jogadores por trofeus",
+    "reports": "Relatorios analiticos servidos por stored procedures",
     "system": "Endpoints utilitarios e health checks"
   },
   "errorResponses": {
@@ -108,6 +109,24 @@
     "list": {
       "summary": "Ranking geral de usuarios por trofeus",
       "description": "Lista contas reais com campanhas concluidas. Ordena por trofeus, vitorias, menos derrotas e cadastro mais antigo. Convidados podem consultar, mas nao aparecem."
+    }
+  },
+  "reports": {
+    "topAthletes": {
+      "summary": "Top atletas por posicao tatica (T6)",
+      "description": "Retorna os atletas mais fortes filtrando opcionalmente por posicao (defender, midfielder, attacker). A ordenacao por poder (attack + defense + velocity) e feita na stored procedure sp_get_top_athletes_by_role."
+    },
+    "teamPowerRanking": {
+      "summary": "Ranking de equipes pelo poder bruto da formacao (T6)",
+      "description": "Agrega o poder dos atletas de cada equipe (sp_team_power_ranking) e devolve nome do time, dono, contagem de atletas, poder total/medio e estatisticas de campanha. Apenas usuarios cadastrados — convidados nao entram."
+    },
+    "marketOverview": {
+      "summary": "Visao agregada do mercado de atletas (T6)",
+      "description": "Roda sp_market_overview e devolve totais globais (athletes, custo medio, poder medio, slots de mercado ativos), breakdown por tier e por posicao tatica. Ideal para painel admin."
+    },
+    "errors": {
+      "INVALID_ROLE": "Posicao tatica invalida. Use defender, midfielder ou attacker.",
+      "INVALID_LIMIT": "Parametro limit invalido. Informe um inteiro positivo."
     }
   },
   "system": {
