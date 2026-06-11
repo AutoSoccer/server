@@ -4,6 +4,18 @@ API base com Fastify, TypeScript e Sequelize (MySQL).
 
 Porta local padrao da API: `3333`.
 
+## Documentacao formal
+
+- [Features BDD (Gherkin)](docs/features/) — 3 features cobrindo
+  autenticacao, mercado e batalha, com cenarios mapeados para rotas e
+  services reais.
+- [User Stories](docs/user-stories.md) — 3 user stories detalhadas
+  (login convidado, ranking, itens) com criterios de aceite e DoD.
+- [Plano de acao consolidado](docs/PLANO_DE_ACAO.md) — RF001-014,
+  RN001-013 e sprint planning do server.
+- [Plano de apresentacao final](docs/PLANO_APRESENTACAO_FINAL.md) —
+  cronograma da entrega de 23/06.
+
 ## Requisitos
 
 - Node.js 20+
