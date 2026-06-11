@@ -8,6 +8,7 @@ import { itensRoutes } from './modules/itens/itens.routes';
 import { mercadoRoutes } from './modules/mercado/mercado.routes';
 import { partidaRoutes } from './modules/partida/partida.routes';
 import { rankingRoutes } from './modules/ranking/ranking.routes';
+import { reportsRoutes } from './modules/reports/reports.routes';
 import { registerErrorHandler } from './plugins/errorHandler';
 import { registerI18n } from './plugins/i18n';
 import { registerSwagger } from './plugins/swagger';
@@ -124,6 +125,10 @@ export const buildApp = async (): Promise<FastifyInstance> => {
 
   await app.register(rankingRoutes, {
     prefix: '/ranking'
+  });
+
+  await app.register(reportsRoutes, {
+    prefix: '/reports'
   });
 
   return app;

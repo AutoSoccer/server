@@ -16,6 +16,7 @@
     "items": "Shop catalog and item application on athletes",
     "match": "Match simulation (12-turn engine)",
     "ranking": "General player ranking by trophies",
+    "reports": "Analytical reports backed by stored procedures",
     "system": "Utility endpoints and health checks"
   },
   "errorResponses": {
@@ -108,6 +109,24 @@
     "list": {
       "summary": "General ranking of users by trophies",
       "description": "Lists real accounts with completed campaigns. Orders by trophies, wins, fewer losses and earliest sign-up. Guests can query but do not appear."
+    }
+  },
+  "reports": {
+    "topAthletes": {
+      "summary": "Top athletes by tactical role (T6)",
+      "description": "Returns the strongest athletes, optionally filtered by role (defender, midfielder, attacker). Power ranking (attack + defense + velocity) is computed by the sp_get_top_athletes_by_role stored procedure."
+    },
+    "teamPowerRanking": {
+      "summary": "Team ranking by raw squad power (T6)",
+      "description": "Aggregates each team's athlete power via sp_team_power_ranking and returns team name, owner, athlete count, total/average power and campaign stats. Only registered users — guests are excluded."
+    },
+    "marketOverview": {
+      "summary": "Aggregated market overview (T6)",
+      "description": "Runs sp_market_overview and returns global totals (athletes, average cost, average power, active market slots), plus breakdowns by tier and by tactical role. Great for an admin dashboard."
+    },
+    "errors": {
+      "INVALID_ROLE": "Invalid tactical role. Use defender, midfielder or attacker.",
+      "INVALID_LIMIT": "Invalid limit parameter. Provide a positive integer."
     }
   },
   "system": {
