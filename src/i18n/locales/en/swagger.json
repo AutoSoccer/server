@@ -15,7 +15,7 @@
     "team": "Team management and formation snapshots",
     "items": "Shop catalog and item application on athletes",
     "match": "Match simulation (12-turn engine). POST /match/play returns a matchId for live streaming via WebSocket at ws(s)://host/ws/battle/:matchId?token=<jwt>.",
-    "websocket": "Live battle streaming via WebSocket (not visible in Swagger UI). Connect to ws(s)://host/ws/battle/:matchId?token=<jwt> after calling POST /match/play."
+    "websocket": "Live battle streaming via WebSocket (not visible in Swagger UI). Connect to ws(s)://host/ws/battle/:matchId?token=<jwt> after calling POST /match/play.",
     "ranking": "General player ranking by trophies",
     "reports": "Analytical reports backed by stored procedures",
     "admin": "Administrative routes (restricted to tokens with the admin role)",
