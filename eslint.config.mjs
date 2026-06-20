@@ -35,7 +35,7 @@ const noUnusedVarsAllowUnderscore = [
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**']
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'apresentacao/**']
   },
   js.configs.recommended,
   {
