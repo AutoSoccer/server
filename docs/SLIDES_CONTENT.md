@@ -176,18 +176,18 @@ Reforcar que a animacao da bola usa apenas CSS e atualizacao de estado — decis
 
 ## Slide 9 — Dark Mode + Responsividade
 
-**Subtitulo:** Tema persistente em cookie com CSS variables e WCAG AA
+**Subtitulo:** Tema persistente em cookie com CSS variables, antd darkAlgorithm e WCAG AA
 
 **Bullets**
-- Paleta dark em `globals.css` com tokens `--bg-*`, `--fg-*`, `--accent-*`
-- Toggle no `ThemeSwitcher` ao lado do `LanguageSwitcher`
-- Cookie `THEME` persistido por 1 ano com aplicacao no `<html>` sem FOUC
-- Auditoria de contraste WCAG AA via Lighthouse em todas as telas
-- Botoes primary refinados para garantir contraste em light e dark
+- Paleta dark em `globals.css` com tokens `--bg-*`, `--text-*`, `--border-*` em `:root[data-theme="dark"]`
+- Toggle no `ThemeSwitcher` (Sol/Lua) ao lado do `LanguageSwitcher` no `ProfileCorner`
+- Cookie `NEXT_THEME` persistido por 1 ano, lido no `app/layout.tsx` Server Component — `data-theme="dark"` no `<html>` antes do React montar (zero FOUC)
+- `AntdProvider` observa `data-theme` via `MutationObserver` e troca em runtime entre `defaultAlgorithm` e `darkAlgorithm` do antd — Button, Input, Modal, Select e Notification respondem ao tema
+- Identidade arcade preservada no dark: laranja `#f97316`, campo verde, trofeu dourado mantidos hardcoded
 - Layout responsivo testado em mobile, tablet e desktop
 
 **Notas do apresentador**
-Explicar que o tema entra antes do React montar (cookie lido em Server Component), por isso nao tem flash de tela branca. Mostrar print light/dark lado a lado.
+Explicar que o tema entra antes do React montar (cookie lido em Server Component), por isso nao tem flash de tela branca. Mostrar print light/dark lado a lado. Citar que componentes antd respeitam o tema gracas ao observer no AntdProvider.
 
 **Visual sugerido:** dois prints lado a lado da tela `/home` em light e dark, com badge "AA" do Lighthouse.
 
@@ -197,15 +197,15 @@ Explicar que o tema entra antes do React montar (cookie lido em Server Component
 
 ## Slide 10 — Dashboard com graficos no ranking
 
-**Subtitulo:** Recharts + filtros + integracao com API de ranking
+**Subtitulo:** Podium + donut chart + cards de metricas com `conic-gradient` puro
 
 **Bullets**
-- Grafico de barras horizontais com top 10 jogadores por trofeus
-- Grafico de linha com evolucao temporal de trofeus
-- Filtros por periodo (7d, 30d, all-time) e escopo (eu vs todos)
-- Componente `RankingDashboard` em Server Component que delega ao client
+- Pagina `/ranking` com podium dos top 3, lista paginada e painel de metricas pessoais do jogador logado
+- Donut chart de win rate (verde sucesso x vermelho derrota) renderizado via `conic-gradient` puro — sem lib extra
+- Cards de metricas: vitorias, derrotas, taxa de vitoria, posicao atual no ranking
+- Grid responsivo com 3 colunas no desktop, 1 no mobile
+- Endpoint `/ranking` devolve lista global; `/auth/me` agrega metricas do usuario
 - Cobertura unitaria especifica em `RankingDashboard.test.tsx`
-- Renderizacao respeita i18n e o tema escolhido pelo usuario
 
 **Notas do apresentador**
 Mostrar o dashboard funcionando no proprio /ranking. Citar que os dados vem do endpoint de ranking do back e que a serializacao foi pensada para o front nao precisar fazer agregacao no cliente.
@@ -348,11 +348,12 @@ Abrir Swagger no auditorio (se possivel) ou screenshot. Reforcar que cada rota t
 
 **Bullets**
 - Coluna `role` adicionada em `users` via migration Sequelize
-- Payload JWT inclui `userId`, `email` e `role`
+- Payload JWT carrega `{ id, nickname, role }` — `role` e enum `'user'` ou `'admin'`
 - Plugin `@fastify/jwt` decora `request.user` apos validar assinatura
 - Middleware `requireAuth` e `requireRole('admin')` em `auth.middleware.ts`
-- Rota `GET /admin/users` retorna 403 para role user e 200 para admin
-- Testes de integracao cobrem 401, 403 e 200 em cada rota protegida
+- Rotas admin-only: `GET /admin/users` + os 3 relatorios em `/admin/reports` (slide 18)
+- Contas admin so sao criadas direto no banco (sem rota publica de promocao — decisao de seguranca)
+- Acesso indevido retorna 403 FORBIDDEN com mensagem traduzida via i18next
 
 **Notas do apresentador**
 Explicar que role e enum (`user`, `admin`) e que o middleware retorna 403 com mensagem traduzida via i18n. Citar que tem teste de integracao validando exatamente esses tres cenarios.
@@ -365,18 +366,18 @@ Explicar que role e enum (`user`, `admin`) e que o middleware retorna 403 com me
 
 ## Slide 18 — Stored procedures e relatorios
 
-**Subtitulo:** SQL otimizado + 3 endpoints administrativos
+**Subtitulo:** 3 SPs SQL otimizadas + 3 endpoints administrativos
 
 **Bullets**
-- Migration cria stored procedure `sp_get_top_athletes_by_role`
-- Procedure retorna top atletas mais vendidos agrupados por posicao
-- Endpoint `GET /admin/reports/top-athletes-by-role` chama a procedure
-- Indices estrategicos em `team_id` e `team_snapshots(user_id, round)`
-- Migration reversa (down) implementada para rollback seguro
-- Documentacao em `docs/api-reports.md` (ou equivalente) com exemplos
+- Migration unica `20260610220000-create-reports-stored-procedures.cjs` cria 3 SPs com `up`/`down` reversiveis
+- `sp_get_top_athletes_by_role(role, limit)` — top atletas por posicao tatica, ordenados por poder bruto (`attack + defense + velocity`)
+- `sp_team_power_ranking(limit)` — ranking de equipes pelo somatorio do poder + metricas de campanha (vitorias, derrotas, trofeus)
+- `sp_market_overview()` — visao agregada do mercado: totais, breakdown por tier e por posicao (emite 3 SELECTs em sequencia)
+- Por que SP: agregacao pesada (JOINs + GROUP BY) e mais rapida no MySQL do que trazer dados brutos pro Node e agregar em memoria — e permite tunar indices sem deploy de aplicacao
+- Chamadas via `sequelize.query('CALL sp_nome(?)', { replacements: [...], type: QueryTypes.SELECT })`
 
 **Notas do apresentador**
-Mostrar o SQL da procedure (poucas linhas), explicar que o agregado roda no banco para economizar trafego. Citar que a rota e admin-only via middleware do slide anterior.
+Mostrar o SQL de uma das SPs (poucas linhas), explicar que o agregado roda no banco para economizar trafego. Citar que as 3 rotas sao admin-only via middleware do slide anterior.
 
 **Visual sugerido:** snippet do `CREATE PROCEDURE` + screenshot do retorno do endpoint no Swagger.
 
@@ -386,18 +387,19 @@ Mostrar o SQL da procedure (poucas linhas), explicar que o agregado roda no banc
 
 ## Slide 19 — Testes back
 
-**Subtitulo:** 84% de cobertura com Vitest + factories + integracao
+**Subtitulo:** ~84% de cobertura com Vitest + factories + integracao
 
 **Bullets**
-- 152 testes distribuidos entre unit e integration
+- 204 testes em 22 arquivos — distribuidos entre unit e integration
+- Vitest 4 com fake timers para o motor de simulacao
 - 3 suites de integration: `auth.int.test.ts`, `equipe.int.test.ts`, `partida.int.test.ts`
 - Helpers `buildApp()` e `sequelizeStub` em `src/__tests__/helpers/`
 - Factories para user, team, athlete e item em `src/__tests__/factories/`
-- Cobertura V8 com threshold de branches e linhas configurado
-- Pipeline CI roda `yarn test` em todo PR e merge na main
+- Motor de simulacao testado deterministicamente: `processarRodada(team, opp, { random: vi.fn().mockReturnValue(0.5) })`
+- Cobertura V8 + lcov enviado pro SonarCloud no CI
 
 **Notas do apresentador**
-Citar que a integracao roda `app.inject()` com o Fastify inteiro registrado, evitando subir HTTP de verdade. Reforcar que a cobertura passou de 84% no servidor sem flakiness.
+Citar que a integracao roda `app.inject()` com o Fastify inteiro registrado, evitando subir HTTP de verdade. Reforcar que a cobertura passou de 84% no servidor sem flakiness e que as factories deixam as suites legiveis.
 
 **Visual sugerido:** print do relatorio de cobertura V8 + arvore dos testes de integracao.
 
@@ -536,10 +538,11 @@ Reforcar que SonarCloud e free para repo publico e UptimeRobot e free para ate 5
 **Subtitulo:** Back no Railway com plugin MySQL, front na Vercel
 
 **Bullets**
-- Railway: servico Node detectado via Nixpacks + plugin MySQL nativo do Railway no mesmo projeto
-- Deploy via Git Pull configurado no painel + PM2 como process manager
-- Vercel: deploy automatico via GitHub App, preview por PR
-- Variaveis de ambiente separadas por ambiente (preview vs production)
+- Railway: servico Node detectado via **Nixpacks** + **plugin MySQL nativo** do Railway no mesmo projeto (sem Docker custom)
+- Build Command `npm install && npm run build`; Start Command `npm run db:migrate && node dist/index.js` — migration roda antes do server subir (se falhar, versao antiga continua no ar)
+- Auto-deploy a cada `git push origin main` via webhook do GitHub
+- Vercel: deploy automatico via GitHub App, preview por PR + producao no main
+- URLs publicas: `autosoccer-api-production.up.railway.app` + `autosoccer.vercel.app`
 - Sequelize com `sync: false` — banco so muda via migration
 - `.env.production.example` versionado documentando as variaveis
 
@@ -575,16 +578,16 @@ Falar pouco neste slide — o slide e apenas estrutura. Toda a narracao acontece
 
 ## Slide 28 — Metricas, licoes e Q&A
 
-**Subtitulo:** 94% front, 84% back, 255 commits, 20 rotas
+**Subtitulo:** 94% front, 84% back, 348 testes, 20 rotas, 75+ commits
 
 **Bullets**
-- Cobertura: 94% front, 84% back
-- 152 testes back + cobertura completa de services e components front
+- Cobertura: ~94% front (144 testes em 19 arquivos), ~84% back (204 testes em 22 arquivos)
+- **348 testes** somados (front + back) rodando em Vitest 4
 - 20 rotas REST documentadas em Swagger com i18n
-- 4 sprints registradas com Sprint Planning e backlog formal
-- Licao Lucas S — adotaria Tanstack Query desde o dia 1
-- Licao Pedro — adotaria Drizzle ORM no lugar de Sequelize
-- Licao Lucas B — configuraria GitHub Project e Conventional Commits na sprint 1
+- 4 sprints registradas com Sprint Planning, Backlog, Review e Retrospective
+- Licao Lucas S — adotaria TanStack Query desde o dia 1 + Zod nos DTOs da API
+- Licao Pedro — adotaria Drizzle ORM no lugar de Sequelize + Faker no seed
+- Licao Lucas B — configuraria GitHub Project e Conventional Commits desde a sprint 1
 - Estamos abertos para perguntas
 
 **Notas do apresentador**
@@ -598,4 +601,4 @@ Cada integrante diz a propria licao em uma frase. Encerrar agradecendo e pergunt
 
 > Documento mantido por Lucas Stopinski com input de Pedro Guligurski e Lucas Bruno.
 > Layout final do .pptx esta em `apresentacao/AutoSoccer_Apresentacao.pptx`; este markdown e a fonte de texto.
-> Ultima atualizacao: 10/06/2026.
+> Ultima atualizacao: 20/06/2026 (alinhado com codigo real apos varredura + implementacao do dark mode).
