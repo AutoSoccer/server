@@ -141,3 +141,6 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Claude Code (settings.local.json e' personal, settings.json e' do time)
+.claude/settings.local.json

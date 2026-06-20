@@ -13,10 +13,20 @@ Porta local padrao da API: `3333`.
   (login convidado, ranking, itens) com criterios de aceite e DoD.
 - [Diagramas UML](docs/diagrams/) — classes, sequencias (login e jogar
   rodada) e atividade da campanha em Mermaid, renderizados direto no GitHub.
-- [Plano de acao consolidado](docs/PLANO_DE_ACAO.md) — RF001-014,
-  RN001-013 e sprint planning do server.
-- [Plano de apresentacao final](docs/PLANO_APRESENTACAO_FINAL.md) —
-  cronograma da entrega de 23/06.
+- [Arquitetura do back](docs/ARQUITETURA_SERVER.md) — fonte da verdade
+  tecnica para a defesa (stack, padroes, decisoes).
+- [Defesa back (Pedro)](docs/DEFESA_BACK.md) — 10 perguntas previsiveis da
+  banca com respostas curtas, alinhadas com o codigo real.
+- [Defesa infra/QA (Lucas Bruno)](docs/DEFESA_INFRA.md) — 10 perguntas
+  sobre CI/CD, deploy, monitoramento, BDD e rastreabilidade.
+- [Roteiro de demo](docs/ROTEIRO_DEMO.md) — 4 fluxos cronometrados +
+  plano B.
+- [Slides da apresentacao](docs/SLIDES_CONTENT.md) — script completo dos
+  28 slides (`AutoSoccer_Apresentacao.pptx`).
+- [Plano de apresentacao final](docs/PLANO_APRESENTACAO.md) — cronograma
+  da entrega de 23/06 + mapeamento da rubrica.
+- [Sprints (Planning, Backlog, Review, Retrospective, Burndown)](docs/sprints/) —
+  documentacao do processo Scrum.
 
 ## Requisitos
 
