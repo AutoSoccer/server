@@ -22,27 +22,27 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 
 ## 2. Mapeamento Tarefas -> Criterios da Rubrica
 
-| # Rubrica | Criterio                              | Peso    | Estado Atual | Tarefa Planejada                       | Responsavel | Ganho |
-| --------- | ------------------------------------- | ------- | ------------ | -------------------------------------- | ----------- | ----- |
-| 10        | Front separado do back (JSON async)   | 0.5     | 100%         | —                                      | —           | 0     |
-| 11        | CRUD com verbos HTTP                  | 0.5     | 100%         | —                                      | —           | 0     |
-| 12        | Dashboard com graficos e filtros      | 0.5     | 0%           | T1 — Grafico no ranking                | Lucas S     | +0.5  |
-| 13        | Sprints registradas (TDE)             | 0.5     | 40%          | T9 — Sprints em GitHub Projects        | Lucas B     | +0.5  |
-| 14        | GitHub + gitflow                      | 0.5     | 100%         | —                                      | —           | 0     |
-| 15        | JWT com 2+ permissoes                 | 0.5     | 40%          | T5 — Roles admin/user                  | Pedro       | +0.5  |
-| 16        | Requisitos com Cucumber/BDD           | 1.0     | 0%           | T3 — .feature files Gherkin            | Lucas B     | +1.0  |
-| 17        | Cobertura backend > 75%               | 1.0     | 100% (84%)   | —                                      | —           | 0     |
-| 18        | Cobertura frontend > 75%              | 1.0     | 100% (94%)   | —                                      | —           | 0     |
-| 19        | 3 Features + 3 User Stories           | 1.0     | 0%           | T3 — junto com BDD                     | Lucas B     | +1.0  |
-| 20        | OpenAPI/Swagger documentado           | 1.0     | 100%         | —                                      | —           | 0     |
-| 21        | Responsivo + Dark Mode                | 1.0     | 70%          | T2 — Dark Mode                         | Lucas S     | +0.5  |
-| 22        | CI/CD por ambiente + monitoramento    | 1.5     | 40%          | T8 — Sonar + UptimeRobot               | Lucas B     | +0.5  |
-| 23        | i18n (textos + conteudo + moeda)      | 1.5     | 100%         | —                                      | —           | 0     |
-| 24        | Microsservicos                        | 1.5     | 0%           | _nao vale a pena_                      | —           | 0     |
-| 25        | Indices + stored procedures           | 1.5     | 40%          | T6 — SP + 3 relatorios                 | Pedro       | +1.5  |
-| 26        | Upload com CDN                        | 1.5     | 0%           | _nao vale a pena_                      | —           | 0     |
-| 27        | UML (classes + sequencia + atividade) | 1.5     | 0%           | T4 — Mermaid/PlantUML                  | Lucas B     | +1.5  |
-| 28        | Outra tecnologia                      | 0.5-1.5 | nao validado | descartado (decisao do grupo em 10/06) | —           | 0     |
+| # Rubrica | Criterio | Peso | Estado Atual | Tarefa Planejada | Responsavel | Ganho |
+|---|---|---|---|---|---|---|
+| 10 | Front separado do back (JSON async) | 0.5 | 100% | — | — | 0 |
+| 11 | CRUD com verbos HTTP | 0.5 | 100% | — | — | 0 |
+| 12 | Dashboard com graficos e filtros | 0.5 | 0% | T1 — Grafico no ranking | Lucas S | +0.5 |
+| 13 | Sprints registradas (TDE) | 0.5 | 40% | T9 — Sprints em GitHub Projects | Lucas B | +0.5 |
+| 14 | GitHub + gitflow | 0.5 | 100% | — | — | 0 |
+| 15 | JWT com 2+ permissoes | 0.5 | 40% | T5 — Roles admin/user | Pedro | +0.5 |
+| 16 | Requisitos com Cucumber/BDD | 1.0 | 0% | T3 — .feature files Gherkin | Lucas B | +1.0 |
+| 17 | Cobertura backend > 75% | 1.0 | 100% (84%) | — | — | 0 |
+| 18 | Cobertura frontend > 75% | 1.0 | 100% (94%) | — | — | 0 |
+| 19 | 3 Features + 3 User Stories | 1.0 | 0% | T3 — junto com BDD | Lucas B | +1.0 |
+| 20 | OpenAPI/Swagger documentado | 1.0 | 100% | — | — | 0 |
+| 21 | Responsivo + Dark Mode | 1.0 | 70% | T2 — Dark Mode | Lucas S | +0.5 |
+| 22 | CI/CD por ambiente + monitoramento | 1.5 | 40% | T8 — Sonar + UptimeRobot | Lucas B | +0.5 |
+| 23 | i18n (textos + conteudo + moeda) | 1.5 | 100% | — | — | 0 |
+| 24 | Microsservicos | 1.5 | 0% | *nao vale a pena* | — | 0 |
+| 25 | Indices + stored procedures | 1.5 | 40% | T6 — SP + 3 relatorios | Pedro | +1.5 |
+| 26 | Upload com CDN | 1.5 | 0% | *nao vale a pena* | — | 0 |
+| 27 | UML (classes + sequencia + atividade) | 1.5 | 0% | T4 — Mermaid/PlantUML | Lucas B | +1.5 |
+| 28 | Outra tecnologia | 0.5-1.5 | nao validado | descartado (decisao do grupo em 10/06) | — | 0 |
 
 **Estimativa final:** 13 + 7 = **20 / 19.5** (capped em 19.5)
 
@@ -204,8 +204,8 @@ RA2 (implementar sistema real) com defesa de autoria individual.
   - Step no CI rodando `sonar-scanner` apos os testes
   - UptimeRobot configurado para fazer ping em `https://autosoccer-api-production.up.railway.app/health` a cada 5 min
   - Screenshot dos dashboards Sonar + UptimeRobot no `server/docs/monitoring.md`
-  - **Atencao:** deploy ativo no Railway (autosoccer-api-production.up.railway.app)
-  - **Limpeza:** `server/render.yaml`, `server/.env.production.example` e `server/scripts/check-swagger.ts` removidos em chore/cleanup-orphan-files (11/06/2026)
+  - **Atencao:** depende de deploy ativo no Railway (ja em producao)
+  - **Limpeza:** remover `server/.github/workflows/cd-production.yml` (morto-codigo da tentativa Cloudways via SSH, nunca foi usado em prod)
 - **Criterio de aceite:**
   - Badge do Sonar no README (lines coverage, quality gate)
   - URL publica do UptimeRobot ou screenshot anexado
@@ -221,8 +221,8 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 - **Entregavel:**
   - Atualizar `.github/workflows/ci.yml` com 3 jobs: `lint-test`, `deploy-staging` (PR), `deploy-production` (main)
   - Variavel `NODE_ENV` (dev/test/prod) afetando comportamento
-  - Railway: 2 environments no mesmo project (`autosoccer-staging` e `autosoccer-production`) ou 2 servers separados
-  - Banco MySQL plugin do Railway separado por ambiente (database distinto por app)
+  - Railway: 2 services no mesmo projeto (`autosoccer-api-staging` e `autosoccer-api-production`) com branches diferentes (`staging` e `main`)
+  - Plugin MySQL separado por service (database distinto por ambiente) ou 2 projetos Railway distintos
 - **Criterio de aceite:**
   - PR triggers staging deploy
   - Merge main triggers prod deploy
@@ -299,7 +299,7 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 - **Entregavel:**
   - README de ambos repos com:
     - Badge Sonar
-    - URL publica do Railway do back (production e staging) + URL Vercel do front
+    - URL Railway publica do back (production e staging) + URL Vercel do front
     - URL Swagger publica
     - Link do video demo backup
     - Link da apresentacao .pptx
@@ -308,22 +308,22 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 
 ## 4. Cronograma Dia a Dia (10/06 a 23/06)
 
-| Data         | Lucas S (Front)                      | Pedro (Back)                      | Lucas B (Infra/Docs)                      | Eventos                 |
-| ------------ | ------------------------------------ | --------------------------------- | ----------------------------------------- | ----------------------- |
-| 10/06 (hoje) | Planejamento + setup branches        | Planejamento + setup branches     | Planejamento + setup branches             | **Plano aprovado**      |
-| 11/06        | T2 Dark Mode (inicio)                | T5 JWT roles (inicio)             | T3 BDD .feature (inicio)                  | —                       |
-| 12/06        | T2 Dark Mode (finaliza)              | T5 JWT roles (finaliza)           | T3 BDD + User Stories (finaliza)          | **Merge T2, T5, T3**    |
-| 13/06        | T1 Dashboard grafico                 | T6 Stored procedures (inicio)     | T4 Diagramas UML (inicio)                 | —                       |
-| 14/06        | Polish + testes T1+T2                | T6 Stored procedures + relatorios | T4 Diagramas UML (finaliza)               | **Merge T1, T4**        |
-| 15/06        | Buffer / ajustes                     | T6 Stored procedures (finaliza)   | T7 Sprints TDE + retrospectivas           | **Merge T6, T7**        |
-| 16/06        | Inicio slides front                  | Inicio slides back                | T8 SonarCloud + UptimeRobot               | **Merge T8**            |
-| 17/06        | T11 Slides front (cont.)             | T12 Slides back (cont.)           | T9 CI por ambiente + T10 estrutura slides | **Capa + intro pronta** |
-| 18/06        | T11 Slides front (finaliza)          | T12 Slides back (finaliza)        | T13 Slides infra                          | —                       |
-| 19/06        | Revisao geral de slides              | Revisao geral de slides           | T13 Slides infra (finaliza)               | **Slides 100%**         |
-| 20/06        | T14 Roteiro demo                     | T15 Defesa autoria back           | T15 Defesa autoria infra                  | —                       |
-| 21/06        | T15 Defesa autoria front + dry run 1 | dry run 1                         | dry run 1 + T16 README                    | **Dry run 1**           |
-| 22/06        | dry run 2 + ajustes                  | dry run 2 + ajustes               | dry run 2 + ajustes + screenshots         | **Dry run 2**           |
-| 23/06        | **APRESENTACAO**                     | **APRESENTACAO**                  | **APRESENTACAO**                          | 🎯                      |
+| Data | Lucas S (Front) | Pedro (Back) | Lucas B (Infra/Docs) | Eventos |
+|---|---|---|---|---|
+| 10/06 (hoje) | Planejamento + setup branches | Planejamento + setup branches | Planejamento + setup branches | **Plano aprovado** |
+| 11/06 | T2 Dark Mode (inicio) | T5 JWT roles (inicio) | T3 BDD .feature (inicio) | — |
+| 12/06 | T2 Dark Mode (finaliza) | T5 JWT roles (finaliza) | T3 BDD + User Stories (finaliza) | **Merge T2, T5, T3** |
+| 13/06 | T1 Dashboard grafico | T6 Stored procedures (inicio) | T4 Diagramas UML (inicio) | — |
+| 14/06 | Polish + testes T1+T2 | T6 Stored procedures + relatorios | T4 Diagramas UML (finaliza) | **Merge T1, T4** |
+| 15/06 | Buffer / ajustes | T6 Stored procedures (finaliza) | T7 Sprints TDE + retrospectivas | **Merge T6, T7** |
+| 16/06 | Inicio slides front | Inicio slides back | T8 SonarCloud + UptimeRobot | **Merge T8** |
+| 17/06 | T11 Slides front (cont.) | T12 Slides back (cont.) | T9 CI por ambiente + T10 estrutura slides | **Capa + intro pronta** |
+| 18/06 | T11 Slides front (finaliza) | T12 Slides back (finaliza) | T13 Slides infra | — |
+| 19/06 | Revisao geral de slides | Revisao geral de slides | T13 Slides infra (finaliza) | **Slides 100%** |
+| 20/06 | T14 Roteiro demo | T15 Defesa autoria back | T15 Defesa autoria infra | — |
+| 21/06 | T15 Defesa autoria front + dry run 1 | dry run 1 | dry run 1 + T16 README | **Dry run 1** |
+| 22/06 | dry run 2 + ajustes | dry run 2 + ajustes | dry run 2 + ajustes + screenshots | **Dry run 2** |
+| 23/06 | **APRESENTACAO** | **APRESENTACAO** | **APRESENTACAO** | 🎯 |
 
 ---
 
@@ -331,36 +331,36 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 
 > **Estilo:** arcade combinando com o front. Fundo escuro `#111827`, accent `#f97316`, font weight 900, letter-spacing wide, drop shadow tipo botao de fliperama. Borda 4px nos cards. Animacao discreta de hover.
 
-| #   | Slide                                                                    | Responsavel    | Tempo | Indicadores  |
-| --- | ------------------------------------------------------------------------ | -------------- | ----- | ------------ |
-| 1   | Capa: logo AutoSoccer + equipe + data + disciplina                       | grupo          | 0:20  | —            |
-| 2   | Agenda da apresentacao                                                   | Lucas S        | 0:20  | —            |
-| 3   | O que e o AutoSoccer (1 frase + screenshot)                              | Lucas S        | 0:40  | RA2          |
-| 4   | Problema e contexto (engenharia de software aplicada a um auto-battler)  | Pedro          | 0:40  | RA1          |
-| 5   | **FRONT-END**                                                            | Lucas S        | —     | —            |
-| 6   | Stack front: Next.js 16 + React 19 + antd 6 + axios                      | Lucas S        | 0:30  | ID2.4        |
-| 7   | i18n com next-intl (cookie + namespaces + Accept-Language)               | Lucas S        | 0:40  | ID2.4        |
-| 8   | Layout da batalha (header unificado + sidebar logs + animacao bola)      | Lucas S        | 0:50  | ID2.1        |
-| 9   | **NOVO** Dark Mode + responsividade + WCAG                               | Lucas S        | 0:30  | ID2.2        |
-| 10  | **NOVO** Dashboard com graficos no ranking                               | Lucas S        | 0:30  | ID2.3        |
-| 11  | Testes front (94% cobertura, vitest + RTL + renderWithProviders)         | Lucas S        | 0:40  | ID2.2        |
-| 12  | **BACK-END**                                                             | Pedro          | —     | —            |
-| 13  | Stack back: Fastify 5 + Sequelize + MySQL + i18next                      | Pedro          | 0:30  | ID2.4        |
-| 14  | Padroes: Strategy (disputas) + Factory (testes) + ErrorHandler global    | Pedro          | 0:50  | ID2.2        |
-| 15  | i18n no back: Accept-Language + 9 namespaces + paridade pt-BR/en         | Pedro          | 0:30  | ID2.4        |
-| 16  | Swagger 100% (11 schemas centralizados + 20 rotas em ingles)             | Pedro          | 0:40  | ID1.2        |
-| 17  | **NOVO** JWT com 2 permissoes (user / admin)                             | Pedro          | 0:30  | ID2.3        |
-| 18  | **NOVO** Stored procedures + 3 relatorios gerenciais                     | Pedro          | 0:50  | ID2.3        |
-| 19  | Testes back (84% cobertura, 152 testes, 3 suites integration)            | Pedro          | 0:40  | ID2.2        |
-| 20  | **INFRAESTRUTURA**                                                       | Lucas B        | —     | —            |
-| 21  | Git workflow (conventional commits, branches por WS, integration branch) | Lucas B        | 0:40  | ID1.3, ID1.4 |
-| 22  | **NOVO** UML: classes + sequencia + atividade                            | Lucas B        | 0:50  | ID1.2        |
-| 23  | **NOVO** Features BDD + User Stories                                     | Lucas B        | 0:40  | ID1.1        |
-| 24  | CI/CD GitHub Actions (lint + typecheck + i18n + test + build)            | Lucas B        | 0:30  | ID1.4        |
-| 25  | **NOVO** Sonar + UptimeRobot monitoring + healthcheck                    | Lucas B        | 0:30  | ID1.4        |
-| 26  | Deploy Railway (back + MySQL) + Vercel (front) + .env por ambiente       | Lucas B        | 0:40  | ID2.4        |
-| 27  | **DEMO AO VIVO** (4 min cronometrados)                                   | Lucas S dirige | 4:00  | tudo         |
-| 28  | Metricas finais + licoes aprendidas + Q&A                                | grupo          | 1:00  | —            |
+| # | Slide | Responsavel | Tempo | Indicadores |
+|---|---|---|---|---|
+| 1 | Capa: logo AutoSoccer + equipe + data + disciplina | grupo | 0:20 | — |
+| 2 | Agenda da apresentacao | Lucas S | 0:20 | — |
+| 3 | O que e o AutoSoccer (1 frase + screenshot) | Lucas S | 0:40 | RA2 |
+| 4 | Problema e contexto (engenharia de software aplicada a um auto-battler) | Pedro | 0:40 | RA1 |
+| 5 | **FRONT-END** | Lucas S | — | — |
+| 6 | Stack front: Next.js 16 + React 19 + antd 6 + axios | Lucas S | 0:30 | ID2.4 |
+| 7 | i18n com next-intl (cookie + namespaces + Accept-Language) | Lucas S | 0:40 | ID2.4 |
+| 8 | Layout da batalha (header unificado + sidebar logs + animacao bola) | Lucas S | 0:50 | ID2.1 |
+| 9 | **NOVO** Dark Mode + responsividade + WCAG | Lucas S | 0:30 | ID2.2 |
+| 10 | **NOVO** Dashboard com graficos no ranking | Lucas S | 0:30 | ID2.3 |
+| 11 | Testes front (94% cobertura, vitest + RTL + renderWithProviders) | Lucas S | 0:40 | ID2.2 |
+| 12 | **BACK-END** | Pedro | — | — |
+| 13 | Stack back: Fastify 5 + Sequelize + MySQL + i18next | Pedro | 0:30 | ID2.4 |
+| 14 | Padroes: Strategy (disputas) + Factory (testes) + ErrorHandler global | Pedro | 0:50 | ID2.2 |
+| 15 | i18n no back: Accept-Language + 9 namespaces + paridade pt-BR/en | Pedro | 0:30 | ID2.4 |
+| 16 | Swagger 100% (11 schemas centralizados + 20 rotas em ingles) | Pedro | 0:40 | ID1.2 |
+| 17 | **NOVO** JWT com 2 permissoes (user / admin) | Pedro | 0:30 | ID2.3 |
+| 18 | **NOVO** Stored procedures + 3 relatorios gerenciais | Pedro | 0:50 | ID2.3 |
+| 19 | Testes back (84% cobertura, 152 testes, 3 suites integration) | Pedro | 0:40 | ID2.2 |
+| 20 | **INFRAESTRUTURA** | Lucas B | — | — |
+| 21 | Git workflow (conventional commits, branches por WS, integration branch) | Lucas B | 0:40 | ID1.3, ID1.4 |
+| 22 | **NOVO** UML: classes + sequencia + atividade | Lucas B | 0:50 | ID1.2 |
+| 23 | **NOVO** Features BDD + User Stories | Lucas B | 0:40 | ID1.1 |
+| 24 | CI/CD GitHub Actions (lint + typecheck + i18n + test + build) | Lucas B | 0:30 | ID1.4 |
+| 25 | **NOVO** Sonar + UptimeRobot monitoring + healthcheck | Lucas B | 0:30 | ID1.4 |
+| 26 | Deploy Railway (back) + Vercel (front) + .env por ambiente | Lucas B | 0:40 | ID2.4 |
+| 27 | **DEMO AO VIVO** (4 min cronometrados) | Lucas S dirige | 4:00 | tudo |
+| 28 | Metricas finais + licoes aprendidas + Q&A | grupo | 1:00 | — |
 
 **Tempo total estimado:** ~20 min (objetivo: 15-20 min com Q&A)
 
@@ -393,27 +393,27 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 
 ## 7. Riscos e Contingencias
 
-| Risco                                            | Probabilidade | Impacto | Mitigacao                                                            |
-| ------------------------------------------------ | ------------- | ------- | -------------------------------------------------------------------- |
-| Railway/Vercel down no dia da apresentacao       | media         | alto    | Demo local no laptop + screenshots backup + video gravado            |
-| Algum integrante doente / ausente                | baixa         | alto    | Cada slide tem **2 donos** que podem apresentar (registrar no .pptx) |
-| MySQL local nao roda no notebook do apresentador | media         | alto    | Docker compose + dados de seed + testar 48h antes                    |
-| Bug critico em prod descoberto na vespera        | media         | medio   | Rollback rapido para `integration/grupo-1` (snapshot conhecido bom)  |
-| T6 (stored procedures) muito demorada            | media         | medio   | Reduzir escopo: 2 relatorios em vez de 3                             |
-| WCAG falhar em alguma tela em dark mode          | baixa         | baixo   | Audit com Chrome Lighthouse antes de mergear T2                      |
-| Slide com texto demais (overload)                | media         | medio   | Regra: max 6 bullets por slide, sem paragrafos                       |
-| Apresentar passar de 20 min                      | media         | medio   | Cronometrar dry runs e cortar                                        |
+| Risco | Probabilidade | Impacto | Mitigacao |
+|---|---|---|---|
+| Railway/Vercel down no dia da apresentacao | media | alto | Demo local no laptop + screenshots backup + video gravado |
+| Algum integrante doente / ausente | baixa | alto | Cada slide tem **2 donos** que podem apresentar (registrar no .pptx) |
+| MySQL local nao roda no notebook do apresentador | media | alto | Docker compose + dados de seed + testar 48h antes |
+| Bug critico em prod descoberto na vespera | media | medio | Rollback rapido para `integration/grupo-1` (snapshot conhecido bom) |
+| T6 (stored procedures) muito demorada | media | medio | Reduzir escopo: 2 relatorios em vez de 3 |
+| WCAG falhar em alguma tela em dark mode | baixa | baixo | Audit com Chrome Lighthouse antes de mergear T2 |
+| Slide com texto demais (overload) | media | medio | Regra: max 6 bullets por slide, sem paragrafos |
+| Apresentar passar de 20 min | media | medio | Cronometrar dry runs e cortar |
 
 ---
 
 ## 8. Itens Urgentes (proximas 24h)
 
-> **Mudanca de plano (11/06/2026):** apos tentativas frustradas com Render (yarn no build) e Cloudways (root-owned $HOME no stack PHP), o deploy do back migrou para **Railway**. Motivos: MySQL plugin nativo, auto-deploy via webhook do GitHub, CLI `railway up` para deploy direto sem commit, e zero ops de Nginx/PM2/SSL — tudo gerenciado. O front continua na **Vercel** (sem mudanca). O arquivo `server/render.yaml` virou morto-codigo e sera removido na T8.
+> **Decisao final de deploy (20/06/2026):** durante a sprint 5 o grupo testou a migracao Render -> Cloudways (PaaS via SSH/PM2/Nginx), mas a configuracao manual no painel + ausencia de deploy declarativo em arquivo no repo nao se pagaram para o contexto academico. **Decidimos manter o back no Railway**, que ja estava em uso desde a sprint 3 e oferece auto-deploy via push, Nixpacks como builder e plugin MySQL gerenciado nativo no mesmo projeto. O front continua na **Vercel** (sem mudanca). Arquivos legados a remover: `server/.github/workflows/cd-production.yml` (workflow Cloudways via SSH que nunca foi acionado em prod) e qualquer mencao residual a `server/render.yaml`.
 
 - [x] **Aprovar este plano** — confirmado por Lucas Stopinski em 10/06 com aval pra commitar com info da equipe
 - [x] **Decisao sobre criterio 28** — descartado, vamos focar em pontuar os outros criterios
-- [x] **Deploy Railway (back)** — ATIVO em `https://autosoccer-api-production.up.railway.app`, healthcheck OK, Swagger acessivel em `/docs`
-- [x] **Deploy Vercel (front)** — ativo com `NEXT_PUBLIC_API_URL` apontando para o Railway
+- [x] **Deploy Railway (back)** — JA ATIVO em `https://autosoccer-api-production.up.railway.app` com plugin MySQL nativo. T8 (Sonar + UptimeRobot) desbloqueada.
+- [ ] **Deploy Vercel (front)** — confirmar que o projeto front esta linkado e com `NEXT_PUBLIC_API_URL` apontando para a URL Railway do back
 - [ ] **Cada integrante criar branch local a partir do main** (`git checkout -b <branch>`)
 - [ ] **Agendar 2 reunioes de sincronizacao:** quarta 17/06 (status checkpoint) + domingo 22/06 (dry run final)
 
@@ -421,36 +421,44 @@ RA2 (implementar sistema real) com defesa de autoria individual.
 
 **Back-end no Railway:**
 
-1. Criar conta em https://railway.com (login com GitHub) e criar um **New Project > Empty Project**
-2. Adicionar plugin **+ New > Database > MySQL** — Railway provisiona um MySQL gerenciado e expoe a env var `MYSQL_URL`
-3. Adicionar servico **+ New > GitHub Repo > AutoSoccer/server** — Railway detecta Node.js via Nixpacks
-4. Em **Settings > Build**:
+1. Lucas Bruno: criar conta em https://railway.com (login com GitHub)
+2. Criar **New Project > Empty Project**
+3. Adicionar plugin de banco: **+ New > Database > MySQL** (o plugin expoe `MYSQL_URL` automaticamente)
+4. Adicionar o servico do back: **+ New > GitHub Repo > AutoSoccer/server** (Railway detecta Node.js via Nixpacks, sem precisar de Dockerfile custom)
+5. Em **Settings > Build**:
    - Build Command: `npm install && npm run build`
-   - Start Command: `npm run db:migrate && node dist/index.js`
-5. Em **Variables**, adicionar (alem das vars geradas pelo plugin MySQL):
-   - `DATABASE_URL=${{MySQL.MYSQL_URL}}` (referencia a var do plugin)
-   - `NODE_ENV=production`
-   - `PORT=3000`
-   - `APP_HOST=0.0.0.0`
-   - `JWT_SECRET=<string aleatoria longa>` (gerar com `openssl rand -base64 48`)
+   - Start Command: `npm run db:migrate && node dist/index.js` (migrations rodam **antes** do servidor subir; se falhar, versao antiga permanece)
+6. Em **Variables**, configurar todas as vars de producao:
+   - `DATABASE_URL=${{MySQL.MYSQL_URL}}` (referencia ao plugin MySQL)
+   - `DB_SSL=false` (rede interna do Railway nao exige SSL)
+   - `JWT_SECRET=<gerar com openssl rand -base64 48>` (secret, nunca em codigo)
    - `JWT_EXPIRES_IN=7d`
-   - `CORS_ORIGIN=<URL do front na Vercel>` (NAO pode ser `*` em producao — o boot falha com `CONFIG_CORS_WILDCARD_IN_PRODUCTION`)
-   - `DB_SSL=false`
-6. Em **Settings > Networking**, clicar em **Generate Domain** para receber `https://<nome>.up.railway.app`
-7. Para o MySQL: **MySQL service > Settings > Networking > Add TCP Proxy** (acesso externo ao banco — necessario para Navicat/migrations locais)
-8. Smoke test: abrir `https://<nome>.up.railway.app/health` (deve retornar `{"status":"ok"}`) e `/docs` (Swagger UI)
+   - `NODE_ENV=production`
+   - `APP_HOST=0.0.0.0`
+   - `PORT=3000`
+   - `CORS_ORIGIN=<URL do front na Vercel>` (em prod o boot quebra se for `*` ou vazio — guard de seguranca em `src/config/env.ts`)
+7. Em **Settings > Networking**, clicar em **Generate Domain** — Railway provisiona `https://autosoccer-api-production.up.railway.app`
+8. Validar:
+   - `GET /health` retorna `200` com `{ status: 'ok' }`
+   - `GET /docs` exibe o Swagger UI
 
-**Deploy rapido pos-configuracao:**
+**Deploy continuo (auto-deploy):**
 
-- Auto-deploy: cada `git push origin main` triggera build no Railway via webhook
-- Manual: dentro de `server/`, rodar `railway up` (Railway CLI faz upload direto sem commit; instalar com `npm install -g @railway/cli` e linkar com `railway link`)
+A cada `git push origin main`, o Railway reconstroi e publica via webhook do GitHub. Para deploy manual rapido sem commit, usar a Railway CLI:
 
-**Front-end na Vercel:**
+```bash
+npm install -g @railway/cli
+railway login
+railway link        # dentro de server/, selecionar o service autosoccer-api
+railway up          # upload direto + build + deploy
+```
 
-9. Projeto Vercel apontando para o repo `front`, branch `main`
-10. Env var `NEXT_PUBLIC_API_URL` = URL publica Railway do back (passo 6)
-11. Redeploy do front para pegar a env var
-12. Voltar no Railway e confirmar que `CORS_ORIGIN` tem a URL exata do front Vercel (sem `/` final)
+**Front-end na Vercel (sem mudanca):**
+
+9. Confirmar projeto front no painel Vercel apontando para o repo `front`, branch `main`
+10. Env var `NEXT_PUBLIC_API_URL` = `https://autosoccer-api-production.up.railway.app`
+11. Redeploy o front para pegar a env var atualizada
+12. Voltar no back e atualizar `CORS_ORIGIN` com a URL Vercel do front no painel Railway (auto-redeploy ao salvar var)
 13. Smoke test final: abrir o front na Vercel, fazer login convidado, verificar comunicacao com o back
 14. Configurar UptimeRobot fazendo ping em `https://autosoccer-api-production.up.railway.app/health` a cada 5 min
 
@@ -470,13 +478,13 @@ Para considerar uma tarefa **completa**:
 
 ## 10. Ferramentas Externas Necessarias
 
-| Ferramenta                    | Conta     | Quem cria | Custo                                                                |
-| ----------------------------- | --------- | --------- | -------------------------------------------------------------------- |
-| Railway (back + MySQL plugin) | grupo     | Lucas B   | plano free (com $5 de credito mensal) — MySQL plugin sem custo extra |
-| Vercel (front)                | grupo     | Lucas B   | free tier (hobby)                                                    |
-| SonarCloud                    | grupo     | Lucas B   | free para repos publicos                                             |
-| UptimeRobot                   | grupo     | Lucas B   | free tier (50 monitors, 5min check)                                  |
-| GitHub Projects               | ja existe | Lucas B   | free                                                                 |
+| Ferramenta | Conta | Quem cria | Custo |
+|---|---|---|---|
+| Railway (back + plugin MySQL) | grupo | Lucas B | plano Hobby (creditos free + pay-as-you-go, ~$5/mes no uso atual) — plugin MySQL gerenciado nativo |
+| Vercel (front) | grupo | Lucas B | free tier (hobby) |
+| SonarCloud | grupo | Lucas B | free para repos publicos |
+| UptimeRobot | grupo | Lucas B | free tier (50 monitors, 5min check) |
+| GitHub Projects | ja existe | Lucas B | free |
 
 ---
 
@@ -491,7 +499,6 @@ Tecnologias extras que naturalmente aparecem no projeto (i18n full-stack, animat
 ## 12. Convencoes de commit
 
 Conforme `server/CONTRIBUTING.md` e `front/AGENTS.md`:
-
 - Conventional Commits em **pt-BR sem acentos** (`feat`, `fix`, `chore`, `docs`, `refactor`, `test`)
 - Titulo <= 72 chars, modo imperativo
 - **Sem Co-Authored-By** (decisao do grupo desde a Sprint 4)

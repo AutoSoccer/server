@@ -11,7 +11,6 @@
 **Subtitulo:** Fantasy soccer auto-battler com engenharia de software aplicada
 
 **Bullets**
-
 - Disciplina Experiencia Criativa BSI PUCPR 2026/1
 - Apresentacao final em 23/06/2026
 - Lucas Stopinski da Silva — Front-end
@@ -33,7 +32,6 @@ Abrir cumprimentando os professores e a banca. Reforcar que e a entrega final co
 **Subtitulo:** Como vamos usar os proximos 15 minutos
 
 **Bullets**
-
 - Produto: o que e o AutoSoccer
 - Front-end: stack, i18n, dark mode, dashboard, testes
 - Back-end: Fastify, padroes, JWT roles, stored procedures
@@ -55,7 +53,6 @@ Sinalizar que o grupo dividiu a apresentacao por area (front/back/infra) e que c
 **Subtitulo:** Auto-battler de fantasy soccer com mercado, batalha e ranking
 
 **Bullets**
-
 - Jogador monta time comprando atletas em um mercado rotativo
 - Aplica itens com bonus de atributos antes da partida
 - Disputa rodadas em sistema de campanha por trofeus
@@ -77,7 +74,6 @@ Resumir o pitch em duas frases: "monta time, joga rodada, sobe ranking". Mencion
 **Subtitulo:** Por que um auto-battler para exercitar engenharia de software
 
 **Bullets**
-
 - Dominio rico em regras: matchmaking, atributos compostos, balanceamento
 - Varios subsistemas: auth, mercado, batalha, ranking, relatorios
 - Permite aplicar padroes de projeto (Strategy, Factory) com proposito
@@ -99,7 +95,6 @@ Explicar que o auto-battler foi escolhido justamente por dar espaco a multiplas 
 **Subtitulo:** A camada que o usuario ve
 
 **Bullets**
-
 - Stack moderna em Next.js 16 + React 19
 - Identidade visual arcade com design system antd 6
 - Internacionalizacao no lado do servidor com next-intl
@@ -121,7 +116,6 @@ Divisor de bloco. Resumir em uma frase: "todo o front foi pensado para experienc
 **Subtitulo:** Next.js 16 App Router + React 19 + antd 6 + axios
 
 **Bullets**
-
 - Next.js 16.2 com App Router e Turbopack
 - React 19.2 com Server Components por padrao
 - antd 6 + @ant-design/icons como design system
@@ -143,7 +137,6 @@ Justificar cada escolha em poucas palavras: App Router porque SSR e o caminho re
 **Subtitulo:** Cookie + Accept-Language + 9 namespaces em paridade
 
 **Bullets**
-
 - Locales `pt-BR` (default) e `en` registrados em `src/i18n/config.ts`
 - Server Components usam `getTranslations`, client usam `useTranslations`
 - LanguageSwitcher grava cookie `NEXT_LOCALE` e faz reload para re-render RSC
@@ -165,7 +158,6 @@ Demonstrar a logica do cookie + reload e a paridade pt-BR/en. Citar que mensagen
 **Subtitulo:** Header unificado, sidebar de logs e bola animada por CSS
 
 **Bullets**
-
 - Grid 3x6 compartilhado entre as duas equipes
 - Header unico com placar, rodada e nome da campanha
 - Sidebar vertical com scroll proprio para o log de turnos
@@ -187,7 +179,6 @@ Reforcar que a animacao da bola usa apenas CSS e atualizacao de estado — decis
 **Subtitulo:** Tema persistente em cookie com CSS variables e WCAG AA
 
 **Bullets**
-
 - Paleta dark em `globals.css` com tokens `--bg-*`, `--fg-*`, `--accent-*`
 - Toggle no `ThemeSwitcher` ao lado do `LanguageSwitcher`
 - Cookie `THEME` persistido por 1 ano com aplicacao no `<html>` sem FOUC
@@ -209,7 +200,6 @@ Explicar que o tema entra antes do React montar (cookie lido em Server Component
 **Subtitulo:** Recharts + filtros + integracao com API de ranking
 
 **Bullets**
-
 - Grafico de barras horizontais com top 10 jogadores por trofeus
 - Grafico de linha com evolucao temporal de trofeus
 - Filtros por periodo (7d, 30d, all-time) e escopo (eu vs todos)
@@ -231,7 +221,6 @@ Mostrar o dashboard funcionando no proprio /ranking. Citar que os dados vem do e
 **Subtitulo:** 94% de cobertura com Vitest + Testing Library + happy-dom
 
 **Bullets**
-
 - Stack: Vitest 4 + @testing-library/react 16 + happy-dom 20
 - Helper `renderWithProviders` injeta i18n, antd e auth context
 - Cobertura por modulo: services, hooks, providers, context, components
@@ -253,7 +242,6 @@ Citar que a regra de ouro foi testar comportamento, nao implementacao — "ao cl
 **Subtitulo:** Onde mora a regra de negocio
 
 **Bullets**
-
 - Fastify 5 com schemas validados e Swagger automatico
 - Sequelize 6 + MySQL 8 com migrations versionadas
 - Padroes de projeto: Strategy nas disputas e Factory nos testes
@@ -275,7 +263,6 @@ Divisor. Reforcar que o back foi pensado para servir tanto o front quanto eventu
 **Subtitulo:** Fastify 5 + Sequelize + MySQL + i18next
 
 **Bullets**
-
 - Fastify 5.8 com plugin system encapsulado
 - Sequelize 6.37 + mysql2 com migrations Sequelize CLI
 - MySQL 8 via docker-compose para desenvolvimento local
@@ -297,7 +284,6 @@ Justificar Fastify pela performance (cerca de 2x Express por causa do find-my-wa
 **Subtitulo:** Strategy nas disputas, Factory nos testes, ErrorHandler global
 
 **Bullets**
-
 - Strategy: cada tipo de disputa (passe, drible, chute) tem estrategia propria
 - Factory: geradores em `src/__tests__/factories/` para user, team, athlete, item
 - ErrorHandler global captura `ServiceError` e traduz via i18next
@@ -319,7 +305,6 @@ Mostrar um trecho curto da Strategy de disputas e contar como o ErrorHandler per
 **Subtitulo:** Accept-Language + 10 namespaces + paridade pt-BR/en garantida
 
 **Bullets**
-
 - Plugin `src/plugins/i18n.ts` registra i18next com fs-backend
 - Middleware le `Accept-Language` e injeta `request.i18n.t`
 - Namespaces: common, auth, equipe, itens, mercado, partida, ranking, simulador, abilities, swagger
@@ -341,7 +326,6 @@ Mostrar o mesmo erro retornado em pt-BR e em en lado a lado. Citar que evita dup
 **Subtitulo:** 20 rotas em ingles + schemas centralizados via $ref
 
 **Bullets**
-
 - @fastify/swagger + @fastify/swagger-ui em `/docs`
 - 20 rotas agrupadas em tags: Auth, Athletes, Team, Market, Match, Ranking, Admin, Reports
 - 11 schemas em `src/plugins/swagger.schemas.ts` registrados com `addSchema`
@@ -363,7 +347,6 @@ Abrir Swagger no auditorio (se possivel) ou screenshot. Reforcar que cada rota t
 **Subtitulo:** Roles user/admin com middleware `requireRole`
 
 **Bullets**
-
 - Coluna `role` adicionada em `users` via migration Sequelize
 - Payload JWT inclui `userId`, `email` e `role`
 - Plugin `@fastify/jwt` decora `request.user` apos validar assinatura
@@ -385,7 +368,6 @@ Explicar que role e enum (`user`, `admin`) e que o middleware retorna 403 com me
 **Subtitulo:** SQL otimizado + 3 endpoints administrativos
 
 **Bullets**
-
 - Migration cria stored procedure `sp_get_top_athletes_by_role`
 - Procedure retorna top atletas mais vendidos agrupados por posicao
 - Endpoint `GET /admin/reports/top-athletes-by-role` chama a procedure
@@ -407,7 +389,6 @@ Mostrar o SQL da procedure (poucas linhas), explicar que o agregado roda no banc
 **Subtitulo:** 84% de cobertura com Vitest + factories + integracao
 
 **Bullets**
-
 - 152 testes distribuidos entre unit e integration
 - 3 suites de integration: `auth.int.test.ts`, `equipe.int.test.ts`, `partida.int.test.ts`
 - Helpers `buildApp()` e `sequelizeStub` em `src/__tests__/helpers/`
@@ -429,11 +410,10 @@ Citar que a integracao roda `app.inject()` com o Fastify inteiro registrado, evi
 **Subtitulo:** Deploy, qualidade e processo
 
 **Bullets**
-
 - Git workflow com Conventional Commits e branches por workstream
 - UML, BDD e User Stories versionados no proprio repo
 - CI/CD GitHub Actions com 5 etapas
-- Deploy automatizado: Railway (back + MySQL plugin nativo) e Vercel (front)
+- Deploy automatizado: Railway (back + plugin MySQL) e Vercel (front)
 - Monitoramento ativo: SonarCloud + UptimeRobot
 - Scrum adaptado com 4 sprints documentadas
 
@@ -451,7 +431,6 @@ Divisor de infra. Reforcar que a infra nao foi tratada como afterthought — ela
 **Subtitulo:** Conventional Commits + branches por workstream + integration branch
 
 **Bullets**
-
 - Commits em pt-BR sem acentos (`feat`, `fix`, `chore`, `docs`, `refactor`, `test`)
 - Branches no padrao `tipo/ws-XX-slug` ou `tipo/slug` para apresentacao
 - Branch `integration/grupo-N` como snapshot conhecido bom antes de merge na main
@@ -473,7 +452,6 @@ Mostrar o git log do `main` recente para evidenciar o padrao. Citar que peer rev
 **Subtitulo:** Classes + sequencias + atividade em Mermaid
 
 **Bullets**
-
 - `classes.md` — diagrama de classes dos models Sequelize
 - `seq-login.md` — sequencia de login JWT (Front -> Fastify -> DB)
 - `seq-jogar-rodada.md` — sequencia da rodada (matchmaking, simulador, snapshot)
@@ -495,7 +473,6 @@ Mostrar o diagrama de classes resumido. Citar que cada sequencia mapeia para um 
 **Subtitulo:** 3 features Gherkin + 3 User Stories com criterios de aceite
 
 **Bullets**
-
 - `autenticacao.feature` — login, login convidado, logout
 - `mercado.feature` — listar atletas, comprar atleta, refresh do mercado
 - `batalha.feature` — iniciar campanha, jogar rodada, finalizar campanha
@@ -517,7 +494,6 @@ Ler 2-3 linhas de um cenario Gherkin para mostrar o estilo Given/When/Then. Cita
 **Subtitulo:** Pipeline de 5 etapas em todo PR e push na main
 
 **Bullets**
-
 - Step 1 — lint (ESLint)
 - Step 2 — typecheck (tsc --noEmit)
 - Step 3 — i18n:check (paridade pt-BR/en)
@@ -539,7 +515,6 @@ Mostrar uma run verde do GitHub Actions. Citar que ja pegou regressao real (mens
 **Subtitulo:** Quality gate + monitoramento publico
 
 **Bullets**
-
 - SonarCloud conectado em ambos os repos (front e server)
 - Quality gate exige cobertura > 80% e zero bugs criticos
 - Badge no README com status da qualidade
@@ -558,22 +533,20 @@ Reforcar que SonarCloud e free para repo publico e UptimeRobot e free para ate 5
 
 ## Slide 26 — Deploy Railway + Vercel
 
-**Subtitulo:** Back em Railway com MySQL plugin nativo, front na Vercel
+**Subtitulo:** Back no Railway com plugin MySQL, front na Vercel
 
 **Bullets**
-
-- Railway: build via Nixpacks (Node 20) + MySQL plugin gerenciado
-- Auto-deploy a cada `git push origin main` via webhook do GitHub
-- `railway up` CLI permite deploy direto sem commit
+- Railway: servico Node detectado via Nixpacks + plugin MySQL nativo do Railway no mesmo projeto
+- Deploy via Git Pull configurado no painel + PM2 como process manager
 - Vercel: deploy automatico via GitHub App, preview por PR
 - Variaveis de ambiente separadas por ambiente (preview vs production)
 - Sequelize com `sync: false` — banco so muda via migration
-- URL publica: `https://autosoccer-api-production.up.railway.app/docs`
+- `.env.production.example` versionado documentando as variaveis
 
 **Notas do apresentador**
-Explicar a jornada Render -> Cloudways -> Railway: Render falhou no yarn no build, Cloudways tinha $HOME root-owned no stack PHP, Railway foi o que finalmente atendeu (MySQL plugin nativo, sem ops de Nginx/PM2/SSL). Mencionar que o front continuou na Vercel sem mudanca.
+Explicar a escolha do Railway: deploy declarativo via push na main, plugin MySQL gerenciado no mesmo projeto (sem servidor externo), auto-deploy via Nixpacks sem precisar de Dockerfile custom. Mencionar que o front continuou na Vercel sem mudanca.
 
-**Visual sugerido:** diagrama com Railway (back + MySQL plugin) -> Vercel (front) -> usuario, setas mostrando o fluxo e dominio publico provisorio.
+**Visual sugerido:** diagrama com Railway (service Node + plugin MySQL) -> Vercel (front) -> usuario, setas mostrando o fluxo e URLs publicas (`autosoccer-api-production.up.railway.app` e `autosoccer.vercel.app`).
 
 **Quem apresenta:** Lucas Bruno
 
@@ -584,11 +557,10 @@ Explicar a jornada Render -> Cloudways -> Railway: Render falhou no yarn no buil
 **Subtitulo:** 4 fluxos cronometrados — login, mercado, relatorios e CI/CD
 
 **Bullets**
-
 - Fluxo 1 (Lucas S) — login + dark mode + dashboard (~1 min)
 - Fluxo 2 (Lucas S) — mercado + drag-and-drop + aplicacao de item (~1 min)
 - Fluxo 3 (Pedro) — Swagger autenticado + relatorio via stored procedure (~1 min)
-- Fluxo 4 (Lucas B) — GitHub Actions + Railway + UptimeRobot (~1 min)
+- Fluxo 4 (Lucas B) — GitHub Actions + Railway dashboard + UptimeRobot (~1 min)
 - Driver: Lucas S no laptop principal projetando
 - Plano B com backup local + video gravado caso a rede falhe
 
@@ -606,7 +578,6 @@ Falar pouco neste slide — o slide e apenas estrutura. Toda a narracao acontece
 **Subtitulo:** 94% front, 84% back, 255 commits, 20 rotas
 
 **Bullets**
-
 - Cobertura: 94% front, 84% back
 - 152 testes back + cobertura completa de services e components front
 - 20 rotas REST documentadas em Swagger com i18n

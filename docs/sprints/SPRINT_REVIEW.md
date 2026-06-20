@@ -4,12 +4,12 @@ Documento formal de revisão das 4 sprints do projeto AutoSoccer. Cada review co
 
 ## Sumario executivo
 
-| Sprint   | SP planejados | SP entregues | Velocidade (%) | Aderência ao escopo                                      |
-| -------- | ------------- | ------------ | -------------- | -------------------------------------------------------- |
-| Sprint 1 | 33            | 33           | 100%           | Total                                                    |
-| Sprint 2 | 46            | 46           | 100%           | Total, com refino visual extra do mercado                |
-| Sprint 3 | 119           | 119          | 100%           | Total, sprint estendida em 1 semana absorveu Páscoa e G1 |
-| Sprint 4 | 81            | 81           | 100%           | Total, com BDD/UML/UML/role admin entregues              |
+| Sprint | SP planejados | SP entregues | Velocidade (%) | Aderência ao escopo |
+| --- | --- | --- | --- | --- |
+| Sprint 1 | 33 | 33 | 100% | Total |
+| Sprint 2 | 46 | 46 | 100% | Total, com refino visual extra do mercado |
+| Sprint 3 | 119 | 119 | 100% | Total, sprint estendida em 1 semana absorveu Páscoa e G1 |
+| Sprint 4 | 81 | 81 | 100% | Total, com BDD/UML/UML/role admin entregues |
 
 Velocidade média do time: **279 SP em ~14 semanas (~20 SP/semana)**.
 
@@ -33,11 +33,11 @@ Velocidade média do time: **279 SP em ~14 semanas (~20 SP/semana)**.
 
 ### Lições aprendidas
 
-| Categoria          | Item                                                                                                           |
-| ------------------ | -------------------------------------------------------------------------------------------------------------- |
-| Acerto             | Adoção de Zod + React Hook Form desde o dia 1 evitou retrabalho de validação.                                  |
-| Erro               | Scaffold inicial sem definir lockfile padrão gerou conflito posterior entre `yarn.lock` e `package-lock.json`. |
-| Ajuste pra próxima | Padronizar npm no front e yarn no server antes da Sprint 2 começar a empilhar deps.                            |
+| Categoria | Item |
+| --- | --- |
+| Acerto | Adoção de Zod + React Hook Form desde o dia 1 evitou retrabalho de validação. |
+| Erro | Scaffold inicial sem definir lockfile padrão gerou conflito posterior entre `yarn.lock` e `package-lock.json`. |
+| Ajuste pra próxima | Padronizar npm no front e yarn no server antes da Sprint 2 começar a empilhar deps. |
 
 ---
 
@@ -60,11 +60,11 @@ Velocidade média do time: **279 SP em ~14 semanas (~20 SP/semana)**.
 
 ### Lições aprendidas
 
-| Categoria          | Item                                                                                     |
-| ------------------ | ---------------------------------------------------------------------------------------- |
-| Acerto             | Strategy pattern no simulador permitiu testar disputas isoladamente.                     |
-| Erro               | Subestimamos o tamanho de US-013 (motor de simulação) — consumiu 50% do tempo da sprint. |
-| Ajuste pra próxima | Quebrar épicos grandes (>13 SP) em stories menores antes do planning.                    |
+| Categoria | Item |
+| --- | --- |
+| Acerto | Strategy pattern no simulador permitiu testar disputas isoladamente. |
+| Erro | Subestimamos o tamanho de US-013 (motor de simulação) — consumiu 50% do tempo da sprint. |
+| Ajuste pra próxima | Quebrar épicos grandes (>13 SP) em stories menores antes do planning. |
 
 ---
 
@@ -92,11 +92,11 @@ Velocidade média do time: **279 SP em ~14 semanas (~20 SP/semana)**.
 
 ### Lições aprendidas
 
-| Categoria          | Item                                                                                                                                                      |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Acerto             | ErrorHandler global + enum `ErrorCode` reduziu try/catch redundante e padronizou respostas.                                                               |
-| Erro               | i18n entrou tarde na sprint, gerando refactor amplo de mensagens hardcoded e exigindo retrabalho de testes (`7442fd6` ajusta integration tests pós-i18n). |
-| Ajuste pra próxima | Decidir contrato de erros e i18n antes de qualquer implementação de novas rotas.                                                                          |
+| Categoria | Item |
+| --- | --- |
+| Acerto | ErrorHandler global + enum `ErrorCode` reduziu try/catch redundante e padronizou respostas. |
+| Erro | i18n entrou tarde na sprint, gerando refactor amplo de mensagens hardcoded e exigindo retrabalho de testes (`7442fd6` ajusta integration tests pós-i18n). |
+| Ajuste pra próxima | Decidir contrato de erros e i18n antes de qualquer implementação de novas rotas. |
 
 ---
 
@@ -122,15 +122,15 @@ Velocidade média do time: **279 SP em ~14 semanas (~20 SP/semana)**.
 10. Papéis de usuário: coluna `role` em users, propagação no JWT, middleware `requireRole` e rota `GET /admin/users`.
 11. Stored procedure `sp_get_top_athletes_by_role` para relatórios analíticos.
 12. CORS rejeitando wildcard em produção.
-13. Deploy de homologação no Render configurado via `render.yaml`; deploy produtivo no Cloudways em validação final.
+13. Deploy de homologação no Render configurado via `render.yaml` (descontinuado); deploy produtivo definido no **Railway** com plugin MySQL nativo, ativo em `https://autosoccer-api-production.up.railway.app`.
 
 ### Lições aprendidas
 
-| Categoria          | Item                                                                                                                               |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Acerto             | Reservar a Sprint 4 inteira para artefatos de avaliação (BDD, UML, papéis) blindou nota sem comprometer features.                  |
-| Erro               | Plano de ação da apresentação ficou para o último commit (`03cb73b`, `84dee00` em 10/06); deveríamos ter aberto a estrutura antes. |
-| Ajuste pra próxima | Em qualquer projeto futuro com defesa presencial, abrir documento de apresentação no início da sprint final.                       |
+| Categoria | Item |
+| --- | --- |
+| Acerto | Reservar a Sprint 4 inteira para artefatos de avaliação (BDD, UML, papéis) blindou nota sem comprometer features. |
+| Erro | Plano de ação da apresentação ficou para o último commit (`03cb73b`, `84dee00` em 10/06); deveríamos ter aberto a estrutura antes. |
+| Ajuste pra próxima | Em qualquer projeto futuro com defesa presencial, abrir documento de apresentação no início da sprint final. |
 
 ---
 
