@@ -27,6 +27,12 @@ Porta local padrao da API: `3333`.
   da entrega de 23/06 + mapeamento da rubrica.
 - [Sprints (Planning, Backlog, Review, Retrospective, Burndown)](docs/sprints/) —
   documentacao do processo Scrum.
+- [Plano de acao consolidado](docs/PLANO_DE_ACAO.md) — RF001-014, RN001-013,
+  cronograma de implementacao + mapeamento de tarefas vs criterios da rubrica.
+- [Plano WebSocket batalha ao vivo](docs/PLANO_WEBSOCKET_LIVE_BATTLE.md) —
+  arquitetura do streaming de turnos via WS + fallback local.
+- [Evidencias por integrante](docs/EVIDENCIAS.md) — mapa de rastreabilidade
+  feature -> commit -> arquivo -> slide, comprovando autoria individual.
 
 ## Requisitos
 
