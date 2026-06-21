@@ -73,6 +73,7 @@ Demo ocorre entre 14:30 e 18:30 (4 minutos), driver Lucas S no laptop principal 
 - [ ] DevTools fechado, zoom 110% para legibilidade no projetor
 - [ ] Idioma do navegador em pt-BR inicialmente, tema light
 - [ ] Aba 1: front em prod; Aba 2: Swagger; Aba 3: GitHub Actions; Aba 4: Railway dashboard; Aba 5: UptimeRobot dashboard
+- [ ] **Terminal lateral pronto** com `cd server && node scripts/test-ws-battle.mjs` digitado (so falta Enter) — usado no fluxo 3.5 para mostrar WebSocket ao vivo
 - [ ] Video de backup (`apresentacao/backup-demo.mp4`) acessivel em pasta local
 - [ ] Slides .pptx abertos em modo apresentacao em segunda tela
 
@@ -115,6 +116,24 @@ Demo ocorre entre 14:30 e 18:30 (4 minutos), driver Lucas S no laptop principal 
 7. (01:00) Mostrar resposta JSON e comentar: "essa rota usa stored procedure, indice composto em team_id+rodada, e exige role admin"
 
 **Narracao chave:** "Swagger 100% documentado, role-based access, stored procedure rodando em producao."
+
+### Fluxo 3.5 — Bonus tecnico: WebSocket ao vivo no terminal (Pedro) — 17:20–17:30 (~10s, opcional)
+
+**Quando usar:** se o tempo estiver folgado depois do fluxo 3. Pode ser cortado sem prejuizo.
+
+**Objetivo:** mostrar que a batalha realmente streama via WebSocket — nao e animacao mockada do front.
+
+1. (00:00) Pedro alterna pro terminal lateral (ja preparado, ver checklist)
+2. (00:02) Aperta Enter no comando ja digitado: `node scripts/test-ws-battle.mjs`
+3. (00:05) Aponta para a tela enquanto turnos chegam (12 turnos x ~800ms = ~10s):
+   ```
+   [TURN]  1/12  move ✓ (100%)  Lopez avanca com a bola para (2, 1).
+   [TURN]  5/12  tackle ✓ (52%)  Lopez vence Marlon Freitas...
+   [TURN]  6/12  shot ✓ (83%)  GOL! Lopez finaliza com 83%. ⚽ GOL!
+   [RESULT] vencedor=player  placar=1x0
+   ```
+
+**Narracao chave:** "Esses turnos sao o que o front recebe e usa pra animar a bola. WebSocket real, com i18n, autenticacao JWT no query param e fallback se a conexao cair."
 
 ### Fluxo 4 — Pipeline CI/CD + producao (Lucas B) — 17:30–18:30 (~1 min)
 

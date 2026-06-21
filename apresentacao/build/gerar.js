@@ -431,7 +431,7 @@ addContentSlide({
 });
 
 addContentSlide({
-  title: "Layout da batalha",
+  title: "Layout da batalha + streaming WebSocket",
   owner: "Lucas S",
   time: "0:50",
   indicator: "ID2.1",
@@ -440,6 +440,7 @@ addContentSlide({
     "Streaming via WebSocket: POST /match/play devolve matchId, hook useBattleStream abre wss://host/ws/battle/:matchId?token=<jwt> e recebe 12 turnos com sleep de 800ms",
     "Bola animada via CSS transitions seguindo as coordenadas de cada TurnEvent — sem framework de animacao",
     "Maquina de estados: idle -> connecting -> streaming -> finished (com fallback local de setInterval se WS falhar)",
+    "Validavel sem o front: node scripts/test-ws-battle.mjs no server mostra os 12 turnos chegando ao vivo no terminal",
     "[Screenshot da tela de batalha com bola em movimento + logs verticais visiveis]",
   ],
 });

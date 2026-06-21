@@ -168,3 +168,12 @@ Detalhes completos (Build/Start Commands, env vars) no
 - Cliente abre WS em `/ws/battle/:matchId?token=<jwt>` (token vai por query param porque a browser WebSocket API nao suporta headers customizados).
 - Server emite `{ type: "turn", data: TurnEvent }` x 12 com sleep de 800ms, depois `{ type: "result", data: MatchResponse }` via `sendAndClose` (garante que a ultima mensagem sai antes do socket fechar).
 - Store em memoria (`match-stream.store.ts`) com TTL de 60s — buffer para o streaming, **nao** persiste eventos no banco (resultado ja persistido em `POST /match/play`).
+
+### Validar WebSocket sem abrir o front
+
+```bash
+node scripts/test-ws-battle.mjs                          # contra producao (Railway)
+node scripts/test-ws-battle.mjs --base=http://localhost:3333  # contra dev local
+```
+
+Script faz fluxo completo: `/auth/guest` -> `/team/buy-athlete` x N -> `/match/play` -> conecta WS e imprime cada turno com `kind` (move/tackle/shot), `success%` e descricao traduzida. Util para defesa de autoria ("WebSocket realmente esta funcionando") e debug rapido se a batalha nao chegar no front.

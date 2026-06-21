@@ -153,22 +153,22 @@ Demonstrar a logica do cookie + reload e a paridade pt-BR/en. Citar que mensagen
 
 ---
 
-## Slide 8 — Layout da batalha
+## Slide 8 — Layout da batalha + streaming WebSocket
 
-**Subtitulo:** Header unificado, sidebar de logs e bola animada por CSS
+**Subtitulo:** Header unificado, sidebar de logs, bola animada via CSS e turnos chegando via WebSocket em tempo real
 
 **Bullets**
-- Grid 3x6 compartilhado entre as duas equipes
-- Header unico com placar, rodada e nome da campanha
-- Sidebar vertical com scroll proprio para o log de turnos
-- Bola animada via atualizacao de coordenadas + CSS transitions
-- Sem framework de animacao: apenas estados e transitions
-- Consome `POST /partida/jogar-rodada` e reproduz turno-a-turno
+- Grid 3x6 compartilhado entre as duas equipes, header unico com placar/turno/nome
+- Sidebar vertical com scroll proprio para os logs (traduzidos via i18n no back)
+- Bola animada via atualizacao de coordenadas + CSS transitions (sem lib de animacao)
+- **Streaming via WebSocket:** `POST /match/play` devolve `matchId`; hook `useBattleStream` conecta em `wss://.../ws/battle/:matchId?token=<jwt>` e recebe 12 turnos com sleep de 800ms entre cada + `result` final
+- Maquina de estados: `idle -> connecting -> streaming -> finished` (com fallback local de `setInterval` se WS falhar ou nao houver `matchId`)
+- Validavel sem abrir o front: `node server/scripts/test-ws-battle.mjs` mostra os turnos chegando ao vivo no terminal
 
 **Notas do apresentador**
-Reforcar que a animacao da bola usa apenas CSS e atualizacao de estado — decisao consciente para nao incluir framework extra. Mencionar que o evento de virada de turno e calculado no back e o front so reproduz.
+Reforcar que a animacao da bola usa apenas CSS e atualizacao de estado — decisao consciente para nao incluir framework extra. Mencionar que cada `TurnEvent` (kind = move/tackle/shot, success, description) vem do simulador no back via WS e o front so reproduz. Se sobrar 10s no demo, pode mostrar o terminal lateral com `test-ws-battle.mjs` (ver Fluxo 3.5 no ROTEIRO_DEMO).
 
-**Visual sugerido:** GIF curto ou screenshot da batalha com setas indicando header, sidebar e bola.
+**Visual sugerido:** screenshot da batalha com setas indicando header, sidebar e bola + (opcional) split-screen com terminal mostrando os turnos chegando.
 
 **Quem apresenta:** Lucas Stopinski
 
