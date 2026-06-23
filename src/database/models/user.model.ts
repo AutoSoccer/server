@@ -22,6 +22,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare hashed_password: string;
   declare email: string;
   declare phone_number: string | null;
+  declare city: string | null;
   declare victory: CreationOptional<number>;
   declare defeat: CreationOptional<number>;
   declare trophies: CreationOptional<number>;
@@ -60,6 +61,10 @@ User.init(
       type: DataTypes.STRING(14),
       allowNull: true,
       unique: true
+    },
+    city: {
+      type: DataTypes.STRING(80),
+      allowNull: true
     },
     victory: {
       type: DataTypes.INTEGER.UNSIGNED,

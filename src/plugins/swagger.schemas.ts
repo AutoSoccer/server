@@ -33,6 +33,7 @@ const UserResponse = {
     nickname: { type: 'string', example: 'lucas' },
     email: { type: 'string', example: 'lucas@gmail.com' },
     phone_number: { type: ['string', 'null'], example: '11900000001' },
+    city: { type: ['string', 'null'], example: 'Curitiba' },
     victory: { type: 'integer', example: 0 },
     defeat: { type: 'integer', example: 0 },
     trophies: { type: 'integer', example: 0 },

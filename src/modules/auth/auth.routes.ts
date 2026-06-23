@@ -11,6 +11,7 @@ type RegisterBody = {
   password: string;
   email: string;
   phone_number?: string;
+  city?: string;
 };
 
 type LoginBody = {
@@ -42,7 +43,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
               format: 'email',
               example: 'lucas@gmail.com'
             },
-            phone_number: { type: 'string', maxLength: 20, example: '(41) 98715-2034' }
+            phone_number: { type: 'string', maxLength: 20, example: '(41) 98715-2034' },
+            city: { type: 'string', maxLength: 80, example: 'Curitiba' }
           }
         },
         response: {
@@ -59,7 +61,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
           nickname: body.nickname,
           password: body.password,
           email: body.email,
-          phone_number: body.phone_number
+          phone_number: body.phone_number,
+          city: body.city
         });
 
         return reply.code(201).send(result);

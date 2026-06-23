@@ -11,6 +11,7 @@ export type RegisterInput = {
   password: string;
   email: string;
   phone_number?: string;
+  city?: string;
 };
 
 export type LoginInput = {
@@ -26,6 +27,7 @@ type AuthResponse = {
     nickname: string;
     email: string;
     phone_number: string | null;
+    city: string | null;
     victory: number;
     defeat: number;
     trophies: number;
@@ -79,6 +81,7 @@ const sanitizeUser = (user: User): AuthResponse['user'] => ({
   nickname: user.nickname,
   email: user.email,
   phone_number: user.phone_number,
+  city: user.city,
   victory: user.victory,
   defeat: user.defeat,
   trophies: user.trophies,
@@ -156,6 +159,7 @@ export const registerUser = async (input: RegisterInput): Promise<AuthResponse> 
   const nickname = input.nickname.trim();
   const email = input.email.trim().toLowerCase();
   const phoneNumber = trimOrUndefined(input.phone_number);
+  const city = trimOrUndefined(input.city);
 
   if (name.length === 0) {
     throw new ServiceError('CONFLICT', { i18nKey: 'auth.register.nameRequired' });
@@ -179,6 +183,7 @@ export const registerUser = async (input: RegisterInput): Promise<AuthResponse> 
       hashed_password: hashedPassword,
       email,
       phone_number: phoneNumber ?? null,
+      city: city ?? null,
       victory: 0,
       defeat: 0,
       trophies: 0
